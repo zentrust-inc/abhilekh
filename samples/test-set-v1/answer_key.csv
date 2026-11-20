@@ -1,0 +1,66 @@
+﻿doc,kind,item,as_written / test,value / dose,unit / strength,range / duration,DDA expected / flag printed
+P01,medicine,metformin,Tab Metformin 500 mg,1-0-1,500 mg,1 month,registered generic
+P01,medicine,glimepiride,Tab Glimepiride 1 mg,1-0-0,1 mg,1 month,registered generic
+P01,medicine,amlodipine,Tab Amlodipine 5 mg,0-0-1,5 mg,1 month,registered generic
+P02,medicine,amoxicillin,Cap Amoxicillin 500 mg,TDS (3 times a day),500 mg,5 days,registered generic
+P02,medicine,paracetamol,Tab Paracetamol 500 mg,SOS (when needed),500 mg,,registered generic
+P02,medicine,cetirizine,Tab Cetirizine 10 mg,HS (at bedtime),10 mg,5 days,registered generic
+P03,medicine,(unknown),T. Glucozen 500,BD (twice a day),500 (unit not written),2 months,"NOT FOUND — invented brand; must be flagged for a person to confirm, never guessed"
+P03,medicine,atorvastatin,T. Atorvastatin 10,HS (at bedtime),10 mg (unit not written),2 months,registered generic
+P03,medicine,losartan,T. Losartan 50,OD (once a day),50 mg (unit not written),2 months,registered generic
+P04,medicine,oral rehydration salts,ORS,50-100 ml after each loose stool,1 packet in 1 litre,,registered generic
+P04,medicine,zinc sulfate,Zinc 20 mg dispersible tab,1 OD,20 mg,14 days,registered generic
+P04,medicine,paracetamol,Syp Paracetamol (250 mg/5 ml),"4 ml SOS, max 4 times a day",250 mg/5 ml,,registered generic
+P05,medicine,levothyroxine,Tab. Levothyroxine 50 mcg,1 once daily,50 mcg,3 months,registered generic
+P05,medicine,pantoprazole,Tab. Pantoprazole 40 mg,1 once daily,40 mg,14 days,registered generic
+P05,medicine,(unknown),Cap. Neurozen-Forte,1 once daily,,1 month,"NOT FOUND — invented brand; flag, show as written, ask the person"
+L01,result,Haemoglobin,Haemoglobin,10.8,g/dL,12.0 – 15.5,L
+L01,result,Total WBC count,Total WBC count,"7,400",/cumm,"4,000 – 11,000",
+L01,result,Neutrophils,Neutrophils,62,%,40 – 75,
+L01,result,Lymphocytes,Lymphocytes,30,%,20 – 45,
+L01,result,Monocytes,Monocytes,5,%,2 – 10,
+L01,result,Eosinophils,Eosinophils,3,%,1 – 6,
+L01,result,Basophils,Basophils,0,%,0 – 1,
+L01,result,RBC count,RBC count,4.1,million/cumm,3.8 – 5.2,
+L01,result,PCV / Haematocrit,PCV / Haematocrit,33.5,%,36 – 46,L
+L01,result,MCV,MCV,78,fL,80 – 100,L
+L01,result,MCH,MCH,26.3,pg,27 – 33,L
+L01,result,MCHC,MCHC,32.2,g/dL,32 – 36,
+L01,result,Platelet count,Platelet count,"2,45,000",/cumm,"1,50,000 – 4,00,000",
+L01,result,ESR,ESR,18,mm/1st hr,0 – 20,
+L02,result,"Glucose, fasting (FBS)","Glucose, fasting (FBS)",168,mg/dL,70 – 100,H
+L02,result,"Glucose, 2 hr post-prandial","Glucose, 2 hr post-prandial",242,mg/dL,< 140,H
+L02,result,HbA1c,HbA1c,8.2,%,< 5.7,H
+L02,result,Estimated average glucose,Estimated average glucose,189,mg/dL,—,
+L02,result,Total cholesterol,Total cholesterol,212,mg/dL,< 200,H
+L02,result,Triglycerides,Triglycerides,236,mg/dL,< 150,H
+L02,result,HDL cholesterol,HDL cholesterol,38,mg/dL,> 40,L
+L02,result,LDL cholesterol (calc.),LDL cholesterol (calc.),127,mg/dL,< 100,H
+L02,result,VLDL,VLDL,47,mg/dL,< 30,H
+L03,result,Urea,Urea,58,mg/dL,15 – 45,H
+L03,result,Creatinine,Creatinine,1.6,mg/dL,0.7 – 1.3,H
+L03,result,Sodium (Na+),Sodium (Na+),136,mmol/L,135 – 145,
+L03,result,Potassium (K+),Potassium (K+),6.6,mmol/L,3.5 – 5.1,HH
+L03,result,Uric acid,Uric acid,7.4,mg/dL,3.5 – 7.2,H
+L03,result,eGFR (CKD-EPI),eGFR (CKD-EPI),48,mL/min/1.73m²,> 90,L
+L04,result,"Bilirubin, total","Bilirubin, total",0.8,mg/dL,0.2 – 1.2,
+L04,result,"Bilirubin, direct","Bilirubin, direct",0.2,mg/dL,0.0 – 0.3,
+L04,result,SGPT (ALT),SGPT (ALT),28,U/L,< 35,
+L04,result,SGOT (AST),SGOT (AST),24,U/L,< 35,
+L04,result,Alkaline phosphatase,Alkaline phosphatase,96,U/L,44 – 147,
+L04,result,Total protein,Total protein,7.1,g/dL,6.0 – 8.3,
+L04,result,Albumin,Albumin,4.2,g/dL,3.5 – 5.2,
+L04,result,T3,T3,1.02,ng/mL,0.8 – 2.0,
+L04,result,T4,T4,5.1,µg/dL,5.1 – 14.1,
+L04,result,TSH,TSH,7.84,µIU/mL,0.35 – 5.50,H
+L05,result,Colour,Colour,Pale yellow,,,
+L05,result,Appearance,Appearance,Clear,,,
+L05,result,Reaction (pH),Reaction (pH),6.0,,,
+L05,result,Albumin,Albumin,Nil,,,
+L05,result,Sugar,Sugar,Nil,,,
+L05,result,Ketone,Ketone,Trace,,,
+L05,result,Pus cells,Pus cells,2-4 /HPF,,,
+L05,result,RBC,RBC,Nil,,,
+L05,result,Epithelial cells,Epithelial cells,1-2 /HPF,,,
+L05,result,Casts,Casts,Not seen,,,
+L05,result,Crystals,Crystals,Not seen,,,

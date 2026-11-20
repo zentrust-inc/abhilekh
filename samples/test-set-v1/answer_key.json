@@ -1,0 +1,852 @@
+{
+  "set": "Abhilekh fictional test set v1",
+  "made": "2026-11-20",
+  "note": "Every person, clinician, clinic, lab and registration number is invented. Glucozen and Neurozen-Forte are invented brands.",
+  "documents": [
+    {
+      "id": "P01",
+      "file_clean": "clean/P01-opd-ticket-diabetes-htn.png",
+      "file_photo": "photo/P01-opd-ticket-diabetes-htn.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "prescription",
+      "style": "printed OPD ticket, hand-written English Rx",
+      "facility": "Namuna Community Hospital",
+      "clinician": "Dr. A. Udaharan",
+      "clinician_reg": "NMC 00000 (fictional)",
+      "patient": {
+        "name": "Ram Bahadur Namuna",
+        "age": "58 y",
+        "sex": "M",
+        "address": "Kakani-3, Nuwakot"
+      },
+      "date": {
+        "as_written": "2083/08/02",
+        "calendar": "BS"
+      },
+      "diagnosis_as_written": "F/U DM-2, HTN",
+      "vitals": {
+        "bp": "146/92",
+        "weight_kg": 71,
+        "fbs_mg_dl": 168
+      },
+      "medicines": [
+        {
+          "as_written": "Tab Metformin 500 mg",
+          "generic": "metformin",
+          "strength": "500 mg",
+          "form": "tablet",
+          "dose": "1-0-1",
+          "timing": "after meals",
+          "duration": "1 month",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Glimepiride 1 mg",
+          "generic": "glimepiride",
+          "strength": "1 mg",
+          "form": "tablet",
+          "dose": "1-0-0",
+          "timing": "before breakfast",
+          "duration": "1 month",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Amlodipine 5 mg",
+          "generic": "amlodipine",
+          "strength": "5 mg",
+          "form": "tablet",
+          "dose": "0-0-1",
+          "timing": "night",
+          "duration": "1 month",
+          "dda_expected": "registered generic"
+        }
+      ],
+      "advice": [
+        "HbA1c, lipid profile, RFT",
+        "Diet, walk 30 min daily",
+        "Follow-up after 1 month with reports"
+      ],
+      "traps": [
+        "1-0-1 dose notation",
+        "c/o and F/U abbreviations",
+        "BS date in Latin digits"
+      ]
+    },
+    {
+      "id": "P02",
+      "file_clean": "clean/P02-clinic-throat-nepali-instructions.png",
+      "file_photo": "photo/P02-clinic-throat-nepali-instructions.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "prescription",
+      "style": "clinic letterhead, hand-written English Rx with Nepali instructions",
+      "facility": "Udaharan Family Clinic",
+      "clinician": "Dr. B. Namuna",
+      "clinician_reg": "NMC 00001 (fictional)",
+      "patient": {
+        "name": "Sita Kumari Namuna",
+        "age": "34 y",
+        "sex": "F",
+        "address": null
+      },
+      "date": {
+        "as_written": "2083-07-28",
+        "calendar": "BS"
+      },
+      "diagnosis_as_written": "Sore throat, fever x 3 days; tonsils enlarged, exudate +",
+      "vitals": {
+        "temp_f": 101
+      },
+      "medicines": [
+        {
+          "as_written": "Cap Amoxicillin 500 mg",
+          "generic": "amoxicillin",
+          "strength": "500 mg",
+          "form": "capsule",
+          "dose": "TDS (3 times a day)",
+          "timing": "after meals",
+          "duration": "5 days",
+          "dda_expected": "registered generic",
+          "instruction_ne": "खाना पछि, दिनको ३ पटक"
+        },
+        {
+          "as_written": "Tab Paracetamol 500 mg",
+          "generic": "paracetamol",
+          "strength": "500 mg",
+          "form": "tablet",
+          "dose": "SOS (when needed)",
+          "timing": "at least 6 hours apart",
+          "duration": null,
+          "dda_expected": "registered generic",
+          "instruction_ne": "ज्वरो आए मात्र, ६ घण्टाको फरकमा"
+        },
+        {
+          "as_written": "Tab Cetirizine 10 mg",
+          "generic": "cetirizine",
+          "strength": "10 mg",
+          "form": "tablet",
+          "dose": "HS (at bedtime)",
+          "timing": "bedtime",
+          "duration": "5 days",
+          "dda_expected": "registered generic",
+          "instruction_ne": "राति सुत्ने बेला"
+        }
+      ],
+      "advice": [
+        "मनतातो नुन पानीले कुल्ला गर्ने (warm salt-water gargle)",
+        "५ दिन पछि नठीक भए फेरि आउने (return if not better in 5 days)"
+      ],
+      "traps": [
+        "Nepali instructions in hand-writing",
+        "Devanagari digits ३ ६ ५",
+        "TDS / SOS / HS abbreviations"
+      ]
+    },
+    {
+      "id": "P03",
+      "file_clean": "clean/P03-messy-hand-invented-brand.png",
+      "file_photo": "photo/P03-messy-hand-invented-brand.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "prescription",
+      "style": "rushed hand-writing on ruled pad, brand-style names, dd/mm/yyyy AD date",
+      "facility": "Example Polyclinic, Bharatpur",
+      "clinician": "Dr. C. Udaharan",
+      "clinician_reg": null,
+      "patient": {
+        "name": "Hari Prasad Namuna",
+        "age": "62 y",
+        "sex": "M",
+        "address": null
+      },
+      "date": {
+        "as_written": "18/11/2026",
+        "calendar": "AD"
+      },
+      "diagnosis_as_written": "Known DM, HTN, dyslipidaemia",
+      "medicines": [
+        {
+          "as_written": "T. Glucozen 500",
+          "generic": null,
+          "strength": "500 (unit not written)",
+          "form": "tablet",
+          "dose": "BD (twice a day)",
+          "timing": null,
+          "duration": "2 months",
+          "dda_expected": "NOT FOUND — invented brand; must be flagged for a person to confirm, never guessed"
+        },
+        {
+          "as_written": "T. Atorvastatin 10",
+          "generic": "atorvastatin",
+          "strength": "10 mg (unit not written)",
+          "form": "tablet",
+          "dose": "HS (at bedtime)",
+          "timing": "bedtime",
+          "duration": "2 months",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "T. Losartan 50",
+          "generic": "losartan",
+          "strength": "50 mg (unit not written)",
+          "form": "tablet",
+          "dose": "OD (once a day)",
+          "timing": null,
+          "duration": "2 months",
+          "dda_expected": "registered generic"
+        }
+      ],
+      "advice": [
+        "Repeat lipid profile and RFT after 2 months"
+      ],
+      "traps": [
+        "invented brand name must be flagged, not mapped to metformin",
+        "strengths without units",
+        "no registration number",
+        "AD date dd/mm/yyyy"
+      ]
+    },
+    {
+      "id": "P04",
+      "file_clean": "clean/P04-child-diarrhoea-syrup.png",
+      "file_photo": "photo/P04-child-diarrhoea-syrup.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "prescription",
+      "style": "paediatric clinic, hand-written, syrup in ml, weight-based",
+      "facility": "Namuna Child Clinic",
+      "clinician": "Dr. D. Udaharan",
+      "clinician_reg": "NMC 00002 (fictional)",
+      "patient": {
+        "name": "Aarav Namuna",
+        "age": "2 y 6 m",
+        "sex": "M",
+        "address": null,
+        "weight_kg": 14
+      },
+      "date": {
+        "as_written": "2083/08/03",
+        "calendar": "BS"
+      },
+      "diagnosis_as_written": "Loose stools x 2 days, no dehydration",
+      "medicines": [
+        {
+          "as_written": "ORS",
+          "generic": "oral rehydration salts",
+          "strength": "1 packet in 1 litre",
+          "form": "powder",
+          "dose": "50-100 ml after each loose stool",
+          "timing": null,
+          "duration": null,
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Zinc 20 mg dispersible tab",
+          "generic": "zinc sulfate",
+          "strength": "20 mg",
+          "form": "dispersible tablet",
+          "dose": "1 OD",
+          "timing": null,
+          "duration": "14 days",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Syp Paracetamol (250 mg/5 ml)",
+          "generic": "paracetamol",
+          "strength": "250 mg/5 ml",
+          "form": "syrup",
+          "dose": "4 ml SOS, max 4 times a day",
+          "timing": "for fever",
+          "duration": null,
+          "dda_expected": "registered generic"
+        }
+      ],
+      "advice": [
+        "आमाको दूध र खाना नरोक्ने (keep breastfeeding and food)",
+        "Return the same day for blood in stool, not drinking, very sleepy"
+      ],
+      "traps": [
+        "syrup concentration vs dose in ml must stay separate",
+        "age in years+months",
+        "doctor's written advice is stored as written, nothing added"
+      ]
+    },
+    {
+      "id": "P05",
+      "file_clean": "clean/P05-e-prescription-thyroid.png",
+      "file_photo": "photo/P05-e-prescription-thyroid.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "prescription",
+      "style": "computer-printed e-prescription table, AD date with time",
+      "facility": "Udaharan Hospital Pvt. Ltd. (fictional)",
+      "clinician": "Dr. E. Namuna",
+      "clinician_reg": "NMC 00003 (fictional)",
+      "patient": {
+        "name": "Maya Devi Namuna",
+        "age": "47 y",
+        "sex": "F",
+        "address": null,
+        "hospital_no": "UH-000045"
+      },
+      "date": {
+        "as_written": "2026-11-17 10:42",
+        "calendar": "AD"
+      },
+      "diagnosis_as_written": "Hypothyroidism; dyspepsia; peripheral neuropathy symptoms",
+      "medicines": [
+        {
+          "as_written": "Tab. Levothyroxine 50 mcg",
+          "generic": "levothyroxine",
+          "strength": "50 mcg",
+          "form": "tablet",
+          "dose": "1 once daily",
+          "timing": "empty stomach, 30 min before food",
+          "duration": "3 months",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab. Pantoprazole 40 mg",
+          "generic": "pantoprazole",
+          "strength": "40 mg",
+          "form": "tablet",
+          "dose": "1 once daily",
+          "timing": "before breakfast",
+          "duration": "14 days",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Cap. Neurozen-Forte",
+          "generic": null,
+          "strength": null,
+          "form": "capsule",
+          "dose": "1 once daily",
+          "timing": "after dinner",
+          "duration": "1 month",
+          "dda_expected": "NOT FOUND — invented brand; flag, show as written, ask the person"
+        }
+      ],
+      "advice": [
+        "TSH after 6 weeks; Vitamin B12",
+        "Follow-up after 6 weeks with TSH report",
+        "औषधि नछुटाउनुहोस्। थाइरोइडको औषधि बिहान खाली पेटमा मात्र।"
+      ],
+      "traps": [
+        "instruction wraps onto a second table row",
+        "mcg vs mg",
+        "invented combination brand"
+      ]
+    },
+    {
+      "id": "L01",
+      "file_clean": "clean/L01-cbc-mild-anaemia.png",
+      "file_photo": "photo/L01-cbc-mild-anaemia.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "lab_report",
+      "style": "printed CBC table, Indian-style digit grouping (2,45,000)",
+      "facility": "Udaharan Diagnostic Centre (fictional)",
+      "patient": {
+        "name": "Sita Kumari Namuna",
+        "age": "34 y",
+        "sex": "F"
+      },
+      "date": {
+        "as_written": "19-11-2026",
+        "calendar": "AD"
+      },
+      "ordered_by": "Dr. B. Namuna",
+      "results": [
+        {
+          "test": "Haemoglobin",
+          "value": "10.8",
+          "unit": "g/dL",
+          "reference_range": "12.0 – 15.5",
+          "flag_printed": "L"
+        },
+        {
+          "test": "Total WBC count",
+          "value": "7,400",
+          "unit": "/cumm",
+          "reference_range": "4,000 – 11,000",
+          "flag_printed": null
+        },
+        {
+          "test": "Neutrophils",
+          "value": "62",
+          "unit": "%",
+          "reference_range": "40 – 75",
+          "flag_printed": null
+        },
+        {
+          "test": "Lymphocytes",
+          "value": "30",
+          "unit": "%",
+          "reference_range": "20 – 45",
+          "flag_printed": null
+        },
+        {
+          "test": "Monocytes",
+          "value": "5",
+          "unit": "%",
+          "reference_range": "2 – 10",
+          "flag_printed": null
+        },
+        {
+          "test": "Eosinophils",
+          "value": "3",
+          "unit": "%",
+          "reference_range": "1 – 6",
+          "flag_printed": null
+        },
+        {
+          "test": "Basophils",
+          "value": "0",
+          "unit": "%",
+          "reference_range": "0 – 1",
+          "flag_printed": null
+        },
+        {
+          "test": "RBC count",
+          "value": "4.1",
+          "unit": "million/cumm",
+          "reference_range": "3.8 – 5.2",
+          "flag_printed": null
+        },
+        {
+          "test": "PCV / Haematocrit",
+          "value": "33.5",
+          "unit": "%",
+          "reference_range": "36 – 46",
+          "flag_printed": "L"
+        },
+        {
+          "test": "MCV",
+          "value": "78",
+          "unit": "fL",
+          "reference_range": "80 – 100",
+          "flag_printed": "L"
+        },
+        {
+          "test": "MCH",
+          "value": "26.3",
+          "unit": "pg",
+          "reference_range": "27 – 33",
+          "flag_printed": "L"
+        },
+        {
+          "test": "MCHC",
+          "value": "32.2",
+          "unit": "g/dL",
+          "reference_range": "32 – 36",
+          "flag_printed": null
+        },
+        {
+          "test": "Platelet count",
+          "value": "2,45,000",
+          "unit": "/cumm",
+          "reference_range": "1,50,000 – 4,00,000",
+          "flag_printed": null
+        },
+        {
+          "test": "ESR",
+          "value": "18",
+          "unit": "mm/1st hr",
+          "reference_range": "0 – 20",
+          "flag_printed": null
+        }
+      ],
+      "comment": "Peripheral smear: microcytic hypochromic RBCs.",
+      "critical_values": [],
+      "traps": [
+        "2,45,000 lakh grouping must read as 245000",
+        "en-dash ranges",
+        "WBC differential percentages"
+      ]
+    },
+    {
+      "id": "L02",
+      "file_clean": "clean/L02-diabetes-lipid-devanagari-date.png",
+      "file_photo": "photo/L02-diabetes-lipid-devanagari-date.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "lab_report",
+      "style": "printed biochemistry, bilingual title, BS date in Devanagari digits",
+      "facility": "Udaharan Diagnostic Centre (fictional)",
+      "patient": {
+        "name": "Ram Bahadur Namuna",
+        "age": "58 y",
+        "sex": "M"
+      },
+      "date": {
+        "as_written": "२०८३/०८/०३",
+        "normalised": "2083/08/03",
+        "calendar": "BS"
+      },
+      "ordered_by": "Dr. A. Udaharan",
+      "results": [
+        {
+          "test": "Glucose, fasting (FBS)",
+          "value": "168",
+          "unit": "mg/dL",
+          "reference_range": "70 – 100",
+          "flag_printed": "H"
+        },
+        {
+          "test": "Glucose, 2 hr post-prandial",
+          "value": "242",
+          "unit": "mg/dL",
+          "reference_range": "< 140",
+          "flag_printed": "H"
+        },
+        {
+          "test": "HbA1c",
+          "value": "8.2",
+          "unit": "%",
+          "reference_range": "< 5.7",
+          "flag_printed": "H"
+        },
+        {
+          "test": "Estimated average glucose",
+          "value": "189",
+          "unit": "mg/dL",
+          "reference_range": "—",
+          "flag_printed": null
+        },
+        {
+          "test": "Total cholesterol",
+          "value": "212",
+          "unit": "mg/dL",
+          "reference_range": "< 200",
+          "flag_printed": "H"
+        },
+        {
+          "test": "Triglycerides",
+          "value": "236",
+          "unit": "mg/dL",
+          "reference_range": "< 150",
+          "flag_printed": "H"
+        },
+        {
+          "test": "HDL cholesterol",
+          "value": "38",
+          "unit": "mg/dL",
+          "reference_range": "> 40",
+          "flag_printed": "L"
+        },
+        {
+          "test": "LDL cholesterol (calc.)",
+          "value": "127",
+          "unit": "mg/dL",
+          "reference_range": "< 100",
+          "flag_printed": "H"
+        },
+        {
+          "test": "VLDL",
+          "value": "47",
+          "unit": "mg/dL",
+          "reference_range": "< 30",
+          "flag_printed": "H"
+        }
+      ],
+      "comment": "Fasting 10 hours as reported by patient. HbA1c: 5.7–6.4 % prediabetes; 6.5 % or above diabetes.",
+      "critical_values": [],
+      "traps": [
+        "Devanagari digits in date",
+        "HbA1c bands printed as a footnote below the tables",
+        "< and > ranges",
+        "two sections on one page"
+      ],
+      "links_to": "P01 (same fictional patient; the advised HbA1c, lipid profile)"
+    },
+    {
+      "id": "L03",
+      "file_clean": "clean/L03-rft-critical-potassium.png",
+      "file_photo": "photo/L03-rft-critical-potassium.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "lab_report",
+      "style": "printed RFT with lab's own critical-value box",
+      "facility": "Udaharan Diagnostic Centre (fictional)",
+      "patient": {
+        "name": "Hari Prasad Namuna",
+        "age": "62 y",
+        "sex": "M"
+      },
+      "date": {
+        "as_written": "20-11-2026",
+        "calendar": "AD"
+      },
+      "ordered_by": "Dr. C. Udaharan",
+      "results": [
+        {
+          "test": "Urea",
+          "value": "58",
+          "unit": "mg/dL",
+          "reference_range": "15 – 45",
+          "flag_printed": "H"
+        },
+        {
+          "test": "Creatinine",
+          "value": "1.6",
+          "unit": "mg/dL",
+          "reference_range": "0.7 – 1.3",
+          "flag_printed": "H"
+        },
+        {
+          "test": "Sodium (Na+)",
+          "value": "136",
+          "unit": "mmol/L",
+          "reference_range": "135 – 145",
+          "flag_printed": null
+        },
+        {
+          "test": "Potassium (K+)",
+          "value": "6.6",
+          "unit": "mmol/L",
+          "reference_range": "3.5 – 5.1",
+          "flag_printed": "HH"
+        },
+        {
+          "test": "Uric acid",
+          "value": "7.4",
+          "unit": "mg/dL",
+          "reference_range": "3.5 – 7.2",
+          "flag_printed": "H"
+        },
+        {
+          "test": "eGFR (CKD-EPI)",
+          "value": "48",
+          "unit": "mL/min/1.73m²",
+          "reference_range": "> 90",
+          "flag_printed": "L"
+        }
+      ],
+      "comment": "Sample not haemolysed. Critical value phoned to referring doctor at 11:20.",
+      "critical_values": [
+        {
+          "test": "Potassium (K+)",
+          "value": "6.6",
+          "unit": "mmol/L",
+          "flag_printed": "HH",
+          "expected_display": "exactly as printed: value, unit, range, the HH flag and the lab's own critical-value note; Abhilekh adds nothing"
+        }
+      ],
+      "traps": [
+        "HH flag",
+        "superscript in unit",
+        "critical box text must not be read as a result row"
+      ],
+      "links_to": "P03 (same fictional patient; on losartan)"
+    },
+    {
+      "id": "L04",
+      "file_clean": "clean/L04-lft-thyroid-faded.png",
+      "file_photo": "photo/L04-lft-thyroid-faded.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "lab_report",
+      "style": "printed LFT + TFT; photo version is faded",
+      "facility": "Udaharan Diagnostic Centre (fictional)",
+      "patient": {
+        "name": "Maya Devi Namuna",
+        "age": "47 y",
+        "sex": "F"
+      },
+      "date": {
+        "as_written": "02-10-2026",
+        "calendar": "AD"
+      },
+      "ordered_by": "Dr. E. Namuna",
+      "results": [
+        {
+          "test": "Bilirubin, total",
+          "value": "0.8",
+          "unit": "mg/dL",
+          "reference_range": "0.2 – 1.2",
+          "flag_printed": null
+        },
+        {
+          "test": "Bilirubin, direct",
+          "value": "0.2",
+          "unit": "mg/dL",
+          "reference_range": "0.0 – 0.3",
+          "flag_printed": null
+        },
+        {
+          "test": "SGPT (ALT)",
+          "value": "28",
+          "unit": "U/L",
+          "reference_range": "< 35",
+          "flag_printed": null
+        },
+        {
+          "test": "SGOT (AST)",
+          "value": "24",
+          "unit": "U/L",
+          "reference_range": "< 35",
+          "flag_printed": null
+        },
+        {
+          "test": "Alkaline phosphatase",
+          "value": "96",
+          "unit": "U/L",
+          "reference_range": "44 – 147",
+          "flag_printed": null
+        },
+        {
+          "test": "Total protein",
+          "value": "7.1",
+          "unit": "g/dL",
+          "reference_range": "6.0 – 8.3",
+          "flag_printed": null
+        },
+        {
+          "test": "Albumin",
+          "value": "4.2",
+          "unit": "g/dL",
+          "reference_range": "3.5 – 5.2",
+          "flag_printed": null
+        },
+        {
+          "test": "T3",
+          "value": "1.02",
+          "unit": "ng/mL",
+          "reference_range": "0.8 – 2.0",
+          "flag_printed": null
+        },
+        {
+          "test": "T4",
+          "value": "5.1",
+          "unit": "µg/dL",
+          "reference_range": "5.1 – 14.1",
+          "flag_printed": null
+        },
+        {
+          "test": "TSH",
+          "value": "7.84",
+          "unit": "µIU/mL",
+          "reference_range": "0.35 – 5.50",
+          "flag_printed": "H"
+        }
+      ],
+      "comment": null,
+      "critical_values": [],
+      "traps": [
+        "T4 printed with no flag at the lower limit: show no flag",
+        "µ symbol",
+        "faded print in photo version"
+      ],
+      "links_to": "P05 (same fictional patient; report predates the levothyroxine prescription)"
+    },
+    {
+      "id": "L05",
+      "file_clean": "clean/L05-urine-hand-filled.png",
+      "file_photo": "photo/L05-urine-hand-filled.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "lab_report",
+      "style": "printed form, results hand-filled, non-numeric values",
+      "facility": "Namuna Health Post Laboratory (fictional)",
+      "patient": {
+        "name": "Aarav Namuna",
+        "age": "2 y 6 m",
+        "sex": "M"
+      },
+      "date": {
+        "as_written": "2083/08/04",
+        "calendar": "BS"
+      },
+      "ordered_by": null,
+      "results": [
+        {
+          "test": "Colour",
+          "value": "Pale yellow",
+          "unit": null,
+          "reference_range": null,
+          "flag_printed": null
+        },
+        {
+          "test": "Appearance",
+          "value": "Clear",
+          "unit": null,
+          "reference_range": null,
+          "flag_printed": null
+        },
+        {
+          "test": "Reaction (pH)",
+          "value": "6.0",
+          "unit": null,
+          "reference_range": null,
+          "flag_printed": null
+        },
+        {
+          "test": "Albumin",
+          "value": "Nil",
+          "unit": null,
+          "reference_range": null,
+          "flag_printed": null
+        },
+        {
+          "test": "Sugar",
+          "value": "Nil",
+          "unit": null,
+          "reference_range": null,
+          "flag_printed": null
+        },
+        {
+          "test": "Ketone",
+          "value": "Trace",
+          "unit": null,
+          "reference_range": null,
+          "flag_printed": null
+        },
+        {
+          "test": "Pus cells",
+          "value": "2-4 /HPF",
+          "unit": null,
+          "reference_range": null,
+          "flag_printed": null
+        },
+        {
+          "test": "RBC",
+          "value": "Nil",
+          "unit": null,
+          "reference_range": null,
+          "flag_printed": null
+        },
+        {
+          "test": "Epithelial cells",
+          "value": "1-2 /HPF",
+          "unit": null,
+          "reference_range": null,
+          "flag_printed": null
+        },
+        {
+          "test": "Casts",
+          "value": "Not seen",
+          "unit": null,
+          "reference_range": null,
+          "flag_printed": null
+        },
+        {
+          "test": "Crystals",
+          "value": "Not seen",
+          "unit": null,
+          "reference_range": null,
+          "flag_printed": null
+        }
+      ],
+      "comment": null,
+      "critical_values": [],
+      "traps": [
+        "text values (Nil, Trace, Not seen)",
+        "range values 2-4 /HPF",
+        "½ in age",
+        "no reference ranges printed — must not invent them, no flags added"
+      ],
+      "links_to": "P04 (same fictional child)"
+    }
+  ]
+}

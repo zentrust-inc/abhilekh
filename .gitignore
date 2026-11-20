@@ -1,0 +1,4 @@
+samples/*/fonts/
+__pycache__/
+.env
+*.key
