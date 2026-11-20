@@ -36,7 +36,7 @@ L11,result,ESR (1st hour),ESR (1st hour),28,mm,0 – 20,H
 L12,result,FBS,FBS,112,mg/dl,70-110,
 L12,result,PPBS,PPBS,164,mg/dl,80-140,
 L12,result,Urea,Urea,31,mg/dl,15-45,
-L12,result,Creatinine,Creatinine,0.9,mg/dl,0.6-1.2,
+L12,result,Creatinine,Creatinine,09,mg/dl,0.6-1.2,
 L12,result,Sodium,Sodium,138,mmol/L,,
 L12,result,Potassium,Potassium,4.1,mmol/L,,
 L13,result,Total cholesterol,Total cholesterol,196,mg/dL,< 200,

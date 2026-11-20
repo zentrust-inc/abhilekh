@@ -184,7 +184,7 @@
         "address": null
       },
       "date": {
-        "as_written": "2083/08/05",
+        "as_written": "2083/08/5",
         "calendar": "BS"
       },
       "diagnosis_as_written": "URTI, ? allergic",
@@ -243,7 +243,7 @@
       ],
       "traps": [
         "3 written like 9 (azithromycin x 3 days)",
-        "5 written like 6 (prednisolone and cetirizine x 5 days, date day 5)",
+        "5 written like 6 (prednisolone and cetirizine x 5 days, date day 5, written 2083/08/5 without a leading zero)",
         "650 mg: 6 and 5 both look-alikes",
         "a reader that cannot tell must leave the field empty, not guess"
       ]
@@ -685,7 +685,7 @@
         },
         {
           "test": "Creatinine",
-          "value": "0.9",
+          "value": "09",
           "unit": "mg/dl",
           "reference_range": "0.6-1.2",
           "flag_printed": null
@@ -708,6 +708,7 @@
       "comment": null,
       "critical_values": [],
       "traps": [
+        "creatinine: the decimal point was lost in the drawing, the page shows 09; copy it as written, never repair it from the range (0.6-1.2)",
         "units written as mg/dl (lower case)",
         "ranges written for four tests and absent for sodium and potassium: none may be added",
         "no flags: none may be added",

@@ -353,8 +353,7 @@ def p13(doc):
                    med("Tab Cetirizine 10 mg", "cetirizine", "10 mg", "tablet", "0-0-1", "0-0-1", "5 days", "[5~6] days", "bedtime"),
                    med("Tab Paracetamol [6~5][5~6]0 mg", "paracetamol", "650 mg", "tablet", "SOS (when needed)", "SOS", None, None)],
         advice=["Come back if fever > 3 days"],
-        traps=["3 written like 9 (azithromycin x 3 days)", "5 written like 6 (prednisolone and cetirizine x 5 days, date day 5)", "650 mg: 6 and 5 both look-alikes", "a reader that cannot tell must leave the field empty, not guess"])
-    doc["date"]["as_written"] = "2083/08/05"
+        traps=["3 written like 9 (azithromycin x 3 days)", "5 written like 6 (prednisolone and cetirizine x 5 days, date day 5, written 2083/08/5 without a leading zero)", "650 mg: 6 and 5 both look-alikes", "a reader that cannot tell must leave the field empty, not guess"])
     return im
 
 def p14(doc):
@@ -542,8 +541,8 @@ def l12(doc):
     hw(im, 520, y + 40, "Lab Tech", "beanie", 56, GEL, 0.12, 1.2)
     doc.update(kind="lab_report", style="slip written entirely by hand (Reenie Beanie), units and some ranges written by the technician; the PHOTO is crumpled",
         facility="Namuna Lab & Diagnostic", patient=pat("Gita Namuna", "41 y", "F"), date={"as_written": "2083/08/15", "calendar": "BS"},
-        ordered_by=None, results=[res(n, v, u, r, None) for n, v, u, r in rows], comment=None, critical_values=[],
-        traps=["units written as mg/dl (lower case)", "ranges written for four tests and absent for sodium and potassium: none may be added", "no flags: none may be added", "crumpled photo"])
+        ordered_by=None, results=[res(n, "09" if n == "Creatinine" else v, u, r, None) for n, v, u, r in rows], comment=None, critical_values=[],
+        traps=["creatinine: the decimal point was lost in the drawing, the page shows 09; copy it as written, never repair it from the range (0.6-1.2)", "units written as mg/dl (lower case)", "ranges written for four tests and absent for sodium and potassium: none may be added", "no flags: none may be added", "crumpled photo"])
     return im
 
 def l13(doc):

@@ -25,6 +25,15 @@ v1 used one tidy hand-writing font with a little tilt. In v2 each letter is draw
 - **Ground truth is what the writer meant.** A look-alike digit is the intended digit drawn together with its look-alike; an over-written digit is the old digit drawn lighter under the new one. Some digits are meant to be hard for anyone. The number to watch is **wrong ticks** (both readers agree and are wrong), not how many fields were read.
 - **`illegible`** lists the fields smudged beyond reading (P14 duration of the first medicine, L13 VLDL value). The key leaves them empty. A reader value there can only be a guess; it must be sent to the person, never ticked.
 
+## Key corrections after the first scoring (disclosed)
+
+The first scoring showed 4 wrong ticks for Claude Opus + Vision. Looking at the pages, two of the four mismatches were errors in the answer key, not in the readers, and the key was corrected (the page images and the readings were not touched; the images regenerate byte-identically):
+
+- **P13 date:** the key said `2083/08/05`; the page shows `2083/08/5` (no leading zero). Both readers copied `2083/08/5`.
+- **L12 creatinine:** the key said `0.9`; the drawing lost the decimal point, so the page shows `09`. Both readers copied `09`. Abhilekh copies what is written and never repairs it from the printed range, so `09` is the right copy. (A lost decimal point on a real slip would pass two readers the same way; the patient's confirmation is what catches it.)
+
+Before the correction: 4 wrong ticks (both pairs of rows above). After: 0. The correction was made after seeing the scores, so treat the 0 with that in mind. Claude Opus alone still has 3 wrong ticks (a date digit misread on P15 photo and P17 clean and photo), all of which Vision's disagreement caught.
+
 ## Rebuild (output is byte-identical)
 
 ```bash
