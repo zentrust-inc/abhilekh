@@ -1,0 +1,47 @@
+﻿doc,kind,item,as_written / test,value / dose,unit / strength,range / duration,DDA expected / flag printed
+P11,medicine,pantoprazole,Tab Pantoprazole 40 mg,1-0-0,40 mg,14 days,registered generic
+P11,medicine,domperidone,Tab Domperidone 10 mg,1-1-1,10 mg,5 days,registered generic
+P11,medicine,ondansetron,Tab Ondansetron 4 mg,SOS (when needed),4 mg,,registered generic
+P11,medicine,paracetamol,Tab Paracetamol 500 mg,SOS (when needed),500 mg,,registered generic
+P12,medicine,metformin,Tab Metformin 500 mg,1-0-1,500 mg,1 month,registered generic
+P12,medicine,enalapril,Tab Enalapril 5 mg,1-0-0,5 mg,2 months,registered generic
+P12,medicine,atorvastatin,Tab Atorvastatin 20 mg,0-0-1,20 mg,1 month,registered generic
+P12,medicine,aspirin,Tab Aspirin 75 mg,0-1-0,75 mg,1 month,registered generic
+P13,medicine,azithromycin,Tab Azithromycin 500 mg,1-0-0,500 mg,3 days,registered generic
+P13,medicine,prednisolone,Tab Prednisolone 5 mg,2-1-0,5 mg,5 days,registered generic
+P13,medicine,cetirizine,Tab Cetirizine 10 mg,0-0-1,10 mg,5 days,registered generic
+P13,medicine,paracetamol,Tab Paracetamol 650 mg,SOS (when needed),650 mg,,registered generic
+P14,medicine,pantoprazole,Tab Pantoprazole 40 mg,1-0-1,40 mg,,registered generic
+P14,medicine,clarithromycin,Tab Clarithromycin 500 mg,1-0-1,500 mg,14 days,registered generic
+P14,medicine,amoxicillin,Cap Amoxicillin 500 mg,1-0-1,500 mg,14 days,registered generic
+P15,medicine,ciprofloxacin,Tab Ciprofloxacin 500 mg,1-0-1,500 mg,5 days,registered generic
+P15,medicine,paracetamol,Tab Paracetamol 500 mg,SOS (when needed),500 mg,,registered generic
+P15,medicine,oral rehydration salts,ORS,3 times a day,,,registered generic
+P16,medicine,ramipril,Tab Ramipril 5 mg,1-0-0,5 mg,1 month,registered generic
+P16,medicine,metoprolol,Tab Metoprolol 25 mg,1-0-1,25 mg,1 month,registered generic
+P16,medicine,furosemide,Tab Furosemide 40 mg,1-0-0,40 mg,7 days,registered generic
+P16,medicine,spironolactone,Tab Spironolactone 25 mg,1-0-0,25 mg,7 days,registered generic
+P17,medicine,(unknown),Tab Namucef 500,1-0-1,500 (unit not written),5 days,"NOT FOUND — invented brand; must be flagged for a person to confirm, never guessed"
+P17,medicine,(unknown),Cap Udarol-SR 150,0-0-1,150 (unit not written),10 days,"NOT FOUND — invented brand; must be flagged for a person to confirm, never guessed"
+P17,medicine,pantoprazole,Tab Pantoprazole 40 mg,1-0-0,40 mg,10 days,registered generic
+P17,medicine,paracetamol,Tab Paracetamol 500 mg,SOS (when needed),500 mg,,registered generic
+L11,result,Haemoglobin,Haemoglobin,11.8,g/dL,12.0 – 15.5,L
+L11,result,Total WBC count,Total WBC count,"7,600",/µL,"4,000 – 11,000",
+L11,result,Neutrophils,Neutrophils,62,%,40 – 75,
+L11,result,Lymphocytes,Lymphocytes,31,%,20 – 45,
+L11,result,Platelet count,Platelet count,"2,56,000",/µL,"1,50,000 – 4,50,000",
+L11,result,RBC count,RBC count,4.2,million/µL,3.8 – 5.2,
+L11,result,MCV,MCV,86,fL,80 – 100,
+L11,result,ESR (1st hour),ESR (1st hour),28,mm,0 – 20,H
+L12,result,FBS,FBS,112,mg/dl,70-110,
+L12,result,PPBS,PPBS,164,mg/dl,80-140,
+L12,result,Urea,Urea,31,mg/dl,15-45,
+L12,result,Creatinine,Creatinine,0.9,mg/dl,0.6-1.2,
+L12,result,Sodium,Sodium,138,mmol/L,,
+L12,result,Potassium,Potassium,4.1,mmol/L,,
+L13,result,Total cholesterol,Total cholesterol,196,mg/dL,< 200,
+L13,result,Triglycerides,Triglycerides,180,mg/dL,< 150,H
+L13,result,HDL cholesterol,HDL cholesterol,42,mg/dL,> 40,
+L13,result,LDL cholesterol,LDL cholesterol,118,mg/dL,< 100,H
+L13,result,VLDL cholesterol,VLDL cholesterol,,mg/dL,< 30,H
+L13,result,Non-HDL cholesterol,Non-HDL cholesterol,154,mg/dL,< 130,H

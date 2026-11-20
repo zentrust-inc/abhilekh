@@ -1,0 +1,797 @@
+{
+  "set": "Abhilekh fictional test set v2 (harder hand-writing)",
+  "made": "2026-11-20",
+  "note": "Every person, clinician, clinic, lab and registration number is invented. Namucef and Udarol-SR are invented brands. Ground truth is what the writer meant; fields smudged beyond reading are empty. dose_as_written and duration_as_written are the exact copies a reader should return.",
+  "documents": [
+    {
+      "id": "P11",
+      "file_clean": "clean/P11-pad-crowded-slanted.png",
+      "file_photo": "photo/P11-pad-crowded-slanted.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "prescription",
+      "style": "small pad, crowded fast slanted hand (Caveat, 18-20° lean), lines nearly touching",
+      "facility": "Example Medical Hall, Butwal",
+      "clinician": "Dr. F. Namuna",
+      "clinician_reg": null,
+      "patient": {
+        "name": "Kamala Devi Udaharan",
+        "age": "52 y",
+        "sex": "F",
+        "address": null
+      },
+      "date": {
+        "as_written": "2083/08/10",
+        "calendar": "BS"
+      },
+      "diagnosis_as_written": "burning epigastric pain x 2 wk",
+      "medicines": [
+        {
+          "as_written": "Tab Pantoprazole 40 mg",
+          "generic": "pantoprazole",
+          "strength": "40 mg",
+          "form": "tablet",
+          "dose": "1-0-0",
+          "dose_as_written": "1-0-0",
+          "timing": "morning",
+          "duration": "14 days",
+          "duration_as_written": "14 days",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Domperidone 10 mg",
+          "generic": "domperidone",
+          "strength": "10 mg",
+          "form": "tablet",
+          "dose": "1-1-1",
+          "dose_as_written": "1-1-1",
+          "timing": null,
+          "duration": "5 days",
+          "duration_as_written": "5 days",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Ondansetron 4 mg",
+          "generic": "ondansetron",
+          "strength": "4 mg",
+          "form": "tablet",
+          "dose": "SOS (when needed)",
+          "dose_as_written": "SOS",
+          "timing": null,
+          "duration": null,
+          "duration_as_written": null,
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Paracetamol 500 mg",
+          "generic": "paracetamol",
+          "strength": "500 mg",
+          "form": "tablet",
+          "dose": "SOS (when needed)",
+          "dose_as_written": "SOS",
+          "timing": null,
+          "duration": null,
+          "duration_as_written": null,
+          "dda_expected": "registered generic"
+        }
+      ],
+      "advice": [
+        "bland diet, no spicy / tea",
+        "F/U 2 wk"
+      ],
+      "traps": [
+        "crowded lines touching, 1-1-1 vs 1-0-1",
+        "numbered list with ')' glued to the name",
+        "no duration on SOS lines: leave empty"
+      ]
+    },
+    {
+      "id": "P12",
+      "file_clean": "clean/P12-overwritten-doses.png",
+      "file_photo": "photo/P12-overwritten-doses.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "prescription",
+      "style": "tall narrow hand (Reenie Beanie); three corrections written over the first digit",
+      "facility": "Example Health Centre, Dhulikhel",
+      "clinician": "Dr. G. Udaharan",
+      "clinician_reg": null,
+      "patient": {
+        "name": "Bishnu Prasad Namuna",
+        "age": "66 y",
+        "sex": "M",
+        "address": null
+      },
+      "date": {
+        "as_written": "2083/08/11",
+        "calendar": "BS"
+      },
+      "diagnosis_as_written": "DM-2, HTN, IHD",
+      "medicines": [
+        {
+          "as_written": "Tab Metformin 500 mg",
+          "generic": "metformin",
+          "strength": "500 mg",
+          "form": "tablet",
+          "dose": "1-0-1",
+          "dose_as_written": "1-0-1",
+          "timing": "after meals",
+          "duration": "1 month",
+          "duration_as_written": "1 month",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Enalapril 5 mg",
+          "generic": "enalapril",
+          "strength": "5 mg",
+          "form": "tablet",
+          "dose": "1-0-0",
+          "dose_as_written": "1-0-0",
+          "timing": null,
+          "duration": "2 months",
+          "duration_as_written": "2 months",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Atorvastatin 20 mg",
+          "generic": "atorvastatin",
+          "strength": "20 mg",
+          "form": "tablet",
+          "dose": "0-0-1",
+          "dose_as_written": "0-0-1",
+          "timing": "night",
+          "duration": "1 month",
+          "duration_as_written": "1 month",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Aspirin 75 mg",
+          "generic": "aspirin",
+          "strength": "75 mg",
+          "form": "tablet",
+          "dose": "0-1-0",
+          "dose_as_written": "0-1-0",
+          "timing": null,
+          "duration": "1 month",
+          "duration_as_written": "1 month",
+          "dda_expected": "registered generic"
+        }
+      ],
+      "advice": [
+        "Review with HbA1c, lipids"
+      ],
+      "traps": [
+        "corrected digits: the FINAL (darker) digit is the dose, the light digit under it is not",
+        "1-1-1 under 1-0-1, 1-0-1 under 1-0-0",
+        "duration 2 over 3 months"
+      ]
+    },
+    {
+      "id": "P13",
+      "file_clean": "clean/P13-five-six-nine-three.png",
+      "file_photo": "photo/P13-five-six-nine-three.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "prescription",
+      "style": "round hand (Covered By Your Grace); 5/6 and 9/3 written so they look alike (intended digit drawn with its look-alike)",
+      "facility": "Example Clinic, Dharan",
+      "clinician": "Dr. H. Namuna",
+      "clinician_reg": "NMC 00000 (fictional)",
+      "patient": {
+        "name": "Maya Kumari Udaharan",
+        "age": "45 y",
+        "sex": "F",
+        "address": null
+      },
+      "date": {
+        "as_written": "2083/08/05",
+        "calendar": "BS"
+      },
+      "diagnosis_as_written": "URTI, ? allergic",
+      "medicines": [
+        {
+          "as_written": "Tab Azithromycin 500 mg",
+          "generic": "azithromycin",
+          "strength": "500 mg",
+          "form": "tablet",
+          "dose": "1-0-0",
+          "dose_as_written": "1-0-0",
+          "timing": null,
+          "duration": "3 days",
+          "duration_as_written": "3 days",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Prednisolone 5 mg",
+          "generic": "prednisolone",
+          "strength": "5 mg",
+          "form": "tablet",
+          "dose": "2-1-0",
+          "dose_as_written": "2-1-0",
+          "timing": null,
+          "duration": "5 days",
+          "duration_as_written": "5 days",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Cetirizine 10 mg",
+          "generic": "cetirizine",
+          "strength": "10 mg",
+          "form": "tablet",
+          "dose": "0-0-1",
+          "dose_as_written": "0-0-1",
+          "timing": "bedtime",
+          "duration": "5 days",
+          "duration_as_written": "5 days",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Paracetamol 650 mg",
+          "generic": "paracetamol",
+          "strength": "650 mg",
+          "form": "tablet",
+          "dose": "SOS (when needed)",
+          "dose_as_written": "SOS",
+          "timing": null,
+          "duration": null,
+          "duration_as_written": null,
+          "dda_expected": "registered generic"
+        }
+      ],
+      "advice": [
+        "Come back if fever > 3 days"
+      ],
+      "traps": [
+        "3 written like 9 (azithromycin x 3 days)",
+        "5 written like 6 (prednisolone and cetirizine x 5 days, date day 5)",
+        "650 mg: 6 and 5 both look-alikes",
+        "a reader that cannot tell must leave the field empty, not guess"
+      ]
+    },
+    {
+      "id": "P14",
+      "file_clean": "clean/P14-ink-smudge-duration.png",
+      "file_photo": "photo/P14-ink-smudge-duration.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "prescription",
+      "style": "hand (Shadows Into Light Two); wet-ink smudge over one duration (unreadable) and a light smear over another line",
+      "facility": "Example Clinic, Hetauda",
+      "clinician": "Dr. I. Udaharan",
+      "clinician_reg": "NMC 00000 (fictional)",
+      "patient": {
+        "name": "Rajan Namuna",
+        "age": "38 y",
+        "sex": "M",
+        "address": null
+      },
+      "date": {
+        "as_written": "2083/08/12",
+        "calendar": "BS"
+      },
+      "diagnosis_as_written": "gastritis, H. pylori +ve (stool Ag)",
+      "medicines": [
+        {
+          "as_written": "Tab Pantoprazole 40 mg",
+          "generic": "pantoprazole",
+          "strength": "40 mg",
+          "form": "tablet",
+          "dose": "1-0-1",
+          "dose_as_written": "1-0-1",
+          "timing": null,
+          "duration": null,
+          "duration_as_written": null,
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Clarithromycin 500 mg",
+          "generic": "clarithromycin",
+          "strength": "500 mg",
+          "form": "tablet",
+          "dose": "1-0-1",
+          "dose_as_written": "1-0-1",
+          "timing": null,
+          "duration": "14 days",
+          "duration_as_written": "14 days",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Cap Amoxicillin 500 mg",
+          "generic": "amoxicillin",
+          "strength": "500 mg",
+          "form": "capsule",
+          "dose": "1-0-1",
+          "dose_as_written": "1-0-1",
+          "timing": null,
+          "duration": "14 days",
+          "duration_as_written": "14 days",
+          "dda_expected": "registered generic"
+        }
+      ],
+      "advice": [
+        "Review after 2 weeks"
+      ],
+      "illegible": [
+        {
+          "item": "Tab Pantoprazole 40 mg",
+          "field": "duration"
+        }
+      ],
+      "traps": [
+        "the pantoprazole duration is smudged and cannot be read by anyone: the key leaves it empty (it was meant to be 14 days like the others); any reader value there is a guess and must not be ticked",
+        "light smear over the clarithromycin name: still readable"
+      ]
+    },
+    {
+      "id": "P15",
+      "file_clean": "clean/P15-nepali-hand-devanagari-digits.png",
+      "file_photo": "photo/P15-nepali-hand-devanagari-digits.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "prescription",
+      "style": "mixed English / Devanagari hand-writing (Gochi Hand, Kalam) with Devanagari digits in the date, dose and duration",
+      "facility": "Example Hospital, Pokhara",
+      "clinician": "Dr. J. Namuna",
+      "clinician_reg": "NMC 00000 (fictional)",
+      "patient": {
+        "name": "Sunita Namuna",
+        "age": "29 y",
+        "sex": "F",
+        "address": null
+      },
+      "date": {
+        "as_written": "२०८३/०८/१३",
+        "calendar": "BS"
+      },
+      "diagnosis_as_written": "पिसाबमा पोल्ने, ज्वरो",
+      "medicines": [
+        {
+          "as_written": "Tab Ciprofloxacin 500 mg",
+          "generic": "ciprofloxacin",
+          "strength": "500 mg",
+          "form": "tablet",
+          "dose": "1-0-1",
+          "dose_as_written": "१-०-१",
+          "timing": null,
+          "duration": "5 days",
+          "duration_as_written": "५ दिन",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Paracetamol 500 mg",
+          "generic": "paracetamol",
+          "strength": "500 mg",
+          "form": "tablet",
+          "dose": "SOS (when needed)",
+          "dose_as_written": "SOS",
+          "timing": null,
+          "duration": null,
+          "duration_as_written": null,
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "ORS",
+          "generic": "oral rehydration salts",
+          "strength": null,
+          "form": "powder",
+          "dose": "3 times a day",
+          "dose_as_written": "दिनमा ३ पटक",
+          "timing": null,
+          "duration": null,
+          "duration_as_written": null,
+          "dda_expected": "registered generic"
+        }
+      ],
+      "advice": [
+        "धेरै पानी पिउने (drink plenty of water)",
+        "३ दिनमा नघटे फेरि आउने (return if not better in 3 days)"
+      ],
+      "traps": [
+        "Devanagari digits kept as Devanagari (१-०-१, ५ दिन)",
+        "Devanagari ५ and ६ and ३ in hand-writing",
+        "dose written in words (दिनमा ३ पटक)"
+      ]
+    },
+    {
+      "id": "P16",
+      "file_clean": "clean/P16-crumpled-photo-cardiac.png",
+      "file_photo": "photo/P16-crumpled-photo-cardiac.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "prescription",
+      "style": "fairly legible hand (Gochi Hand); the PHOTO is of crumpled paper: creases shift and shade the writing",
+      "facility": "Namuna Polyclinic, Janakpur",
+      "clinician": "Dr. K. Udaharan",
+      "clinician_reg": "NMC 00000 (fictional)",
+      "patient": {
+        "name": "Devi Prasad Namuna",
+        "age": "71 y",
+        "sex": "M",
+        "address": null
+      },
+      "date": {
+        "as_written": "2083/08/14",
+        "calendar": "BS"
+      },
+      "diagnosis_as_written": "HTN, CCF, on diuretics",
+      "medicines": [
+        {
+          "as_written": "Tab Ramipril 5 mg",
+          "generic": "ramipril",
+          "strength": "5 mg",
+          "form": "tablet",
+          "dose": "1-0-0",
+          "dose_as_written": "1-0-0",
+          "timing": null,
+          "duration": "1 month",
+          "duration_as_written": "1 month",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Metoprolol 25 mg",
+          "generic": "metoprolol",
+          "strength": "25 mg",
+          "form": "tablet",
+          "dose": "1-0-1",
+          "dose_as_written": "1-0-1",
+          "timing": null,
+          "duration": "1 month",
+          "duration_as_written": "1 month",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Furosemide 40 mg",
+          "generic": "furosemide",
+          "strength": "40 mg",
+          "form": "tablet",
+          "dose": "1-0-0",
+          "dose_as_written": "1-0-0",
+          "timing": null,
+          "duration": "7 days",
+          "duration_as_written": "7 days",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Spironolactone 25 mg",
+          "generic": "spironolactone",
+          "strength": "25 mg",
+          "form": "tablet",
+          "dose": "1-0-0",
+          "dose_as_written": "1-0-0",
+          "timing": null,
+          "duration": "7 days",
+          "duration_as_written": "7 days",
+          "dda_expected": "registered generic"
+        }
+      ],
+      "advice": [
+        "Wt daily, low salt",
+        "Review 1 week"
+      ],
+      "traps": [
+        "crumpled photo: creases cut through strokes; the clean scan is the easy version of the same page"
+      ]
+    },
+    {
+      "id": "P17",
+      "file_clean": "clean/P17-pencil-stamp-invented-brands.png",
+      "file_photo": "photo/P17-pencil-stamp-invented-brands.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "prescription",
+      "style": "soft pencil-like hand (Nanum Pen Script) on a small pad; a round rubber stamp over the end of line 3 and all of line 4; two invented brands",
+      "facility": "Example Nursing Home, Birgunj",
+      "clinician": "Dr. L. Namuna",
+      "clinician_reg": null,
+      "patient": {
+        "name": "Anita Udaharan",
+        "age": "31 y",
+        "sex": "F",
+        "address": null
+      },
+      "date": {
+        "as_written": "14/11/2026",
+        "calendar": "AD"
+      },
+      "diagnosis_as_written": null,
+      "medicines": [
+        {
+          "as_written": "Tab Namucef 500",
+          "generic": null,
+          "strength": "500 (unit not written)",
+          "form": "tablet",
+          "dose": "1-0-1",
+          "dose_as_written": "1-0-1",
+          "timing": null,
+          "duration": "5 days",
+          "duration_as_written": "5 d",
+          "dda_expected": "NOT FOUND — invented brand; must be flagged for a person to confirm, never guessed"
+        },
+        {
+          "as_written": "Cap Udarol-SR 150",
+          "generic": null,
+          "strength": "150 (unit not written)",
+          "form": "capsule",
+          "dose": "0-0-1",
+          "dose_as_written": "0-0-1",
+          "timing": null,
+          "duration": "10 days",
+          "duration_as_written": "10 d",
+          "dda_expected": "NOT FOUND — invented brand; must be flagged for a person to confirm, never guessed"
+        },
+        {
+          "as_written": "Tab Pantoprazole 40 mg",
+          "generic": "pantoprazole",
+          "strength": "40 mg",
+          "form": "tablet",
+          "dose": "1-0-0",
+          "dose_as_written": "1-0-0",
+          "timing": null,
+          "duration": "10 days",
+          "duration_as_written": "10 d",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Paracetamol 500 mg",
+          "generic": "paracetamol",
+          "strength": "500 mg",
+          "form": "tablet",
+          "dose": "SOS (when needed)",
+          "dose_as_written": "SOS",
+          "timing": null,
+          "duration": null,
+          "duration_as_written": null,
+          "dda_expected": "registered generic"
+        }
+      ],
+      "advice": [
+        "Rpt CBC after course"
+      ],
+      "traps": [
+        "Namucef and Udarol-SR are invented: shown as written and flagged, never mapped to a real drug",
+        "stamp ink over the duration of line 3 and the whole of line 4",
+        "duration written as '5 d' / '10 d'",
+        "no dx line"
+      ]
+    },
+    {
+      "id": "L11",
+      "file_clean": "clean/L11-handfilled-cbc-lookalike-digits.png",
+      "file_photo": "photo/L11-handfilled-cbc-lookalike-digits.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "lab_report",
+      "style": "printed form (test, unit, range), results and flags written by hand in a fast slanted hand (Caveat); look-alike digits in five values",
+      "facility": "Udaharan Pathology Laboratory (fictional)",
+      "patient": {
+        "name": "Sita Kumari Namuna",
+        "age": "34 y",
+        "sex": "F",
+        "address": null
+      },
+      "date": {
+        "as_written": "2083/08/09",
+        "calendar": "BS"
+      },
+      "ordered_by": null,
+      "results": [
+        {
+          "test": "Haemoglobin",
+          "value": "11.8",
+          "unit": "g/dL",
+          "reference_range": "12.0 – 15.5",
+          "flag_printed": "L"
+        },
+        {
+          "test": "Total WBC count",
+          "value": "7,600",
+          "unit": "/µL",
+          "reference_range": "4,000 – 11,000",
+          "flag_printed": null
+        },
+        {
+          "test": "Neutrophils",
+          "value": "62",
+          "unit": "%",
+          "reference_range": "40 – 75",
+          "flag_printed": null
+        },
+        {
+          "test": "Lymphocytes",
+          "value": "31",
+          "unit": "%",
+          "reference_range": "20 – 45",
+          "flag_printed": null
+        },
+        {
+          "test": "Platelet count",
+          "value": "2,56,000",
+          "unit": "/µL",
+          "reference_range": "1,50,000 – 4,50,000",
+          "flag_printed": null
+        },
+        {
+          "test": "RBC count",
+          "value": "4.2",
+          "unit": "million/µL",
+          "reference_range": "3.8 – 5.2",
+          "flag_printed": null
+        },
+        {
+          "test": "MCV",
+          "value": "86",
+          "unit": "fL",
+          "reference_range": "80 – 100",
+          "flag_printed": null
+        },
+        {
+          "test": "ESR (1st hour)",
+          "value": "28",
+          "unit": "mm",
+          "reference_range": "0 – 20",
+          "flag_printed": "H"
+        }
+      ],
+      "comment": null,
+      "critical_values": [],
+      "traps": [
+        "flags L and H are hand-written next to the value: copy them as written",
+        "9/3 in the date, 8/6 in haemoglobin, 6/5 in WBC, 1/7 in lymphocytes, 5/6 in platelets, 8/3 in ESR",
+        "lakh grouping 2,56,000",
+        "ranges are printed, so they are copied, never supplied"
+      ]
+    },
+    {
+      "id": "L12",
+      "file_clean": "clean/L12-handwritten-slip-crumpled.png",
+      "file_photo": "photo/L12-handwritten-slip-crumpled.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "lab_report",
+      "style": "slip written entirely by hand (Reenie Beanie), units and some ranges written by the technician; the PHOTO is crumpled",
+      "facility": "Namuna Lab & Diagnostic",
+      "patient": {
+        "name": "Gita Namuna",
+        "age": "41 y",
+        "sex": "F",
+        "address": null
+      },
+      "date": {
+        "as_written": "2083/08/15",
+        "calendar": "BS"
+      },
+      "ordered_by": null,
+      "results": [
+        {
+          "test": "FBS",
+          "value": "112",
+          "unit": "mg/dl",
+          "reference_range": "70-110",
+          "flag_printed": null
+        },
+        {
+          "test": "PPBS",
+          "value": "164",
+          "unit": "mg/dl",
+          "reference_range": "80-140",
+          "flag_printed": null
+        },
+        {
+          "test": "Urea",
+          "value": "31",
+          "unit": "mg/dl",
+          "reference_range": "15-45",
+          "flag_printed": null
+        },
+        {
+          "test": "Creatinine",
+          "value": "0.9",
+          "unit": "mg/dl",
+          "reference_range": "0.6-1.2",
+          "flag_printed": null
+        },
+        {
+          "test": "Sodium",
+          "value": "138",
+          "unit": "mmol/L",
+          "reference_range": null,
+          "flag_printed": null
+        },
+        {
+          "test": "Potassium",
+          "value": "4.1",
+          "unit": "mmol/L",
+          "reference_range": null,
+          "flag_printed": null
+        }
+      ],
+      "comment": null,
+      "critical_values": [],
+      "traps": [
+        "units written as mg/dl (lower case)",
+        "ranges written for four tests and absent for sodium and potassium: none may be added",
+        "no flags: none may be added",
+        "crumpled photo"
+      ]
+    },
+    {
+      "id": "L13",
+      "file_clean": "clean/L13-lipid-overwritten-smudged.png",
+      "file_photo": "photo/L13-lipid-overwritten-smudged.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "lab_report",
+      "style": "printed form, values hand-written (Shadows Into Light Two); total cholesterol corrected by over-writing; the VLDL value smudged",
+      "facility": "Example Diagnostic Centre (fictional)",
+      "patient": {
+        "name": "Hari Prasad Namuna",
+        "age": "62 y",
+        "sex": "M",
+        "address": null
+      },
+      "date": {
+        "as_written": "2083/08/16",
+        "calendar": "BS"
+      },
+      "ordered_by": null,
+      "results": [
+        {
+          "test": "Total cholesterol",
+          "value": "196",
+          "unit": "mg/dL",
+          "reference_range": "< 200",
+          "flag_printed": null
+        },
+        {
+          "test": "Triglycerides",
+          "value": "180",
+          "unit": "mg/dL",
+          "reference_range": "< 150",
+          "flag_printed": "H"
+        },
+        {
+          "test": "HDL cholesterol",
+          "value": "42",
+          "unit": "mg/dL",
+          "reference_range": "> 40",
+          "flag_printed": null
+        },
+        {
+          "test": "LDL cholesterol",
+          "value": "118",
+          "unit": "mg/dL",
+          "reference_range": "< 100",
+          "flag_printed": "H"
+        },
+        {
+          "test": "VLDL cholesterol",
+          "value": "",
+          "unit": "mg/dL",
+          "reference_range": "< 30",
+          "flag_printed": "H"
+        },
+        {
+          "test": "Non-HDL cholesterol",
+          "value": "154",
+          "unit": "mg/dL",
+          "reference_range": "< 130",
+          "flag_printed": "H"
+        }
+      ],
+      "comment": "Fasting 12 hr",
+      "critical_values": [],
+      "illegible": [
+        {
+          "item": "VLDL cholesterol",
+          "field": "value"
+        }
+      ],
+      "traps": [
+        "total cholesterol: the final (darker) 6 over an 8 is the value: 196",
+        "VLDL value smudged beyond reading: the key leaves it empty; unit, range and the printed H stay readable",
+        "flags H are hand-written next to the values"
+      ],
+      "links_to": "P03/L03 of test set v1 (same fictional patient name)"
+    }
+  ]
+}

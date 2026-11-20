@@ -10,7 +10,8 @@ Reused from the Chautari reader (github.com/zentrust-inc/chautari, `reader/`, co
 | `engines.mjs` | `readClaude`, `readGemini` (keys from `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`; never commit a key). `read.mjs vision` reuses Chautari's Google Cloud Vision engine (`CHAUTARI_READER_DIR`, `VISION_API_KEY` from Key Vault) as the confirming second reader |
 | `read.mjs` | Reads a folder of images with one engine into a readings cache; stops at a budget (default USD 1.00) |
 | `medicine-check.mjs` | Checks a copied medicine name against `dda/nlem-2021.json` (DDA essential-medicines list 2021): exact match only, never a closest guess; not found means shown as written and flagged |
-| `score.mjs` | Compares one or more readings caches with a test set's answer key; with two or more, applies the agreement rule and counts wrong ticks |
+| `normalise.mjs` | How copies are compared: digits, dashes, spacing; dose = the characters as written; duration = number plus unit (`5 d` = `5 days`), number must match |
+| `score.mjs` | Compares one or more readings caches with a test set's answer key; with two or more, applies the agreement rule and counts wrong ticks, by kind of field (date, result value/unit/range/flag, medicine name, **dose**, **duration**) and by document. Dose and duration are scored when the key has `dose_as_written` / `duration_as_written` (test set v2) |
 
 ```bash
 node reader/read.mjs claude samples/test-set-v1/clean samples/test-set-v1/photo --out samples/test-set-v1/readings/claude-opus-5-5.json
