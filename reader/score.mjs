@@ -14,7 +14,13 @@ const out = args.includes('--out') ? args[args.indexOf('--out') + 1] : null;
 const pos = args.filter((a, i) => !a.startsWith('--') && args[i - 1] !== '--out');
 const [setDir, ...readingFiles] = pos;
 const key = JSON.parse(await readFile(`${setDir}/answer_key.json`, 'utf8'));
-const readers = await Promise.all(readingFiles.map(async (f) => ({ name: f.split('/').pop().replace('.json', ''), data: JSON.parse(await readFile(f, 'utf8')) })));
+const loaded = await Promise.all(readingFiles.map(async (f) => ({ name: f.split('/').pop().replace('.json', ''), data: JSON.parse(await readFile(f, 'utf8')) })));
+// A reader that returns plain text lines (Google Vision OCR) cannot fill fields itself; it confirms or
+// disputes the fields a JSON reader filled: a field counts as read the same only when the same characters
+// stand on the matching line of its text. Its mistakes are not Claude's, which is the point.
+const isLines = (r) => Object.values(r.data).some((x) => Array.isArray(x?.lines));
+const readers = loaded.filter((r) => !isLines(r));
+const confirmers = loaded.filter(isLines);
 
 // ---- normalising copies of the paper (never their meaning) ----
 const DEV = '०१२३४५६७८९';
@@ -54,23 +60,45 @@ function field(doc, variant, label, truth, values) {
   rows.push({ doc, variant, label, truth: truth ?? '', values, status: !ticked ? 'check' : right ? 'ok' : 'WRONG' });
 }
 
+// What a text-only confirmer says about a value the JSON reader filled: the same value when the same
+// characters stand on the matching line, otherwise "not seen" (a disagreement). Absent fields: a flag
+// token on the row disputes an empty flag; an empty unit or range is not disputed.
+const NOT_SEEN = '«not seen»';
+const FLAGS = new Set(['h', 'l', 'hh', 'll', '*']);
+function confirmValue(row, v, kind) {
+  const blank = v == null || ['', '-'].includes(norm(v));
+  if (kind === 'flag') {
+    const toks = norm(row).split(/[\s|]+/);
+    if (blank) { const f = toks.find((t) => FLAGS.has(t)); return f ? f.toUpperCase() : ''; }
+    return toks.includes(norm(v)) ? v : NOT_SEEN;
+  }
+  if (blank) return v ?? '';
+  return loose(row).includes(loose(v)) ? v : NOT_SEEN;
+}
+const rowOf = (lines, test) => { const t = loose(test); return t ? lines.filter((l) => loose(l).includes(t)).join('  ') : ''; };
+
 for (const d of key.documents) {
   for (const variant of ['clean', 'photo']) {
     const file = d[variant === 'clean' ? 'file_clean' : 'file_photo'];
     const reads = readers.map((r) => r.data[file] ?? {});
-    field(d.id, variant, 'date', d.date.as_written, reads.map((x) => x.date_as_printed ?? undefined));
+    const confs = confirmers.map((c) => c.data[file]?.lines ?? []);
+    const whole = (lines) => lines.join('  ');
+    const date = reads.map((x) => x.date_as_printed ?? undefined);
+    field(d.id, variant, 'date', d.date.as_written, [...date, ...confs.map((ls) => confirmValue(whole(ls), date[0], 'text'))]);
     for (const r of d.results ?? []) {
       // a value and unit written together ("2-4 /HPF") may be copied as one field or split in two: both are exact copies
       const hits = reads.map((x) => findResult(x.results, r.test)).map((h) => h && !r.unit && h.unit && same(`${h.value} ${h.unit}`, r.value) ? { ...h, value: r.value, unit: '' } : h);
-      field(d.id, variant, `${r.test}: value`, r.value, hits.map((h) => h?.value));
-      field(d.id, variant, `${r.test}: unit`, r.unit, hits.map((h) => h ? (h.unit ?? '') : undefined));
-      field(d.id, variant, `${r.test}: range`, r.reference_range, hits.map((h) => h ? (h.range ?? '') : undefined));
-      field(d.id, variant, `${r.test}: flag`, r.flag_printed, hits.map((h) => h ? (h.flag ?? '') : undefined));
+      const rows2 = confs.map((ls) => rowOf(ls, hits[0]?.test));
+      const c = (k, kind = 'text') => rows2.map((row) => hits[0] ? confirmValue(row, hits[0][k], kind) : undefined);
+      field(d.id, variant, `${r.test}: value`, r.value, [...hits.map((h) => h?.value), ...c('value')]);
+      field(d.id, variant, `${r.test}: unit`, r.unit, [...hits.map((h) => h ? (h.unit ?? '') : undefined), ...c('unit')]);
+      field(d.id, variant, `${r.test}: range`, r.reference_range, [...hits.map((h) => h ? (h.range ?? '') : undefined), ...c('range')]);
+      field(d.id, variant, `${r.test}: flag`, r.flag_printed, [...hits.map((h) => h ? (h.flag ?? '') : undefined), ...c('flag', 'flag')]);
       hits.forEach((h) => { if (h?.flag && !r.flag_printed) tally.addedFlags++; if (h?.range && !r.reference_range) tally.addedRanges++; });
     }
     for (const m of d.medicines ?? []) {
       const hits = reads.map((x) => findMed(x.medicines, m.as_written));
-      field(d.id, variant, `medicine: ${m.as_written}`, m.as_written, hits.map((h) => h?.as_written));
+      field(d.id, variant, `medicine: ${m.as_written}`, m.as_written, [...hits.map((h) => h?.as_written), ...confs.map((ls) => hits[0] ? confirmValue(whole(ls), hits[0].as_written, 'text') : undefined)]);
     }
   }
 }
@@ -112,7 +140,8 @@ let wrongMaps = 0;
 for (const d of key.documents) for (const m of d.medicines ?? []) for (const variant of ['clean', 'photo']) {
   const file = d[variant === 'clean' ? 'file_clean' : 'file_photo'];
   const copies = allReads(file).map((x) => findMed(x.medicines, m.as_written)?.as_written ?? null);
-  const agreed = copies.every((c) => c && loose(c) === loose(copies[0]));
+  const seen = confirmers.every((cf) => copies[0] && loose((cf.data[file]?.lines ?? []).join('  ')).includes(loose(copies[0])));
+  const agreed = copies.every((c) => c && loose(c) === loose(copies[0])) && seen;
   const res = agreed ? checkMedicine(copies[0], ESSENTIAL) : { status: 'readers disagree', entry: null, as_written: copies.join(' / ') };
   // a wrong map = matched to a listed medicine that is not what the doctor wrote
   const wrong = res.entry && m.generic && !res.entry.includes(m.generic.split(' ')[0]);
@@ -124,7 +153,8 @@ const medSection = ['## Medicine names against DDA essential-medicines list 2021
   '| Doc | Version | As written | Check | Truth (answer key) |', '|---|---|---|---|---|', ...medRows, ''];
 
 const pct = (a, b) => b ? `${Math.round((100 * a) / b)}%` : '–';
-const mode = readers.length > 1 ? `agreement of ${readers.map((r) => r.name).join(' + ')}` : `one reader only (${readers[0].name}); agreement needs a second reader`;
+const all = [...readers, ...confirmers].map((r) => r.name);
+const mode = all.length > 1 ? `agreement of ${all.join(' + ')} (a field is ticked only when every reader has the same characters)` : `one reader only (${all[0]}); agreement needs a second reader`;
 const lines = [
   `# Reader score on ${setDir.split('/').pop()} (fictional SAMPLE documents)`, '',
   `Mode: ${mode}. ${key.documents.length} documents × clean scan and phone photo. Planning stage: a score on invented documents, not a result on real records.`, '',
