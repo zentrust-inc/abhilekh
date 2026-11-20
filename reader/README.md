@@ -9,6 +9,7 @@ Reused from the Chautari reader (github.com/zentrust-inc/chautari, `reader/`, co
 | `prompt.mjs` | The single instruction every reader gets |
 | `engines.mjs` | `readClaude`, `readGemini` (keys from `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`; never commit a key) |
 | `read.mjs` | Reads a folder of images with one engine into a readings cache; stops at a budget (default USD 1.00) |
+| `medicine-check.mjs` | Checks a copied medicine name against `dda/nlem-2021.json` (DDA essential-medicines list 2021): exact match only, never a closest guess; not found means shown as written and flagged |
 | `score.mjs` | Compares one or more readings caches with a test set's answer key; with two or more, applies the agreement rule and counts wrong ticks |
 
 ```bash

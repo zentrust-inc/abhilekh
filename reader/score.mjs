@@ -5,6 +5,9 @@
 // value; a ticked field that differs from the answer key is a WRONG TICK (the number that must be 0).
 // Nothing here interprets a result: it only compares copies of the paper.
 import { readFile, writeFile } from 'node:fs/promises';
+import { loadList, checkMedicine } from './medicine-check.mjs';
+const LIST = new URL('./dda/nlem-2021.json', import.meta.url).pathname;
+const ESSENTIAL = loadList(LIST);
 
 const args = process.argv.slice(2);
 const out = args.includes('--out') ? args[args.indexOf('--out') + 1] : null;
@@ -103,6 +106,23 @@ for (const [docId, brand] of [['P03', 'glucozen'], ['P05', 'neurozen']]) {
   }
 }
 
+// ---- medicine names against DDA's essential-medicines list (exact match only) ----
+const medRows = [];
+let wrongMaps = 0;
+for (const d of key.documents) for (const m of d.medicines ?? []) for (const variant of ['clean', 'photo']) {
+  const file = d[variant === 'clean' ? 'file_clean' : 'file_photo'];
+  const copies = allReads(file).map((x) => findMed(x.medicines, m.as_written)?.as_written ?? null);
+  const agreed = copies.every((c) => c && loose(c) === loose(copies[0]));
+  const res = agreed ? checkMedicine(copies[0], ESSENTIAL) : { status: 'readers disagree', entry: null, as_written: copies.join(' / ') };
+  // a wrong map = matched to a listed medicine that is not what the doctor wrote
+  const wrong = res.entry && m.generic && !res.entry.includes(m.generic.split(' ')[0]);
+  if (wrong) wrongMaps++;
+  medRows.push(`| ${d.id} | ${variant} | ${res.as_written} | ${res.status === 'on_list' ? `on list: ${res.entry}` : res.status === 'not_found' ? 'not found: shown as written, flagged' : res.status} | ${m.generic ?? '(invented brand)'} |${wrong ? ' **WRONG MATCH**' : ''}`);
+}
+const medSection = ['## Medicine names against DDA essential-medicines list 2021', '',
+  `Exact matches only. Not found means: shown as written and flagged for the patient; never replaced. Wrong matches: **${wrongMaps}**. The essential list is not the full register of medicines DDA has registered, so registered medicines missing from it (glimepiride, cetirizine, pantoprazole here) are flagged too.`, '',
+  '| Doc | Version | As written | Check | Truth (answer key) |', '|---|---|---|---|---|', ...medRows, ''];
+
 const pct = (a, b) => b ? `${Math.round((100 * a) / b)}%` : '–';
 const mode = readers.length > 1 ? `agreement of ${readers.map((r) => r.name).join(' + ')}` : `one reader only (${readers[0].name}); agreement needs a second reader`;
 const lines = [
@@ -111,6 +131,7 @@ const lines = [
   '| | Fields | Ticked | Right ticks | **Wrong ticks** | Correctly left empty | To check | Not found | Flags added | Ranges added |', '|---|---|---|---|---|---|---|---|---|---|',
   `| Total | ${tally.fields} | ${tally.ticked} (${pct(tally.ticked, tally.fields)}) | ${tally.rightTicks} | **${tally.wrongTicks}** | ${tally.rightEmpty} | ${tally.flagged} | ${tally.missing} | ${tally.addedFlags} | ${tally.addedRanges} |`, '',
   '## Gate checks', '', ...gate.map((g) => `- ${g}`), '',
+  ...medSection,
   '## Every field that was not a right tick', '', '| Doc | Version | Field | Answer key | Reader(s) | Status |', '|---|---|---|---|---|---|',
   ...rows.filter((r) => r.status !== 'ok').map((r) => `| ${r.doc} | ${r.variant} | ${r.label} | ${r.truth} | ${r.values.map((v) => v ?? '—').join(' / ')} | ${r.status} |`),
 ];
