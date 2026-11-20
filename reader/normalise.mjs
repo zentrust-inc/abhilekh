@@ -23,3 +23,30 @@ export const durOf = (s) => {
 };
 export const sameDur = (a, b) => durOf(a) === durOf(b);
 
+// Dose confirmation by a text-only reader (Google Vision), for doses written as digits in slots ("1-0-1", "1 + 0 + 1").
+// OCR often loses or merges the dashes ("1-01", "1-00", "100", "10-0") but keeps the digits. So a numeric dose is
+// confirmed when a standalone group of digits on the medicine's own line has the same digits in the same order as the
+// dose being confirmed; dashes, spaces and "+" between digits do not matter. Nothing else changes:
+//  - the digits must be the same, in the same order ("0-04" does not confirm "0-0-1"; "2-0-2" does not confirm "1-0-1");
+//  - a group stuck to letters ("100d", "x3days", "650m") or followed by a strength or duration unit ("500 mg", "5 d")
+//    is a strength or a duration, not a dose, and a group after "x" / "for" is a duration;
+//  - a dose that is not digits in slots ("SOS", "TDS", "0.5-0-0.5") is not handled here and keeps the strict rule.
+export const doseSlots = (s) => {
+  const t = norm(String(s ?? '').replace(/\(.*?\)/g, '')).replace(/\s+/g, '');
+  return /^\d+(?:[-+]\d+)+$/.test(t) ? t.replace(/\D/g, '') : null;
+};
+const UNIT_AFTER = /^\s+(?:mg|mcg|µg|ug|g|ml|iu|%|d|days?|wks?|weeks?|mos?|months?|दिन)(?![\p{L}\p{M}])/iu;
+export const confirmsDose = (row, dose) => {
+  const want = doseSlots(dose);
+  if (want === null) return false;
+  const text = ascii(String(row ?? '')).replace(/[–—−]/g, '-');
+  for (const m of text.matchAll(/\d[\d\s+-]*/g)) {
+    const group = m[0].replace(/[\s+-]+$/, '');
+    const before = text.slice(0, m.index), after = text.slice(m.index + group.length);
+    if (/[\p{L}\p{M}\d.]$/u.test(before)) continue;           // stuck to a word or a decimal: not a dose
+    if (/(?:^|\s)(?:x|×|for)\s*$/i.test(before)) continue;   // after "x" / "for": a duration
+    if (/^[\p{L}\p{M}%µ]/u.test(after) || UNIT_AFTER.test(after)) continue; // a strength or a duration
+    if (group.replace(/\D/g, '') === want) return true;
+  }
+  return false;
+};

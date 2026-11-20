@@ -4,7 +4,7 @@ Mode: agreement of claude-opus-5-5 + google-vision (a field is ticked only when 
 
 | | Fields | Ticked | Right ticks | **Wrong ticks** | Correctly left empty | To check | Not found | Flags added | Ranges added |
 |---|---|---|---|---|---|---|---|---|---|
-| Total | 336 | 172 (51%) | 172 | **0** | 48 | 111 | 5 | 0 | 0 |
+| Total | 336 | 179 (53%) | 179 | **0** | 48 | 104 | 5 | 0 | 0 |
 
 ## By kind of field
 
@@ -12,7 +12,7 @@ Mode: agreement of claude-opus-5-5 + google-vision (a field is ticked only when 
 |---|---|---|---|---|---|
 | date | 20 | 15 | **0** | 0 | 5 |
 | medicine name | 52 | 32 | **0** | 0 | 20 |
-| dose | 52 | 18 | **0** | 0 | 34 |
+| dose | 52 | 25 | **0** | 0 | 27 |
 | duration | 52 | 23 | **0** | 14 | 15 |
 | result value | 40 | 16 | **0** | 2 | 22 |
 | result unit | 40 | 34 | **0** | 0 | 6 |
@@ -25,16 +25,16 @@ Mode: agreement of claude-opus-5-5 + google-vision (a field is ticked only when 
 |---|---|---|---|---|---|---|
 | P11 | clean | 13 | 2 | **0** | 2 | 9 |
 | P11 | photo | 13 | 4 | **0** | 2 | 7 |
-| P12 | clean | 13 | 8 | **0** | 0 | 5 |
-| P12 | photo | 13 | 8 | **0** | 0 | 5 |
-| P13 | clean | 13 | 7 | **0** | 1 | 5 |
-| P13 | photo | 13 | 7 | **0** | 1 | 5 |
+| P12 | clean | 13 | 10 | **0** | 0 | 3 |
+| P12 | photo | 13 | 10 | **0** | 0 | 3 |
+| P13 | clean | 13 | 8 | **0** | 1 | 4 |
+| P13 | photo | 13 | 8 | **0** | 1 | 4 |
 | P14 | clean | 10 | 3 | **0** | 1 | 6 |
 | P14 | photo | 10 | 5 | **0** | 1 | 4 |
 | P15 | clean | 10 | 4 | **0** | 2 | 4 |
 | P15 | photo | 10 | 4 | **0** | 2 | 4 |
 | P16 | clean | 13 | 11 | **0** | 0 | 2 |
-| P16 | photo | 13 | 12 | **0** | 0 | 1 |
+| P16 | photo | 13 | 13 | **0** | 0 | 0 |
 | P17 | clean | 13 | 4 | **0** | 1 | 8 |
 | P17 | photo | 13 | 4 | **0** | 1 | 8 |
 | L11 | clean | 33 | 19 | **0** | 6 | 8 |
@@ -134,22 +134,16 @@ Exact matches only. Not found means: shown as written and flagged for the patien
 | P11 | photo | duration: Tab Domperidone 10 mg | 5 days | x 5 days / «not seen» | check |
 | P11 | photo | medicine: Tab Paracetamol 500 mg | Tab Paracetamol 500 mg | Tab Paracetamol 500 mg / «not seen» | check |
 | P11 | photo | dose: Tab Paracetamol 500 mg | SOS | SOS / «not seen» | check |
-| P12 | clean | dose: Tab Metformin 500 mg | 1-0-1 | 1-0-1 / «not seen» | check |
-| P12 | clean | dose: Tab Enalapril 5 mg | 1-0-0 | 1-0-0 / «not seen» | check |
 | P12 | clean | medicine: Tab Aspirin 75 mg | Tab Aspirin 75 mg | Tab Aspirin 75 mg / «not seen» | check |
 | P12 | clean | dose: Tab Aspirin 75 mg | 0-1-0 | 0-1-0 / «not seen» | check |
 | P12 | clean | duration: Tab Aspirin 75 mg | 1 month | 1 month / «not seen» | check |
-| P12 | photo | dose: Tab Metformin 500 mg | 1-0-1 | 1-0-1 / «not seen» | check |
 | P12 | photo | medicine: Tab Enalapril 5 mg | Tab Enalapril 5 mg | Tab Enalapril 5 mg / «not seen» | check |
-| P12 | photo | dose: Tab Enalapril 5 mg | 1-0-0 | 1-0-0 / «not seen» | check |
 | P12 | photo | duration: Tab Atorvastatin 20 mg | 1 month | x 1 month / «not seen» | check |
 | P12 | photo | duration: Tab Aspirin 75 mg | 1 month | x 1 month / «not seen» | check |
-| P13 | clean | dose: Tab Azithromycin 500 mg | 1-0-0 | 1-0-0 / «not seen» | check |
 | P13 | clean | dose: Tab Prednisolone 5 mg | 2-1-0 | 2-1-0 / «not seen» | check |
 | P13 | clean | dose: Tab Cetirizine 10 mg | 0-0-1 | 0-0-1 / «not seen» | check |
 | P13 | clean | medicine: Tab Paracetamol 650 mg | Tab Paracetamol 650 mg | Tab Paracetamol 650 mg / «not seen» | check |
 | P13 | clean | dose: Tab Paracetamol 650 mg | SOS | SOS / «not seen» | check |
-| P13 | photo | dose: Tab Azithromycin 500 mg | 1-0-0 | 1-0-0 / «not seen» | check |
 | P13 | photo | dose: Tab Prednisolone 5 mg | 2-1-0 | 2-1-0 / «not seen» | check |
 | P13 | photo | dose: Tab Cetirizine 10 mg | 0-0-1 | 0-0-1 / «not seen» | check |
 | P13 | photo | medicine: Tab Paracetamol 650 mg | Tab Paracetamol 650 mg | Tab Paracetamol 650 mg / «not seen» | check |
@@ -174,7 +168,6 @@ Exact matches only. Not found means: shown as written and flagged for the patien
 | P15 | photo | medicine: Tab Paracetamol 500 mg | Tab Paracetamol 500 mg | Tab Paracetamol 500 mg / «not seen» | check |
 | P16 | clean | duration: Tab Furosemide 40 mg | 7 days | x 7 days / «not seen» | check |
 | P16 | clean | duration: Tab Spironolactone 25 mg | 7 days | x 7 days / «not seen» | check |
-| P16 | photo | dose: Tab Ramipril 5 mg | 1-0-0 | 1-0-0 / «not seen» | check |
 | P17 | clean | date | 14/11/2026 | 4/11/2026 / «not seen» | check |
 | P17 | clean | dose: Tab Namucef 500 | 1-0-1 | 1-0-1 / «not seen» | check |
 | P17 | clean | dose: Cap Udarol-SR 150 | 0-0-1 | 0-0-1 / «not seen» | check |
