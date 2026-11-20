@@ -6,6 +6,7 @@
 // Nothing here interprets a result: it only compares copies of the paper.
 import { readFile, writeFile } from 'node:fs/promises';
 import { loadList, checkMedicine } from './medicine-check.mjs';
+import { norm, loose, num, same, sameDose, sameDur } from './normalise.mjs';
 const LIST = new URL('./dda/nlem-2021.json', import.meta.url).pathname;
 const ESSENTIAL = loadList(LIST);
 
@@ -22,15 +23,7 @@ const isLines = (r) => Object.values(r.data).some((x) => Array.isArray(x?.lines)
 const readers = loaded.filter((r) => !isLines(r));
 const confirmers = loaded.filter(isLines);
 
-// ---- normalising copies of the paper (never their meaning) ----
-const DEV = '०१२३४५६७८९';
-const ascii = (s) => s.replace(/[०-९]/g, (c) => String(DEV.indexOf(c)));
-const norm = (s) => s == null ? '' : ascii(String(s)).normalize('NFKC').toLowerCase()
-  .replace(/[–—−]/g, '-').replace(/μ/g, 'µ').replace(/\s+/g, ' ').replace(/\s*-\s*/g, '-').replace(/\s*([<>])\s*/g, '$1').replace(/^—$/, '').trim();
-const loose = (s) => norm(s).replace(/[^\p{L}\p{N}%µ<>.\-]/gu, '');
-const num = (s) => { const t = norm(s).replace(/,/g, ''); return /^-?\d+(\.\d+)?$/.test(t) ? +t : null; };
-const same = (a, b) => { const na = num(a), nb = num(b); return na !== null && nb !== null ? na === nb : loose(a) === loose(b); };
-
+// ---- normalising copies of the paper (never their meaning): see normalise.mjs ----
 function findResult(list, test) {
   const t = loose(test);
   return (list ?? []).find((r) => loose(r.test) === t) ?? (list ?? []).find((r) => { const x = loose(r.test); return x && (x.includes(t) || t.includes(x)); });
@@ -44,19 +37,24 @@ function findMed(list, asWritten) {
 // ---- per field: what each reader said, whether they agree, whether that matches the key ----
 const rows = [];
 const tally = { fields: 0, rightEmpty: 0, ticked: 0, rightTicks: 0, wrongTicks: 0, flagged: 0, missing: 0, addedFlags: 0, addedRanges: 0 };
-function field(doc, variant, label, truth, values) {
+// the same counts per kind of field (date, result value, unit, range, flag, medicine name, dose, duration)
+const kinds = new Map();
+const kindOf = (label) => label === 'date' ? 'date' : /^(medicine|dose|duration): /.test(label) ? label.split(': ')[0].replace('medicine', 'medicine name') : `result ${label.split(': ').pop()}`;
+function field(doc, variant, label, truth, values, cmp = same) {
   const blank = (v) => ['', '-'].includes(norm(v));
   const present = values.filter((v) => v !== undefined);
-  const agree = present.length === values.length && present.every((v) => blank(v) ? blank(values[0]) : same(v, values[0] ?? ''));
+  const agree = present.length === values.length && present.every((v) => blank(v) ? blank(values[0]) : cmp(v, values[0] ?? ''));
   tally.fields++;
+  const k = kinds.get(kindOf(label)) ?? kinds.set(kindOf(label), { fields: 0, right: 0, wrong: 0, empty: 0, check: 0 }).get(kindOf(label));
+  k.fields++;
   if (agree && blank(values[0])) { // every reader left it empty
-    if (blank(truth)) { rows.push({ doc, variant, label, truth: '', values, status: 'ok' }); tally.rightEmpty++; return; }
-    tally.missing++; rows.push({ doc, variant, label, truth, values, status: 'check' }); return;
+    if (blank(truth)) { rows.push({ doc, variant, label, truth: '', values, status: 'ok' }); tally.rightEmpty++; k.empty++; return; }
+    tally.missing++; k.check++; rows.push({ doc, variant, label, truth, values, status: 'check' }); return;
   }
   const ticked = agree && present.length > 0;
-  const right = ticked && same(values[0] ?? '', truth ?? '');
-  if (ticked) { tally.ticked++; right ? tally.rightTicks++ : tally.wrongTicks++; }
-  else if (present.length === 0) tally.missing++; else tally.flagged++;
+  const right = ticked && cmp(values[0] ?? '', truth ?? '');
+  if (ticked) { tally.ticked++; right ? (tally.rightTicks++, k.right++) : (tally.wrongTicks++, k.wrong++); }
+  else { (present.length === 0 ? tally.missing++ : tally.flagged++); k.check++; }
   rows.push({ doc, variant, label, truth: truth ?? '', values, status: !ticked ? 'check' : right ? 'ok' : 'WRONG' });
 }
 
@@ -76,6 +74,10 @@ function confirmValue(row, v, kind) {
   return loose(row).includes(loose(v)) ? v : NOT_SEEN;
 }
 const rowOf = (lines, test) => { const t = loose(test); return t ? lines.filter((l) => loose(l).includes(t)).join('  ') : ''; };
+// the printed/written line of one medicine: only the line(s) that carry its name, so a dose or duration is confirmed
+// only when it stands on the medicine's own line (never on a neighbouring medicine's line)
+const nameToken = (asWritten) => { const t = loose(asWritten ?? '').replace(/^(tab|cap|syp|t)\.?/, ''); return t.match(/[a-z\-]{4,}/)?.[0] ?? t; };
+const medRow = (lines, asWritten) => rowOf(lines, nameToken(asWritten));
 
 for (const d of key.documents) {
   for (const variant of ['clean', 'photo']) {
@@ -99,6 +101,13 @@ for (const d of key.documents) {
     for (const m of d.medicines ?? []) {
       const hits = reads.map((x) => findMed(x.medicines, m.as_written));
       field(d.id, variant, `medicine: ${m.as_written}`, m.as_written, [...hits.map((h) => h?.as_written), ...confs.map((ls) => hits[0] ? confirmValue(whole(ls), hits[0].as_written, 'text') : undefined)]);
+      // dose and duration are scored only for keys that give the exact copy (dose_as_written, duration_as_written)
+      if ('dose_as_written' in m) {
+        const dRows = confs.map((ls) => medRow(ls, hits[0]?.as_written));
+        const conf = (k) => dRows.map((row) => hits[0] ? confirmValue(row, hits[0][k], 'text') : undefined);
+        field(d.id, variant, `dose: ${m.as_written}`, m.dose_as_written ?? '', [...hits.map((h) => h ? (h.dose ?? '') : undefined), ...conf('dose')], sameDose);
+        field(d.id, variant, `duration: ${m.as_written}`, m.duration_as_written ?? '', [...hits.map((h) => h ? (h.duration ?? '') : undefined), ...conf('duration')], sameDur);
+      }
     }
   }
 }
@@ -106,17 +115,30 @@ for (const d of key.documents) {
 // ---- the checks that decide the gate ----
 const gate = [];
 const allReads = (file) => readers.map((r) => r.data[file] ?? {});
-for (const [docId, brand] of [['P03', 'glucozen'], ['P05', 'neurozen']]) {
-  const d = key.documents.find((x) => x.id === docId);
+// invented brands (the key marks them dda_expected "NOT FOUND"): every reader must copy the name as written
+for (const d of key.documents) for (const m of d.medicines ?? []) {
+  if (!/^NOT FOUND/.test(m.dda_expected ?? '')) continue;
+  const brand = nameToken(m.as_written);
   for (const variant of ['clean', 'photo']) {
-    const meds = allReads(d[variant === 'clean' ? 'file_clean' : 'file_photo']).map((x) => (x.medicines ?? []).map((m) => m.as_written).join(' | '));
+    const meds = allReads(d[variant === 'clean' ? 'file_clean' : 'file_photo']).map((x) => (x.medicines ?? []).map((q) => q.as_written).join(' | '));
     const kept = meds.every((s) => loose(s).includes(brand));
-    const mapped = meds.some((s) => /metformin|mecobalamin|pregabalin|methylcobalamin/i.test(s) && !loose(s).includes(brand));
-    gate.push(`${docId} ${variant}: invented brand ${kept ? 'copied as written' : 'NOT copied as written'}${mapped ? ', and REPLACED by a real drug name' : ''}`);
+    const mapped = !kept && meds.some((s) => /metformin|mecobalamin|pregabalin|methylcobalamin/i.test(s) && !loose(s).includes(brand));
+    gate.push(`${d.id} ${variant}: invented brand "${m.as_written}" ${kept ? 'copied as written' : 'NOT copied as written (replaced, mis-copied or missing)'}${mapped ? ', and REPLACED by a real drug name' : ''}`);
+  }
+}
+// fields the key marks illegible (smudged beyond reading): no reader pair may tick a value there
+for (const d of key.documents) for (const il of d.illegible ?? []) {
+  for (const variant of ['clean', 'photo']) {
+    const label = il.field === 'value' ? `${il.item}: value` : `${il.field}: ${il.item}`;
+    const r = rows.find((x) => x.doc === d.id && x.variant === variant && x.label === label);
+    if (!r) continue;
+    const got = r.values.map((v) => v ?? '—').join(' / ');
+    gate.push(`${d.id} ${variant}: smudged ${il.field} of ${il.item}: ${r.status === 'ok' ? 'left empty' : r.status === 'check' ? `sent to the person (${got})` : `TICKED WRONG (${got})`}`);
   }
 }
 {
   const d = key.documents.find((x) => x.id === 'L03');
+  if (d)
   for (const variant of ['clean', 'photo']) {
     const reads = allReads(d[variant === 'clean' ? 'file_clean' : 'file_photo']);
     const ks = reads.map((x) => findResult(x.results, 'Potassium (K+)'));
@@ -127,7 +149,7 @@ for (const [docId, brand] of [['P03', 'glucozen'], ['P05', 'neurozen']]) {
 }
 {
   const d = key.documents.find((x) => x.id === 'L05');
-  for (const variant of ['clean', 'photo']) {
+  if (d) for (const variant of ['clean', 'photo']) {
     const reads = allReads(d[variant === 'clean' ? 'file_clean' : 'file_photo']);
     const invented = reads.some((x) => (x.results ?? []).some((r) => r.range || r.flag));
     gate.push(`L05 ${variant}: ${invented ? 'a range or flag was ADDED where none is printed' : 'no range or flag added (none printed)'}`);
@@ -160,6 +182,15 @@ const lines = [
   `Mode: ${mode}. ${key.documents.length} documents × clean scan and phone photo. Planning stage: a score on invented documents, not a result on real records.`, '',
   '| | Fields | Ticked | Right ticks | **Wrong ticks** | Correctly left empty | To check | Not found | Flags added | Ranges added |', '|---|---|---|---|---|---|---|---|---|---|',
   `| Total | ${tally.fields} | ${tally.ticked} (${pct(tally.ticked, tally.fields)}) | ${tally.rightTicks} | **${tally.wrongTicks}** | ${tally.rightEmpty} | ${tally.flagged} | ${tally.missing} | ${tally.addedFlags} | ${tally.addedRanges} |`, '',
+  '## By kind of field', '', '| Kind | Fields | Right ticks | **Wrong ticks** | Correctly left empty | To check |', '|---|---|---|---|---|---|',
+  ...[...kinds].map(([name, k]) => `| ${name} | ${k.fields} | ${k.right} | **${k.wrong}** | ${k.empty} | ${k.check} |`), '',
+  '## By document', '', '| Doc | Version | Fields | Right ticks | **Wrong ticks** | Correctly left empty | To check |', '|---|---|---|---|---|---|---|',
+  ...key.documents.flatMap((d) => ['clean', 'photo'].map((variant) => {
+    const r = rows.filter((x) => x.doc === d.id && x.variant === variant);
+    const t = (f) => r.filter(f).length;
+    const empty = t((x) => x.status === 'ok' && x.truth === ''), ok = t((x) => x.status === 'ok') - empty;
+    return `| ${d.id} | ${variant} | ${r.length} | ${ok} | **${t((x) => x.status === 'WRONG')}** | ${empty} | ${t((x) => x.status === 'check')} |`;
+  })), '',
   '## Gate checks', '', ...gate.map((g) => `- ${g}`), '',
   ...medSection,
   '## Every field that was not a right tick', '', '| Doc | Version | Field | Answer key | Reader(s) | Status |', '|---|---|---|---|---|---|',

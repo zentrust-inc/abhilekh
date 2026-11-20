@@ -1,0 +1,849 @@
+{
+ "clean/L11-handfilled-cbc-lookalike-digits.png": {
+  "kind": "lab_report",
+  "date_as_printed": "2083/08/09",
+  "facility": "उदाहरण प्याथोलोजी प्रयोगशाला / Udaharan Pathology Laboratory (fictional)",
+  "clinician": null,
+  "patient_name": "Sita Kumari Namuna",
+  "results": [
+   {
+    "test": "Haemoglobin",
+    "value": "11.8",
+    "unit": "g/dL",
+    "range": "12.0 – 15.5",
+    "flag": "L"
+   },
+   {
+    "test": "Total WBC count",
+    "value": "7,600",
+    "unit": "/µL",
+    "range": "4,000 – 11,000",
+    "flag": null
+   },
+   {
+    "test": "Neutrophils",
+    "value": "62",
+    "unit": "%",
+    "range": "40 – 75",
+    "flag": null
+   },
+   {
+    "test": "Lymphocytes",
+    "value": "31",
+    "unit": "%",
+    "range": "20 – 45",
+    "flag": null
+   },
+   {
+    "test": "Platelet count",
+    "value": "2,56,000",
+    "unit": "/µL",
+    "range": "1,50,000 – 4,50,000",
+    "flag": null
+   },
+   {
+    "test": "RBC count",
+    "value": "4.2",
+    "unit": "million/µL",
+    "range": "3.8 – 5.2",
+    "flag": null
+   },
+   {
+    "test": "MCV",
+    "value": "86",
+    "unit": "fL",
+    "range": "80 – 100",
+    "flag": null
+   },
+   {
+    "test": "ESR (1st hour)",
+    "value": "28",
+    "unit": "mm",
+    "range": "0 – 20",
+    "flag": "H"
+   }
+  ],
+  "medicines": [],
+  "notes": [
+   "Example Road, Itahari · Complete blood count",
+   "Age/Sex: 34y / F",
+   "Signed: Lab Tech."
+  ]
+ },
+ "clean/L12-handwritten-slip-crumpled.png": {
+  "kind": "lab_report",
+  "date_as_printed": "2083/08/15",
+  "facility": "Namuna Lab & Diagnostic",
+  "clinician": null,
+  "patient_name": "Gita Namuna",
+  "results": [
+   {
+    "test": "FBS",
+    "value": "112",
+    "unit": "mg/dl",
+    "range": "70-110",
+    "flag": null
+   },
+   {
+    "test": "PPBS",
+    "value": "164",
+    "unit": "mg/dl",
+    "range": "80-140",
+    "flag": null
+   },
+   {
+    "test": "Urea",
+    "value": "31",
+    "unit": "mg/dl",
+    "range": "15-45",
+    "flag": null
+   },
+   {
+    "test": "Creatinine",
+    "value": "09",
+    "unit": "mg/dl",
+    "range": "0.6-1.2",
+    "flag": null
+   },
+   {
+    "test": "Sodium",
+    "value": "138",
+    "unit": "mmol/L",
+    "range": null,
+    "flag": null
+   },
+   {
+    "test": "Potassium",
+    "value": "4.1",
+    "unit": "mmol/L",
+    "range": null,
+    "flag": null
+   }
+  ],
+  "medicines": [],
+  "notes": [
+   "41/F",
+   "Lab Tech"
+  ]
+ },
+ "clean/L13-lipid-overwritten-smudged.png": {
+  "kind": "lab_report",
+  "date_as_printed": "2083/08/16",
+  "facility": "उदाहरण डायग्नोस्टिक सेन्टर / Example Diagnostic Centre (fictional)",
+  "clinician": null,
+  "patient_name": "Hari Prasad Namuna",
+  "results": [
+   {
+    "test": "Total cholesterol",
+    "value": "196",
+    "unit": "mg/dL",
+    "range": "< 200",
+    "flag": null
+   },
+   {
+    "test": "Triglycerides",
+    "value": "180",
+    "unit": "mg/dL",
+    "range": "< 150",
+    "flag": "H"
+   },
+   {
+    "test": "HDL cholesterol",
+    "value": "42",
+    "unit": "mg/dL",
+    "range": "> 40",
+    "flag": null
+   },
+   {
+    "test": "LDL cholesterol",
+    "value": "118",
+    "unit": "mg/dL",
+    "range": "< 100",
+    "flag": "H"
+   },
+   {
+    "test": "VLDL cholesterol",
+    "value": null,
+    "unit": "mg/dL",
+    "range": "< 30",
+    "flag": "H"
+   },
+   {
+    "test": "Non-HDL cholesterol",
+    "value": "154",
+    "unit": "mg/dL",
+    "range": "< 130",
+    "flag": "H"
+   }
+  ],
+  "medicines": [],
+  "notes": [
+   "Age/Sex: 62 y / M",
+   "Fasting 12 hr",
+   "Lab Tech"
+  ]
+ },
+ "clean/P11-pad-crowded-slanted.png": {
+  "kind": "prescription",
+  "date_as_printed": "2083/08/10",
+  "facility": "Example Medical Hall, Butwal",
+  "clinician": "Dr. F. Namuna",
+  "patient_name": "Kamala Devi Udaharan",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Tab Pantoprazole 40 mg",
+    "dose": "1-0-0",
+    "duration": "x 14 days"
+   },
+   {
+    "as_written": "Tab Domperidone 10mg",
+    "dose": "1-1-1",
+    "duration": "x 5 days"
+   },
+   {
+    "as_written": "Tab Ondansetron 4 mg",
+    "dose": "SOS",
+    "duration": null
+   },
+   {
+    "as_written": "Tab Paracetamol 500 mg",
+    "dose": "SOS",
+    "duration": null
+   }
+  ],
+  "notes": [
+   "52/F",
+   "burning epigastric pain x 2 wk",
+   "bland diet no spicy / tea",
+   "F/U 2 wk"
+  ]
+ },
+ "clean/P12-overwritten-doses.png": {
+  "kind": "prescription",
+  "date_as_printed": "2083/08/11",
+  "facility": "उदाहरण स्वास्थ्य केन्द्र",
+  "clinician": "Dr. G. Udaharan",
+  "patient_name": "Bishnu Prasad Namuna",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Tab Metformin 500 mg",
+    "dose": "1-0-1",
+    "duration": "1 month"
+   },
+   {
+    "as_written": "Tab Enalapril 5 mg",
+    "dose": "1-0-0",
+    "duration": "2 months"
+   },
+   {
+    "as_written": "Tab Atorvastatin 20 mg",
+    "dose": "0-0-1",
+    "duration": "1 month"
+   },
+   {
+    "as_written": "Tab Aspirin 75 mg",
+    "dose": "0-1-0",
+    "duration": "1 month"
+   }
+  ],
+  "notes": [
+   "66/M",
+   "DM2, HTN, IHD",
+   "Review with HbA1c, lipids"
+  ]
+ },
+ "clean/P13-five-six-nine-three.png": {
+  "kind": "prescription",
+  "date_as_printed": "2083/08/5",
+  "facility": "Example Clinic, Dharan",
+  "clinician": "Dr. H. Namuna",
+  "patient_name": "Maya kumariuddharan",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Tab Azithromycin 500 mg",
+    "dose": "1-0-0",
+    "duration": "x 3 days"
+   },
+   {
+    "as_written": "Tab Prednisolone 5 mg",
+    "dose": "2-1-0",
+    "duration": "x 5 days"
+   },
+   {
+    "as_written": "Tab Cetirizine 10 mg",
+    "dose": "0-0-1",
+    "duration": "x 5 days"
+   },
+   {
+    "as_written": "Tab Paracetamol 650 mg",
+    "dose": "SOS",
+    "duration": null
+   }
+  ],
+  "notes": [
+   "45/F",
+   "URTI ? allergic",
+   "Come back if fever > 3 days"
+  ]
+ },
+ "clean/P14-ink-smudge-duration.png": {
+  "kind": "prescription",
+  "date_as_printed": "2083/08/12",
+  "facility": "Example Clinic, Hetauda",
+  "clinician": "Dr. I. Udaharan",
+  "patient_name": "Rajan Namuna",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Tab Pantoprazole 40 mg",
+    "dose": "1-0-1",
+    "duration": null
+   },
+   {
+    "as_written": "Tab Carithromycin 500 mg",
+    "dose": "1-0-1",
+    "duration": "x 14 days"
+   },
+   {
+    "as_written": "Cap Amoxicillin 500 mg",
+    "dose": "1-0-1",
+    "duration": "x 14 days"
+   }
+  ],
+  "notes": [
+   "38/M",
+   "gastritis, H pylori +ve (stool Ag)",
+   "Review after 2 weeks"
+  ]
+ },
+ "clean/P15-nepali-hand-devanagari-digits.png": {
+  "kind": "prescription",
+  "date_as_printed": "२०८३/०८/१३",
+  "facility": "उदाहरण अस्पताल (Example Hospital, Pokhara)",
+  "clinician": "Dr. J. Namuna",
+  "patient_name": "Sunita Namuna",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Tab Ciprofloxacin 500 mg",
+    "dose": "१-०-१",
+    "duration": "५ दिन"
+   },
+   {
+    "as_written": "Tab Paracetamol 500 mg",
+    "dose": "SOS",
+    "duration": null
+   },
+   {
+    "as_written": "ORS",
+    "dose": "दिनमा ३ पटक",
+    "duration": null
+   }
+  ],
+  "notes": [
+   "29/F",
+   "पिसाबमा पोल्ने, ज्वरो",
+   "धेरै पानी पिउने",
+   "३ दिनमा नघटे फेरि आउने"
+  ]
+ },
+ "clean/P16-crumpled-photo-cardiac.png": {
+  "kind": "prescription",
+  "date_as_printed": "2083/08/14",
+  "facility": "Namuna Polyclinic, Janakpur",
+  "clinician": "Dr. K. Udaharan",
+  "patient_name": "Devi Prasad Namuna",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Tab Ramipril 5 mg",
+    "dose": "1-0-0",
+    "duration": "x 1 month"
+   },
+   {
+    "as_written": "Tab Metoprolol 25 mg",
+    "dose": "1-0-1",
+    "duration": "x 1 month"
+   },
+   {
+    "as_written": "Tab Furosemide 40 mg",
+    "dose": "1-0-0",
+    "duration": "x 7 days"
+   },
+   {
+    "as_written": "Tab spironolactone 25 mg",
+    "dose": "1-0-0",
+    "duration": "x 7 days"
+   }
+  ],
+  "notes": [
+   "71/M",
+   "HTN, CCF, on diuretics",
+   "Wt daily, low salt",
+   "Review 1 week"
+  ]
+ },
+ "clean/P17-pencil-stamp-invented-brands.png": {
+  "kind": "prescription",
+  "date_as_printed": "4/11/2026",
+  "facility": "Example Nursing Home, Birgunj",
+  "clinician": "Dr. L. Namuna",
+  "patient_name": "Anita udaharan",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Tab Namucef 500",
+    "dose": "1-0-1",
+    "duration": "5 d"
+   },
+   {
+    "as_written": "cap Udarol-SR 150",
+    "dose": "0-0-1",
+    "duration": "10 d"
+   },
+   {
+    "as_written": "Tab Pantoprazole 40 mg",
+    "dose": "1-0-0",
+    "duration": null
+   },
+   {
+    "as_written": "Tab Paracetamol 500 mg",
+    "dose": "SOS",
+    "duration": null
+   }
+  ],
+  "notes": [
+   "31/F",
+   "Rpt cBc after course"
+  ]
+ },
+ "photo/L11-handfilled-cbc-lookalike-digits.jpg": {
+  "kind": "lab_report",
+  "date_as_printed": "2083/08/09",
+  "facility": "Udaharan Pathology Laboratory (fictional)",
+  "clinician": null,
+  "patient_name": "Sita Kumari Namuna",
+  "results": [
+   {
+    "test": "Haemoglobin",
+    "value": "11.8",
+    "unit": "g/dL",
+    "range": "12.0 – 15.5",
+    "flag": "L"
+   },
+   {
+    "test": "Total WBC count",
+    "value": "7,600",
+    "unit": "/µL",
+    "range": "4,000 – 11,000",
+    "flag": null
+   },
+   {
+    "test": "Neutrophils",
+    "value": "62",
+    "unit": "%",
+    "range": "40 – 75",
+    "flag": null
+   },
+   {
+    "test": "Lymphocytes",
+    "value": "31",
+    "unit": "%",
+    "range": "20 – 45",
+    "flag": null
+   },
+   {
+    "test": "Platelet count",
+    "value": "2,56,000",
+    "unit": "/µL",
+    "range": "1,50,000 – 4,50,000",
+    "flag": null
+   },
+   {
+    "test": "RBC count",
+    "value": "4.2",
+    "unit": "million/µL",
+    "range": "3.8 – 5.2",
+    "flag": null
+   },
+   {
+    "test": "MCV",
+    "value": "86",
+    "unit": "fL",
+    "range": "80 – 100",
+    "flag": null
+   },
+   {
+    "test": "ESR (1st hour)",
+    "value": "28",
+    "unit": "mm",
+    "range": "0 – 20",
+    "flag": "H"
+   }
+  ],
+  "medicines": [],
+  "notes": [
+   "उदाहरण प्याथोलोजी प्रयोगशाला",
+   "Example Road, Itahari · Complete blood count",
+   "Age/Sex: 34 y / F",
+   "Lab Tech."
+  ]
+ },
+ "photo/L12-handwritten-slip-crumpled.jpg": {
+  "kind": "lab_report",
+  "date_as_printed": "2083/08/15",
+  "facility": "Namuna Lab & Diagnostic",
+  "clinician": null,
+  "patient_name": "Gita Namuna",
+  "results": [
+   {
+    "test": "FBS",
+    "value": "112",
+    "unit": "mg/dl",
+    "range": "70-110",
+    "flag": null
+   },
+   {
+    "test": "PPBS",
+    "value": "164",
+    "unit": "mg/dl",
+    "range": "80-140",
+    "flag": null
+   },
+   {
+    "test": "Urea",
+    "value": "31",
+    "unit": "mg/dl",
+    "range": "15-45",
+    "flag": null
+   },
+   {
+    "test": "Creatinine",
+    "value": "09",
+    "unit": "mg/dl",
+    "range": "0.6-1.2",
+    "flag": null
+   },
+   {
+    "test": "Sodium",
+    "value": "138",
+    "unit": "mmol/L",
+    "range": null,
+    "flag": null
+   },
+   {
+    "test": "Potassium",
+    "value": "4.1",
+    "unit": "mmol/L",
+    "range": null,
+    "flag": null
+   }
+  ],
+  "medicines": [],
+  "notes": [
+   "41/F",
+   "Lab Tech"
+  ]
+ },
+ "photo/L13-lipid-overwritten-smudged.jpg": {
+  "kind": "lab_report",
+  "date_as_printed": "2083/08/16",
+  "facility": "उदाहरण डायग्नोस्टिक सेन्टर Example Diagnostic Centre (fictional)",
+  "clinician": null,
+  "patient_name": "Hari Prasad Namuna",
+  "results": [
+   {
+    "test": "Total cholesterol",
+    "value": "196",
+    "unit": "mg/dL",
+    "range": "< 200",
+    "flag": null
+   },
+   {
+    "test": "Triglycerides",
+    "value": "180",
+    "unit": "mg/dL",
+    "range": "< 150",
+    "flag": "H"
+   },
+   {
+    "test": "HDL cholesterol",
+    "value": "42",
+    "unit": "mg/dL",
+    "range": "> 40",
+    "flag": null
+   },
+   {
+    "test": "LDL cholesterol",
+    "value": "118",
+    "unit": "mg/dL",
+    "range": "< 100",
+    "flag": "H"
+   },
+   {
+    "test": "VLDL cholesterol",
+    "value": null,
+    "unit": "mg/dL",
+    "range": "< 30",
+    "flag": "H"
+   },
+   {
+    "test": "Non-HDL cholesterol",
+    "value": "154",
+    "unit": "mg/dL",
+    "range": "< 130",
+    "flag": "H"
+   }
+  ],
+  "medicines": [],
+  "notes": [
+   "Age/Sex: 62 y / M",
+   "Fasting 12 hr",
+   "Lab Tech"
+  ]
+ },
+ "photo/P11-pad-crowded-slanted.jpg": {
+  "kind": "prescription",
+  "date_as_printed": "2083/08/10",
+  "facility": "Example Medical Hall, Butwal",
+  "clinician": "Dr. F. Namuna",
+  "patient_name": "Kamala Devi Udaharan",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Tab Pantoprazole 40 mg",
+    "dose": "1-0-0",
+    "duration": "x 14 days"
+   },
+   {
+    "as_written": "Tab Domperidone 10 mg",
+    "dose": "1-1-1",
+    "duration": "x 5 days"
+   },
+   {
+    "as_written": "Tab Ondansetron 4 mg",
+    "dose": "SOS",
+    "duration": null
+   },
+   {
+    "as_written": "Tab Paracetamol 500 mg",
+    "dose": "SOS",
+    "duration": null
+   }
+  ],
+  "notes": [
+   "52/F",
+   "burning epigastric pain x 2 wk",
+   "bland diet x spicy / tea",
+   "F/U 2 wk",
+   "Reg. 00000 (fictional)"
+  ]
+ },
+ "photo/P12-overwritten-doses.jpg": {
+  "kind": "prescription",
+  "date_as_printed": "2083/08/11",
+  "facility": "उदाहरण स्वास्थ्य केन्द्र / Example Health Centre, Dhulikhel",
+  "clinician": "Dr. G. Udaharan",
+  "patient_name": "Bishnu Prasad Namuna",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Tab Metformin 500 mg",
+    "dose": "1-0-1",
+    "duration": "x 1 month"
+   },
+   {
+    "as_written": "Tab Enalapril 5 mg",
+    "dose": "1-0-0",
+    "duration": "x 2 months"
+   },
+   {
+    "as_written": "Tab Atorvastatin 20 mg",
+    "dose": "0-0-1",
+    "duration": "x 1 month"
+   },
+   {
+    "as_written": "Tab Aspirin 75 mg",
+    "dose": "0-1-0",
+    "duration": "x 1 month"
+   }
+  ],
+  "notes": [
+   "66/M",
+   "DM2, HTN, IHD",
+   "Review with HbA1c, lipids"
+  ]
+ },
+ "photo/P13-five-six-nine-three.jpg": {
+  "kind": "prescription",
+  "date_as_printed": "2083/08/5",
+  "facility": "Example Clinic, Dharan",
+  "clinician": "Dr. H. Namuna",
+  "patient_name": "Maya kumariuddharan",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Tab Azithromycin 500 mg",
+    "dose": "1-0-0",
+    "duration": "x 3 days"
+   },
+   {
+    "as_written": "Tab Prednisolone 5 mg",
+    "dose": "2-1-0",
+    "duration": "x 5 days"
+   },
+   {
+    "as_written": "Tab Cetirizine 10 mg",
+    "dose": "0-0-1",
+    "duration": "x 5 days"
+   },
+   {
+    "as_written": "Tab Paracetamol 650 mg",
+    "dose": "SOS",
+    "duration": null
+   }
+  ],
+  "notes": [
+   "45/F",
+   "URTI ? allergic",
+   "Come back if fever >3 days",
+   "NMC 00000 (fictional)"
+  ]
+ },
+ "photo/P14-ink-smudge-duration.jpg": {
+  "kind": "prescription",
+  "date_as_printed": "2083/08/12",
+  "facility": "Example Clinic, Hetauda",
+  "clinician": "Dr. I. Udaharan",
+  "patient_name": "Rajan Namuna",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Tab Pantoprazole 40 mg",
+    "dose": "1-0-1",
+    "duration": null
+   },
+   {
+    "as_written": "Tab Clarithromycin 500 mg",
+    "dose": "1-0-1",
+    "duration": "x 14 days"
+   },
+   {
+    "as_written": "Cap Amoxicillin 500 mg",
+    "dose": "1-0-1",
+    "duration": "x 14 days"
+   }
+  ],
+  "notes": [
+   "38/M",
+   "gastritis, H. pylori +ve (stool Ag)",
+   "Review after 2 weeks"
+  ]
+ },
+ "photo/P15-nepali-hand-devanagari-digits.jpg": {
+  "kind": "prescription",
+  "date_as_printed": "२०८३/०८/२३",
+  "facility": "उदाहरण अस्पताल",
+  "clinician": "Dr. J. Namuna",
+  "patient_name": "Sunita Namuna",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Tab Ciprofloxacin 500 mg",
+    "dose": "१-०-१",
+    "duration": "५ दिन"
+   },
+   {
+    "as_written": "Tab Paracetamol 500 mg",
+    "dose": "SOS",
+    "duration": null
+   },
+   {
+    "as_written": "ORS",
+    "dose": "दिनमा ३ पटक",
+    "duration": null
+   }
+  ],
+  "notes": [
+   "Example Hospital, Pokhara · NMC 00000 (fictional)",
+   "29/F",
+   "पिसाबमा पोल्ने, ज्वरो",
+   "धेरै पानी पिउने",
+   "३ दिनमा नघटे फेरि आउने",
+   "J. Namuna"
+  ]
+ },
+ "photo/P16-crumpled-photo-cardiac.jpg": {
+  "kind": "prescription",
+  "date_as_printed": "2083/08/14",
+  "facility": "Namuna Polyclinic, Janakpur",
+  "clinician": "Dr. K. Udaharan",
+  "patient_name": "Devi Prasad Namuna",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Tab Ramipril 5 mg",
+    "dose": "1-0-0",
+    "duration": "1 month"
+   },
+   {
+    "as_written": "Tab Metoprolol 25 mg",
+    "dose": "1-0-1",
+    "duration": "1 month"
+   },
+   {
+    "as_written": "Tab Furosemide 40 mg",
+    "dose": "1-0-0",
+    "duration": "7 days"
+   },
+   {
+    "as_written": "Tab Spironolactone 25 mg",
+    "dose": "1-0-0",
+    "duration": "7 days"
+   }
+  ],
+  "notes": [
+   "71/M",
+   "HTN, CCF, on diuretics",
+   "Wt daily, low salt",
+   "Review 1 week"
+  ]
+ },
+ "photo/P17-pencil-stamp-invented-brands.jpg": {
+  "kind": "prescription",
+  "date_as_printed": "4/11/2026",
+  "facility": "Example Nursing Home, Birgunj",
+  "clinician": "Dr. L. Namuna",
+  "patient_name": "Anita Udaharan",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Tab Namucef 500",
+    "dose": "1-0-1",
+    "duration": "5 d"
+   },
+   {
+    "as_written": "cap Udarol-SR 150",
+    "dose": "0-0-1",
+    "duration": "10 d"
+   },
+   {
+    "as_written": "Tab Pantoprazole 40 mg",
+    "dose": "1-0-0",
+    "duration": null
+   },
+   {
+    "as_written": "Tab Paracetamol 500 mg",
+    "dose": "SOS",
+    "duration": null
+   }
+  ],
+  "notes": [
+   "31/F",
+   "Rpt cBc after course"
+  ]
+ }
+}
