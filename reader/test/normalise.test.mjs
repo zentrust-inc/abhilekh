@@ -33,3 +33,29 @@ test('values still compare as numbers or characters (unchanged from v1)', () => 
   assert.ok(same('6.6', '6.60'));
   assert.ok(!same('11.8', '11.6'));
 });
+
+import { doseSlots, confirmsDose } from '../normalise.mjs';
+test('dose confirmation: lost or merged dashes are fine, the digits must be the same in the same order', () => {
+  assert.equal(doseSlots('1 - 0 - 1'), '101');
+  assert.equal(doseSlots('१-०-१'), '101');
+  assert.equal(doseSlots('SOS'), null);
+  assert.equal(doseSlots('0.5-0-0.5'), null);
+  assert.ok(confirmsDose('1. Tab Metformin 500 mg 1-01  X 1 month', '1-0-1'));
+  assert.ok(confirmsDose('2. Tab Enalapril 5 mg 1-00  x 2 months', '1-0-0'));
+  assert.ok(confirmsDose('1. Tab Azithromycin 500 mg 100  x3days', '1-0-0'));
+  assert.ok(confirmsDose('1. Tab Ramipril 5 mg  10-0  X1 month', '1-0-0'));
+  assert.ok(confirmsDose('2. Tab Clarithromycin 500 mg 1-0-1  x 14 days', '1-0-1'));
+  assert.ok(confirmsDose('2. Tab Prednisolone 5 mg  2 + 1 + 0  X5 days', '2-1-0'));
+});
+test('dose confirmation: a different dose, a strength or a duration never confirms', () => {
+  assert.ok(!confirmsDose('3. Tab cetirizine 10 mg  0-04  x 5 days', '0-0-1'));   // 4 is not 1
+  assert.ok(!confirmsDose('1. Tab ciprofloxacin 500 mg 2-0-2  5 days', '1-0-1'));
+  assert.ok(!confirmsDose('1. Tab Pantoprazole 40 mg 1-0-  x 14 days', '1-0-1')); // digit lost
+  assert.ok(!confirmsDose('Tab Paracetamol 100 mg  x 5 days', '1-0-0'));        // 100 is the strength
+  assert.ok(!confirmsDose('Tab Foo 500 mg  x 10 1', '5-0-0'));                    // strength is not a dose
+  assert.ok(!confirmsDose('Tab Foo  x 1-0-1 days', '1-0-1'));                     // after x: a duration
+  assert.ok(!confirmsDose('Tab Foo 500 mg  for 101 days', '1-0-1'));
+  assert.ok(!confirmsDose('Tab Foo 100d', '1-0-0'));                              // stuck to a letter
+  assert.ok(!confirmsDose('Tab Foo 500 mg 1-0-1', 'TDS'));                        // not a digit dose
+  assert.ok(!confirmsDose('', '1-0-1'));
+});

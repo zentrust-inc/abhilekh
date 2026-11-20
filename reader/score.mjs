@@ -6,11 +6,12 @@
 // Nothing here interprets a result: it only compares copies of the paper.
 import { readFile, writeFile } from 'node:fs/promises';
 import { loadList, checkMedicine } from './medicine-check.mjs';
-import { norm, loose, num, same, sameDose, sameDur } from './normalise.mjs';
+import { norm, loose, num, same, sameDose, sameDur, confirmsDose } from './normalise.mjs';
 const LIST = new URL('./dda/nlem-2021.json', import.meta.url).pathname;
 const ESSENTIAL = loadList(LIST);
 
 const args = process.argv.slice(2);
+const strictDose = args.includes('--strict-dose'); // the earlier rule (characters must stand as written), kept to compare
 const out = args.includes('--out') ? args[args.indexOf('--out') + 1] : null;
 const pos = args.filter((a, i) => !a.startsWith('--') && args[i - 1] !== '--out');
 const [setDir, ...readingFiles] = pos;
@@ -105,7 +106,9 @@ for (const d of key.documents) {
       if ('dose_as_written' in m) {
         const dRows = confs.map((ls) => medRow(ls, hits[0]?.as_written));
         const conf = (k) => dRows.map((row) => hits[0] ? confirmValue(row, hits[0][k], 'text') : undefined);
-        field(d.id, variant, `dose: ${m.as_written}`, m.dose_as_written ?? '', [...hits.map((h) => h ? (h.dose ?? '') : undefined), ...conf('dose')], sameDose);
+        // a numeric dose is also confirmed when the line carries the same digits in the same order (dashes lost or merged by the OCR)
+        const confDose = dRows.map((row) => hits[0] ? (strictDose || !confirmsDose(row, hits[0].dose) ? confirmValue(row, hits[0].dose, 'text') : hits[0].dose) : undefined);
+        field(d.id, variant, `dose: ${m.as_written}`, m.dose_as_written ?? '', [...hits.map((h) => h ? (h.dose ?? '') : undefined), ...confDose], sameDose);
         field(d.id, variant, `duration: ${m.as_written}`, m.duration_as_written ?? '', [...hits.map((h) => h ? (h.duration ?? '') : undefined), ...conf('duration')], sameDur);
       }
     }
