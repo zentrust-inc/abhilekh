@@ -26,7 +26,7 @@
   if (!lit) return;
   var words = Array.prototype.slice.call(lit.querySelectorAll('span'));
   if (reduce) { words.forEach(function (w) { w.classList.add('on'); }); return; }
-  var section = lit.parentElement, ticking = false;
+  var section = lit.closest('section'), ticking = false;
   function update() {
     ticking = false;
     var r = section.getBoundingClientRect(), vh = window.innerHeight;
