@@ -59,3 +59,10 @@ test('dose confirmation: a different dose, a strength or a duration never confir
   assert.ok(!confirmsDose('Tab Foo 500 mg 1-0-1', 'TDS'));                        // not a digit dose
   assert.ok(!confirmsDose('', '1-0-1'));
 });
+
+test('a fraction in a dose is not its digits run together: 1/2-0-1/2 is not 12-0-12', () => {
+  assert.ok(!sameDose('1/2-0-1/2', '12-0-12'));
+  assert.ok(sameDose('1/2 - 0 - 1/2', '1/2-0-1/2'));
+  assert.ok(sameDose('1/2-0-1/2', '१/२-०-१/२'));
+  assert.ok(same('2083/08/10', '20830810'));   // dates and values are compared as before
+});
