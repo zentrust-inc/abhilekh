@@ -18,12 +18,14 @@ redirects to the root). `app.abhilekh.org` stays on Azure. Total size about 2.9 
 
 ## Film encodes
 
-    ffmpeg -i hero.mp4 -an -c:v libx264 -preset slow -crf 24 -pix_fmt yuv420p -movflags +faststart media/hero-1080.mp4
-    ffmpeg -i hero.mp4 -an -vf scale=1280:-2 -c:v libx264 -preset slow -crf 25 -pix_fmt yuv420p -movflags +faststart media/hero-720.mp4
-    ffmpeg -i hero.mp4 -an -c:v libvpx-vp9 -b:v 0 -crf 36 -row-mt 1 media/hero-1080.webm
-    ffmpeg -ss 6.6 -i hero.mp4 -frames:v 1 -vf scale=1600:-2 -q:v 4 media/poster.jpg
+    ffmpeg -i hero.mp4 -an -c:v libx264 -preset slow -crf 24 -pix_fmt yuv420p -movflags +faststart media/hero-1080-v3.mp4
+    ffmpeg -i hero.mp4 -an -vf scale=1280:-2 -c:v libx264 -preset slow -crf 25 -pix_fmt yuv420p -movflags +faststart media/hero-720-v3.mp4
+    ffmpeg -i hero.mp4 -an -c:v libvpx-vp9 -b:v 0 -crf 36 -row-mt 1 media/hero-1080-v3.webm
+    ffmpeg -ss 6.6 -i hero.mp4 -frames:v 1 -vf scale=1600:-2 -q:v 4 media/poster-v3.jpg
 
 ## Email protection (separate yes needed)
 
 Until email is wanted: no MX record, plus `TXT abhilekh.org "v=spf1 -all"` and
 `TXT _dmarc.abhilekh.org "v=DMARC1; p=reject"`.
+
+When the film changes, give the files a new version suffix (-v4 …) and update index.html: media is cached for 7 days.
