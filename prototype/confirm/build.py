@@ -13,7 +13,7 @@ import {valueRegion,rangeRegion,dateRegion} from './reader/regions.mjs';
 const S='samples/test-set-v3/readings/';
 const W=JSON.parse(readFileSync(S+'google-vision-words.json','utf8'));
 const O=JSON.parse(readFileSync(S+'claude-opus-5-5.json','utf8'));
-const want={'clean/L21-urine-text-results.png':['Specific gravity'],'clean/L22-thyroid-coffee-bleed.png':['TSH','Free T4']};
+const want={'clean/L21-urine-text-results.png':['Specific gravity'],'clean/L22-thyroid-coffee-bleed.png':['TSH','Free T4'],'clean/P27-devanagari-weeks-months.png':[]};
 const out={};
 for(const [f,tests] of Object.entries(want)){const words=W[f].words;out[f]={date:dateRegion(words),values:[]};
  for(const t of tests){const x=O[f].results.find(r=>r.test===t);out[f].values.push({test:t,reading:x.value,v:valueRegion(words,t,x.value),r:rangeRegion(words,t)});}}
@@ -27,14 +27,14 @@ def crop(page, box, wide=0, vpad=PAD):
     c = im.crop(b)
     buf = io.BytesIO(); c.save(buf, 'PNG', optimize=True)
     return 'data:image/png;base64,' + base64.b64encode(buf.getvalue()).decode(), b
-names = {'clean/L21-urine-text-results.png': ('L21', 'Urine report'), 'clean/L22-thyroid-coffee-bleed.png': ('L22', 'Thyroid report')}
+names = {'clean/L21-urine-text-results.png': ('L21', 'urine'), 'clean/L22-thyroid-coffee-bleed.png': ('L22', 'thyroid'), 'clean/P27-devanagari-weeks-months.png': ('P27', 'rx')}
 cards, log = [], []
 for page, r in regs.items():
     tag, doc = names[page]
     d = r['date']
     if d:
-        img, b = crop(page, d['box'], wide=60)
-        cards.append(dict(id=tag + '-date', doc=doc, label='Date', kind='date', reading='', img=img)); log.append((tag, 'date', d['how'], b))
+        img, b = crop(page, d['box'], wide=16)
+        cards.append(dict(id=tag + '-date', doc=doc, label='date', kind='date', reading='', img=img)); log.append((tag, 'date', d['how'], b))
     else: sys.exit('no date region for ' + page)
     for v in r['values']:
         if not (v['v'] and v['r']): sys.exit('missing region for ' + v['test'])
