@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en" data-resolution="landscape">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1920, height=1080" />
+<script src="assets/gsap.min.js"></script>
+<style>
+@font-face{font-family:"Noto Serif Devanagari";src:url('assets/fonts/noto-serif-deva-600.woff2') format('woff2');font-weight:600}
+@font-face{font-family:"Noto Serif Devanagari";src:url('assets/fonts/noto-serif-deva-400.woff2') format('woff2');font-weight:400}
+:root{--paper:#fffdf8;--ink:#1d2433;--ink2:#4a5061;--wine:#7a1530;--accent:#b5283f;--gold:#e8a33d;--ok:#1d6b4a}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1920px;height:1080px;overflow:hidden;background:#f7f1e6}
+#root{width:100%;height:100%;position:relative;overflow:hidden;font-family:Inter,sans-serif}
+#ground{position:absolute;inset:0;background:radial-gradient(ellipse 55% 60% at 62% 38%,#fff6e3 0%,#fbe9cc 30%,#f4dfc6 55%,#efe3d2 100%)}
+#sky{position:absolute;inset:0}
+#sun{position:absolute;left:1180px;top:-260px;width:900px;height:900px;border-radius:50%;background:radial-gradient(circle,rgba(255,214,140,.75) 0%,rgba(255,190,120,.35) 35%,rgba(255,180,120,0) 70%)}
+#rays{position:absolute;inset:-200px;background:repeating-conic-gradient(from 200deg at 74% 8%,rgba(255,236,200,0) 0deg 7deg,rgba(255,236,200,.28) 7deg 9deg,rgba(255,236,200,0) 9deg 16deg);mix-blend-mode:screen;opacity:.5}
+#ridge{position:absolute;left:0;right:0;bottom:0;height:300px}
+#stage{position:absolute;inset:0;z-index:2}
+/* the plastic carrier bag: handles behind the papers, front panel in front */
+#bagback,#bagfront{position:absolute;left:610px;top:250px;width:700px;height:760px}
+#bagback svg,#bagfront svg{width:100%;height:100%;overflow:visible}
+#bagfront{z-index:3}
+/* documents */
+.sheet{position:absolute;left:810px;top:350px;width:300px;height:400px;background:var(--paper);border-radius:10px;padding:22px 22px 0;z-index:2;color:var(--ink);
+  box-shadow:0 2px 0 rgba(120,90,50,.08),0 30px 60px rgba(120,80,40,.22),0 8px 18px rgba(120,80,40,.12);overflow:hidden}
+.org{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid var(--wine);padding-bottom:8px}
+.org b{font-size:15px;letter-spacing:.06em;color:var(--wine);font-weight:800}
+.org span{font:600 15px "Noto Serif Devanagari";color:var(--wine)}
+.ttl{font-size:24px;font-weight:700;margin-top:14px;letter-spacing:-.01em}
+.dt{font-size:14px;color:var(--ink2);margin-top:4px}
+.rows{margin-top:16px}
+.r{display:grid;grid-template-columns:1.5fr .8fr .9fr 26px;gap:6px;align-items:baseline;padding:9px 0;border-top:1px solid #e8e1d4;font-size:16px}
+.r .t{color:var(--ink2)}.r .v{font-weight:700;font-size:18px}.r .u{color:var(--ink2);font-size:13px}
+.r .f{font-size:12px;font-weight:800}.r .f.on{border:1.5px solid var(--ink);border-radius:3px;text-align:center}
+.stamp{position:absolute;right:16px;bottom:16px;font:600 15px "Noto Serif Devanagari";color:#a2463f;border:2px solid #a2463f;border-radius:6px;padding:1px 8px;transform:rotate(-6deg)}
+.scan{position:absolute;left:0;right:0;top:-40px;height:46px;background:linear-gradient(180deg,rgba(232,163,61,0),rgba(232,163,61,.55),rgba(232,163,61,0));opacity:0}
+.tick{position:absolute;left:16px;bottom:12px;width:56px;height:56px;border-radius:50%;background:var(--ok);box-shadow:0 10px 26px rgba(29,107,74,.45);opacity:0}
+.tick svg{width:100%;height:100%}.tick path{fill:none;stroke:#fff;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+/* phone */
+#phone{position:absolute;left:770px;top:110px;width:380px;height:800px;border-radius:58px;background:#1b1f2a;border:3px solid #2c303b;z-index:4;
+  box-shadow:0 60px 120px rgba(80,50,20,.35),0 20px 40px rgba(80,50,20,.2)}
+#screen{position:absolute;left:16px;top:16px;right:16px;bottom:16px;border-radius:44px;background:#fbf6ec;overflow:hidden;padding:64px 26px 0;color:var(--ink)}
+#notch{position:absolute;left:50%;top:14px;width:100px;height:26px;margin-left:-50px;border-radius:13px;background:#1b1f2a}
+#app-hd{display:flex;align-items:baseline;gap:10px}
+#app-hd b{font:600 30px "Noto Serif Devanagari";color:var(--accent)}
+#app-hd span{font-size:18px;color:var(--ink2)}
+#app-sub{font-size:15px;color:var(--ink2);margin:6px 0 18px}
+#list{position:absolute;left:26px;right:26px;top:150px}
+.li{display:grid;grid-template-columns:1fr auto 26px;gap:8px;align-items:center;background:#fff;border-radius:14px;padding:13px 14px;margin-bottom:10px;box-shadow:0 4px 14px rgba(120,80,40,.1);opacity:0}
+.lt{font-size:16px;font-weight:700}.ld{font-size:13px;color:var(--ink2)}.lk{color:var(--ok);font-weight:800;text-align:right}
+#share{position:absolute;left:26px;right:26px;top:150px;opacity:0}
+#share h3{font-size:22px;font-weight:700}
+#share p{font-size:15px;color:var(--ink2);margin-top:4px}
+#qrbox{position:relative;width:264px;height:264px;margin:20px auto 0}
+#qr{width:264px;height:264px;display:grid;grid-template-columns:repeat(25,1fr);grid-template-rows:repeat(25,1fr)}
+#qr i{background:var(--ink);display:block}
+#qrscan{position:absolute;left:-10px;right:-10px;height:30px;top:0;background:linear-gradient(180deg,rgba(181,40,63,0),rgba(181,40,63,.45),rgba(181,40,63,0))}
+#timer{margin-top:22px;font-size:15px;color:var(--ink2);text-align:center}
+#timer b{color:var(--ink)}
+#stop{margin-top:16px;height:52px;border-radius:26px;background:var(--wine);color:#fff;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center}
+#flood{position:absolute;inset:0;background:#f7f1e6;opacity:0;z-index:9}
+</style>
+</head>
+<body>
+<div id="root" data-composition-id="main" data-start="0" data-duration="14" data-width="1920" data-height="1080" data-layout-allow-overlap>
+  <div id="ground" class="clip" data-start="0" data-duration="14" data-track-index="0"></div>
+  <div id="sky" class="clip" data-start="0" data-duration="14" data-track-index="1" data-layout-allow-overflow><div id="sun"></div><div id="rays"></div>
+    <svg id="ridge" viewBox="0 0 1920 300" preserveAspectRatio="none"><path d="M0 190 L180 110 L300 160 L460 55 L560 120 L700 40 L820 130 L980 65 L1120 140 L1260 45 L1400 130 L1560 75 L1700 140 L1920 85 L1920 300 L0 300Z" fill="#c9d3df" opacity=".5"/><path d="M0 235 L220 175 L380 220 L560 160 L760 230 L960 170 L1180 235 L1380 175 L1600 230 L1920 185 L1920 300 L0 300Z" fill="#aebcce" opacity=".45"/><path d="M0 275 L300 240 L620 278 L940 245 L1260 282 L1600 248 L1920 276 L1920 300 L0 300Z" fill="#e9dccb"/></svg></div>
+  <div id="stage" class="clip" data-start="0" data-duration="14" data-track-index="2" data-layout-allow-overlap data-layout-allow-overflow>
+    <div id="bagback"><svg viewBox="0 0 700 760"><defs>
+      <linearGradient id="bb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fb4c9" stop-opacity=".22"/><stop offset="1" stop-color="#9fb4c9" stop-opacity=".34"/></linearGradient></defs>
+      <!-- two full handles, looping from the rim -->
+      <path d="M190 210 C185 40 300 40 295 210" fill="none" stroke="#7d93ad" stroke-opacity=".75" stroke-width="16" stroke-linecap="round"/>
+      <path d="M405 210 C400 40 515 40 510 210" fill="none" stroke="#7d93ad" stroke-opacity=".75" stroke-width="16" stroke-linecap="round"/>
+      <path d="M190 210 C185 40 300 40 295 210 M405 210 C400 40 515 40 510 210" fill="none" stroke="#ffffff" stroke-opacity=".45" stroke-width="4" stroke-linecap="round"/>
+      <!-- back wall of the bag -->
+      <path d="M150 200 Q350 185 550 200 L612 690 Q350 735 88 690 Z" fill="url(#bb)" stroke="#6f87a3" stroke-opacity=".5" stroke-width="2.5"/></svg></div>
+    <div class="sheet" id="s0"><div class="org"><b>NAMUNA LAB</b><span>नमूना ल्याब</span></div><div class="ttl">Thyroid profile</div><div class="dt">Date 2083/08/12</div><div class="rows"><div class="r"><span class="t">TSH</span><span class="v">6.8</span><span class="u">µIU/mL</span><span class="f on">H</span></div><div class="r"><span class="t">Free T4</span><span class="v">1.1</span><span class="u">ng/dL</span><span class="f"></span></div><div class="r"><span class="t">Anti-TPO</span><span class="v">12</span><span class="u">IU/mL</span><span class="f"></span></div></div><div class="stamp">SAMPLE · नमूना</div><div class="scan" id="scan0"></div><div class="tick" id="tick0"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div></div><div class="sheet" id="s1"><div class="org"><b>UDAHARAN CLINIC</b><span>उदाहरण क्लिनिक</span></div><div class="ttl">Prescription</div><div class="dt">Date 2083/07/30</div><div class="rows"><div class="r"><span class="t">Tab. Metformin</span><span class="v">500</span><span class="u">mg</span><span class="f"></span></div><div class="r"><span class="t">1 – 0 – 1</span><span class="v">× 30</span><span class="u">days</span><span class="f"></span></div><div class="r"><span class="t">Tab. Amlodipine</span><span class="v">5</span><span class="u">mg</span><span class="f"></span></div></div><div class="stamp">SAMPLE · नमूना</div><div class="scan" id="scan1"></div><div class="tick" id="tick1"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div></div><div class="sheet" id="s2"><div class="org"><b>NAMUNA LAB</b><span>नमूना ल्याब</span></div><div class="ttl">Urine routine</div><div class="dt">Date 2083/07/02</div><div class="rows"><div class="r"><span class="t">Sp. gravity</span><span class="v">1.020</span><span class="u"></span><span class="f"></span></div><div class="r"><span class="t">Colour</span><span class="v">Yellow</span><span class="u"></span><span class="f"></span></div><div class="r"><span class="t">pH</span><span class="v">6.0</span><span class="u"></span><span class="f"></span></div></div><div class="stamp">SAMPLE · नमूना</div><div class="scan" id="scan2"></div><div class="tick" id="tick2"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div></div><div class="sheet" id="s3"><div class="org"><b>NAMUNA LAB</b><span>नमूना ल्याब</span></div><div class="ttl">Diabetes panel</div><div class="dt">Date 2083/06/18</div><div class="rows"><div class="r"><span class="t">HbA1c</span><span class="v">6.1</span><span class="u">%</span><span class="f"></span></div><div class="r"><span class="t">Fasting sugar</span><span class="v">112</span><span class="u">mg/dL</span><span class="f on">H</span></div><div class="r"><span class="t">Creatinine</span><span class="v">0.9</span><span class="u">mg/dL</span><span class="f"></span></div></div><div class="stamp">SAMPLE · नमूना</div><div class="scan" id="scan3"></div><div class="tick" id="tick3"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div></div><div class="sheet" id="s4"><div class="org"><b>UDAHARAN HOSPITAL</b><span>उदाहरण अस्पताल</span></div><div class="ttl">Chest X-ray report</div><div class="dt">Date 2083/05/09</div><div class="rows"><div class="r"><span class="t">Findings</span><span class="v">as</span><span class="u">printed</span><span class="f"></span></div><div class="r"><span class="t">Impression</span><span class="v">as</span><span class="u">printed</span><span class="f"></span></div><div class="r"><span class="t">Radiologist</span><span class="v">Dr.</span><span class="u">Namuna</span><span class="f"></span></div></div><div class="stamp">SAMPLE · नमूना</div><div class="scan" id="scan4"></div><div class="tick" id="tick4"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div></div>
+    <div id="bagfront"><svg viewBox="0 0 700 760"><defs>
+      <linearGradient id="bf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b9c8d8" stop-opacity=".42"/><stop offset=".5" stop-color="#dfe7ef" stop-opacity=".22"/><stop offset="1" stop-color="#b9c8d8" stop-opacity=".48"/></linearGradient>
+      <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>
+      <!-- front panel, lower than the back rim so the bag reads open; side gussets -->
+      <path d="M120 400 Q350 380 580 400 L612 690 Q350 735 88 690 Z" fill="url(#bf)" stroke="#6f87a3" stroke-opacity=".6" stroke-width="2.5"/>
+      <path d="M120 400 L150 200 M580 400 L550 200" stroke="#6f87a3" stroke-opacity=".45" stroke-width="2"/>
+      <path d="M170 470 Q260 445 330 490 T520 480 M140 590 Q250 560 360 610 T590 600 M210 660 Q300 640 420 675" fill="none" stroke="#ffffff" stroke-opacity=".7" stroke-width="2.5"/>
+      <path d="M200 420 L230 690" stroke="url(#sheen)" stroke-width="40" opacity=".5"/></svg></div>
+    <div id="phone"><div id="screen">
+        <div id="app-hd"><b>अभिलेख</b><span>Abhilekh</span></div>
+        <div id="app-sub">My record · SAMPLE</div>
+        <div id="list"><div class="li" id="li0"><span class="lt">Thyroid profile</span><span class="ld">2083/08/12</span><span class="lk">✓</span></div><div class="li" id="li1"><span class="lt">Prescription</span><span class="ld">2083/07/30</span><span class="lk">✓</span></div><div class="li" id="li2"><span class="lt">Urine routine</span><span class="ld">2083/07/02</span><span class="lk">✓</span></div><div class="li" id="li3"><span class="lt">Diabetes panel</span><span class="ld">2083/06/18</span><span class="lk">✓</span></div><div class="li" id="li4"><span class="lt">Chest X-ray report</span><span class="ld">2083/05/09</span><span class="lk">✓</span></div></div>
+        <div id="share"><h3>Share with a doctor</h3><p>5 reports · until tomorrow 10:00</p>
+          <div id="qrbox"><div id="qr"><i style="grid-area:1/1"></i><i style="grid-area:1/2"></i><i style="grid-area:1/3"></i><i style="grid-area:1/4"></i><i style="grid-area:1/5"></i><i style="grid-area:1/6"></i><i style="grid-area:1/7"></i><i style="grid-area:1/9"></i><i style="grid-area:1/10"></i><i style="grid-area:1/11"></i><i style="grid-area:1/15"></i><i style="grid-area:1/16"></i><i style="grid-area:1/17"></i><i style="grid-area:1/19"></i><i style="grid-area:1/20"></i><i style="grid-area:1/21"></i><i style="grid-area:1/22"></i><i style="grid-area:1/23"></i><i style="grid-area:1/24"></i><i style="grid-area:1/25"></i><i style="grid-area:2/1"></i><i style="grid-area:2/7"></i><i style="grid-area:2/10"></i><i style="grid-area:2/11"></i><i style="grid-area:2/12"></i><i style="grid-area:2/19"></i><i style="grid-area:2/25"></i><i style="grid-area:3/1"></i><i style="grid-area:3/3"></i><i style="grid-area:3/4"></i><i style="grid-area:3/5"></i><i style="grid-area:3/7"></i><i style="grid-area:3/10"></i><i style="grid-area:3/13"></i><i style="grid-area:3/15"></i><i style="grid-area:3/19"></i><i style="grid-area:3/21"></i><i style="grid-area:3/22"></i><i style="grid-area:3/23"></i><i style="grid-area:3/25"></i><i style="grid-area:4/1"></i><i style="grid-area:4/3"></i><i style="grid-area:4/4"></i><i style="grid-area:4/5"></i><i style="grid-area:4/7"></i><i style="grid-area:4/9"></i><i style="grid-area:4/12"></i><i style="grid-area:4/14"></i><i style="grid-area:4/15"></i><i style="grid-area:4/17"></i><i style="grid-area:4/19"></i><i style="grid-area:4/21"></i><i style="grid-area:4/22"></i><i style="grid-area:4/23"></i><i style="grid-area:4/25"></i><i style="grid-area:5/1"></i><i style="grid-area:5/3"></i><i style="grid-area:5/4"></i><i style="grid-area:5/5"></i><i style="grid-area:5/7"></i><i style="grid-area:5/9"></i><i style="grid-area:5/10"></i><i style="grid-area:5/12"></i><i style="grid-area:5/13"></i><i style="grid-area:5/14"></i><i style="grid-area:5/16"></i><i style="grid-area:5/19"></i><i style="grid-area:5/21"></i><i style="grid-area:5/22"></i><i style="grid-area:5/23"></i><i style="grid-area:5/25"></i><i style="grid-area:6/1"></i><i style="grid-area:6/7"></i><i style="grid-area:6/9"></i><i style="grid-area:6/15"></i><i style="grid-area:6/19"></i><i style="grid-area:6/25"></i><i style="grid-area:7/1"></i><i style="grid-area:7/2"></i><i style="grid-area:7/3"></i><i style="grid-area:7/4"></i><i style="grid-area:7/5"></i><i style="grid-area:7/6"></i><i style="grid-area:7/7"></i><i style="grid-area:7/9"></i><i style="grid-area:7/11"></i><i style="grid-area:7/13"></i><i style="grid-area:7/15"></i><i style="grid-area:7/17"></i><i style="grid-area:7/19"></i><i style="grid-area:7/20"></i><i style="grid-area:7/21"></i><i style="grid-area:7/22"></i><i style="grid-area:7/23"></i><i style="grid-area:7/24"></i><i style="grid-area:7/25"></i><i style="grid-area:8/9"></i><i style="grid-area:8/11"></i><i style="grid-area:8/16"></i><i style="grid-area:8/17"></i><i style="grid-area:9/1"></i><i style="grid-area:9/5"></i><i style="grid-area:9/7"></i><i style="grid-area:9/8"></i><i style="grid-area:9/9"></i><i style="grid-area:9/11"></i><i style="grid-area:9/12"></i><i style="grid-area:9/13"></i><i style="grid-area:9/16"></i><i style="grid-area:9/18"></i><i style="grid-area:9/19"></i><i style="grid-area:9/20"></i><i style="grid-area:9/21"></i><i style="grid-area:9/22"></i><i style="grid-area:9/25"></i><i style="grid-area:10/1"></i><i style="grid-area:10/2"></i><i style="grid-area:10/3"></i><i style="grid-area:10/4"></i><i style="grid-area:10/8"></i><i style="grid-area:10/10"></i><i style="grid-area:10/11"></i><i style="grid-area:10/12"></i><i style="grid-area:10/13"></i><i style="grid-area:10/14"></i><i style="grid-area:10/15"></i><i style="grid-area:10/16"></i><i style="grid-area:10/17"></i><i style="grid-area:10/21"></i><i style="grid-area:10/22"></i><i style="grid-area:10/24"></i><i style="grid-area:11/1"></i><i style="grid-area:11/2"></i><i style="grid-area:11/3"></i><i style="grid-area:11/5"></i><i style="grid-area:11/7"></i><i style="grid-area:11/9"></i><i style="grid-area:11/12"></i><i style="grid-area:11/14"></i><i style="grid-area:11/15"></i><i style="grid-area:11/16"></i><i style="grid-area:11/18"></i><i style="grid-area:11/20"></i><i style="grid-area:11/22"></i><i style="grid-area:11/23"></i><i style="grid-area:12/2"></i><i style="grid-area:12/4"></i><i style="grid-area:12/8"></i><i style="grid-area:12/12"></i><i style="grid-area:12/15"></i><i style="grid-area:12/17"></i><i style="grid-area:12/18"></i><i style="grid-area:12/19"></i><i style="grid-area:12/23"></i><i style="grid-area:12/24"></i><i style="grid-area:13/1"></i><i style="grid-area:13/3"></i><i style="grid-area:13/4"></i><i style="grid-area:13/5"></i><i style="grid-area:13/6"></i><i style="grid-area:13/7"></i><i style="grid-area:13/10"></i><i style="grid-area:13/14"></i><i style="grid-area:13/15"></i><i style="grid-area:13/16"></i><i style="grid-area:13/18"></i><i style="grid-area:13/19"></i><i style="grid-area:13/20"></i><i style="grid-area:13/22"></i><i style="grid-area:13/23"></i><i style="grid-area:13/24"></i><i style="grid-area:13/25"></i><i style="grid-area:14/1"></i><i style="grid-area:14/2"></i><i style="grid-area:14/3"></i><i style="grid-area:14/4"></i><i style="grid-area:14/9"></i><i style="grid-area:14/10"></i><i style="grid-area:14/13"></i><i style="grid-area:14/15"></i><i style="grid-area:14/16"></i><i style="grid-area:14/17"></i><i style="grid-area:14/21"></i><i style="grid-area:14/24"></i><i style="grid-area:15/5"></i><i style="grid-area:15/7"></i><i style="grid-area:15/8"></i><i style="grid-area:15/10"></i><i style="grid-area:15/11"></i><i style="grid-area:15/12"></i><i style="grid-area:15/13"></i><i style="grid-area:15/14"></i><i style="grid-area:15/15"></i><i style="grid-area:15/16"></i><i style="grid-area:15/18"></i><i style="grid-area:15/19"></i><i style="grid-area:15/20"></i><i style="grid-area:15/21"></i><i style="grid-area:15/22"></i><i style="grid-area:15/23"></i><i style="grid-area:16/6"></i><i style="grid-area:16/8"></i><i style="grid-area:16/10"></i><i style="grid-area:16/12"></i><i style="grid-area:16/14"></i><i style="grid-area:16/16"></i><i style="grid-area:16/18"></i><i style="grid-area:16/20"></i><i style="grid-area:16/21"></i><i style="grid-area:16/23"></i><i style="grid-area:16/24"></i><i style="grid-area:17/1"></i><i style="grid-area:17/2"></i><i style="grid-area:17/3"></i><i style="grid-area:17/4"></i><i style="grid-area:17/5"></i><i style="grid-area:17/6"></i><i style="grid-area:17/7"></i><i style="grid-area:17/8"></i><i style="grid-area:17/9"></i><i style="grid-area:17/11"></i><i style="grid-area:17/13"></i><i style="grid-area:17/14"></i><i style="grid-area:17/17"></i><i style="grid-area:17/18"></i><i style="grid-area:17/19"></i><i style="grid-area:17/20"></i><i style="grid-area:17/21"></i><i style="grid-area:17/22"></i><i style="grid-area:17/23"></i><i style="grid-area:18/9"></i><i style="grid-area:18/14"></i><i style="grid-area:18/15"></i><i style="grid-area:18/17"></i><i style="grid-area:18/21"></i><i style="grid-area:19/1"></i><i style="grid-area:19/2"></i><i style="grid-area:19/3"></i><i style="grid-area:19/4"></i><i style="grid-area:19/5"></i><i style="grid-area:19/6"></i><i style="grid-area:19/7"></i><i style="grid-area:19/9"></i><i style="grid-area:19/10"></i><i style="grid-area:19/11"></i><i style="grid-area:19/17"></i><i style="grid-area:19/19"></i><i style="grid-area:19/21"></i><i style="grid-area:20/1"></i><i style="grid-area:20/7"></i><i style="grid-area:20/11"></i><i style="grid-area:20/13"></i><i style="grid-area:20/15"></i><i style="grid-area:20/17"></i><i style="grid-area:20/21"></i><i style="grid-area:20/22"></i><i style="grid-area:20/23"></i><i style="grid-area:20/24"></i><i style="grid-area:21/1"></i><i style="grid-area:21/3"></i><i style="grid-area:21/4"></i><i style="grid-area:21/5"></i><i style="grid-area:21/7"></i><i style="grid-area:21/9"></i><i style="grid-area:21/10"></i><i style="grid-area:21/12"></i><i style="grid-area:21/14"></i><i style="grid-area:21/15"></i><i style="grid-area:21/17"></i><i style="grid-area:21/18"></i><i style="grid-area:21/19"></i><i style="grid-area:21/20"></i><i style="grid-area:21/21"></i><i style="grid-area:21/22"></i><i style="grid-area:21/23"></i><i style="grid-area:21/24"></i><i style="grid-area:21/25"></i><i style="grid-area:22/1"></i><i style="grid-area:22/3"></i><i style="grid-area:22/4"></i><i style="grid-area:22/5"></i><i style="grid-area:22/7"></i><i style="grid-area:22/11"></i><i style="grid-area:22/13"></i><i style="grid-area:22/18"></i><i style="grid-area:22/19"></i><i style="grid-area:22/20"></i><i style="grid-area:22/23"></i><i style="grid-area:22/24"></i><i style="grid-area:22/25"></i><i style="grid-area:23/1"></i><i style="grid-area:23/3"></i><i style="grid-area:23/4"></i><i style="grid-area:23/5"></i><i style="grid-area:23/7"></i><i style="grid-area:23/10"></i><i style="grid-area:23/12"></i><i style="grid-area:23/13"></i><i style="grid-area:23/14"></i><i style="grid-area:23/15"></i><i style="grid-area:23/18"></i><i style="grid-area:23/19"></i><i style="grid-area:23/22"></i><i style="grid-area:23/24"></i><i style="grid-area:24/1"></i><i style="grid-area:24/7"></i><i style="grid-area:24/11"></i><i style="grid-area:24/12"></i><i style="grid-area:24/14"></i><i style="grid-area:24/16"></i><i style="grid-area:24/18"></i><i style="grid-area:24/19"></i><i style="grid-area:24/20"></i><i style="grid-area:24/21"></i><i style="grid-area:24/22"></i><i style="grid-area:24/23"></i><i style="grid-area:24/24"></i><i style="grid-area:25/1"></i><i style="grid-area:25/2"></i><i style="grid-area:25/3"></i><i style="grid-area:25/4"></i><i style="grid-area:25/5"></i><i style="grid-area:25/6"></i><i style="grid-area:25/7"></i><i style="grid-area:25/9"></i><i style="grid-area:25/11"></i><i style="grid-area:25/13"></i><i style="grid-area:25/14"></i><i style="grid-area:25/16"></i><i style="grid-area:25/18"></i><i style="grid-area:25/19"></i><i style="grid-area:25/23"></i><i style="grid-area:25/24"></i><i style="grid-area:25/25"></i></div><div id="qrscan"></div></div>
+          <div id="timer">Ends in <b>24 hours</b> · you can stop it</div>
+          <div id="stop">Stop sharing</div></div>
+      </div><div id="notch"></div></div>
+  </div>
+  <div id="flood" class="clip" data-start="0" data-duration="14" data-track-index="3"></div>
+</div>
+<script>
+const tl = gsap.timeline({ paused: true });
+const S = [0,1,2,3,4].map(i => '#s'+i);
+gsap.set('#stage', { scale: 1.05, transformOrigin: '50% 55%' });
+gsap.set(['#bagback','#bagfront'], { opacity: 0, y: 30 });
+const inBag = [[-80,170,-8],[-25,185,5],[30,175,-4],[80,190,9],[0,205,-2]];
+S.forEach((s,i) => gsap.set(s, { x: inBag[i][0], y: inBag[i][1], rotation: inBag[i][2], scale: .86 }));
+gsap.set('#phone', { y: 980, opacity: 1 });
+gsap.set('#flood', { opacity: 1 });
+// 0 - 1.3: morning light, the bag of papers
+tl.to('#flood', { opacity: 0, duration: 1.1, ease: 'power2.inOut' }, 0);
+tl.to(['#bagback','#bagfront'], { opacity: 1, y: 0, duration: 1.3, ease: 'expo.out' }, 0.15);
+tl.to('#stage', { scale: 1, duration: 4.4, ease: 'power2.inOut' }, 0);
+tl.fromTo('#ridge', { y: 20 }, { y: 0, duration: 4.4, ease: 'power2.out' }, 0);
+tl.fromTo('#rays', { rotation: -3, transformOrigin: '74% 8%' }, { rotation: 3, duration: 14, ease: 'none' }, 0);
+// 1.2 - 3.4: the papers rise out of the bag, in front of the handles
+const up = [[-360,-300,-12],[-170,-345,8],[10,-370,-4],[190,-335,11],[370,-285,-7]];
+S.forEach((s,i) => tl.to(s, { x: up[i][0], y: up[i][1], rotation: up[i][2], scale: .92, duration: 1.25, ease: 'expo.out' }, 1.2 + i*0.24));
+// 3.3 - 4.1: the bag sinks away
+tl.to(['#bagback','#bagfront'], { y: 160, opacity: 0, duration: .85, ease: 'power3.in' }, 3.3);
+// 3.8 - 5.0: the papers straighten into one centred row
+S.forEach((s,i) => tl.to(s, { x: (i-2)*330, y: -120, rotation: 0, scale: .96, duration: 1.15, ease: 'power3.inOut' }, 3.8 + i*0.05));
+// 5.1 - 7.0: each is read (two passes of light) and ticked
+S.forEach((s,i) => {
+  const t0 = 5.15 + i*0.32;
+  tl.fromTo('#scan'+i, { y: 0, opacity: 0 }, { y: 440, opacity: 1, duration: .55, ease: 'power2.inOut' }, t0);
+  tl.to('#scan'+i, { opacity: 0, duration: .15 }, t0 + .5);
+  tl.fromTo('#tick'+i, { scale: .3, opacity: 0 }, { scale: 1, opacity: 1, duration: .45, ease: 'back.out(1.6)' }, t0 + .52);
+});
+// 7.2 - 7.9: the papers gather into one stack in the middle
+S.forEach((s,i) => tl.to(s, { x: (i-2)*14, y: -110 + i*6, rotation: (i-2)*2, duration: .7, ease: 'power3.inOut' }, 7.2 + Math.abs(i-2)*0.05));
+// 7.8 - 8.7: the phone rises behind; the stack shrinks into its screen
+tl.set(S, { zIndex: 6 }, 7.5);
+tl.to('#phone', { y: 0, duration: .95, ease: 'expo.out' }, 7.55);
+S.forEach((s,i) => tl.to(s, { x: 0, y: -170, scale: .2, opacity: 0, duration: .55, ease: 'power3.in' }, 8.3 + i*0.05));
+// 8.5 - 9.3: they appear as entries in the record
+[0,1,2,3,4].forEach(i => tl.fromTo('#li'+i, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: .45, ease: 'expo.out' }, 8.75 + i*0.12));
+// 9.9 - 11.2: the share screen and its QR code
+tl.to('#list', { opacity: 0, y: -30, duration: .35, ease: 'power3.in' }, 9.9);
+tl.fromTo('#share', { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: .5, ease: 'expo.out' }, 10.15);
+tl.fromTo('#qr', { clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0 0 0% 0)', duration: 1.0, ease: 'power2.inOut' }, 10.3);
+tl.fromTo('#qrscan', { y: -20 }, { y: 270, duration: 1.0, ease: 'power2.inOut' }, 10.3);
+tl.to('#qrscan', { opacity: 0, duration: .2 }, 11.25);
+// 12.0 - 13.8: push in, back to morning light (loops to the start)
+tl.to('#phone', { scale: 2.3, y: 40, duration: 1.6, ease: 'power3.in', transformOrigin: '50% 48%' }, 12.1);
+tl.to('#flood', { opacity: 1, duration: .9, ease: 'power2.in' }, 12.55);
+window.__timelines = window.__timelines || {};
+window.__timelines["main"] = tl;
+tl.seek(0);
+</script>
+</body>
+</html>
