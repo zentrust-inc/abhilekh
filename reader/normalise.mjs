@@ -51,3 +51,10 @@ export const confirmsDose = (row, dose) => {
   }
   return false;
 };
+
+// Fields the patient must confirm herself, never pre-ticked even when every reader agrees (decided 2026-11-21 after test set v3:
+// 3 wrong ticks, all on dates or decimal values, where both readers misread the same faint or merged mark).
+// A date is always one. A result value is one when any reader's copy of the value or of the printed range holds a decimal point:
+// the dot is what a faint mark loses ("1.020" read as "1020"), so the reading alone cannot be trusted to show it.
+export const hasDecimalPoint = (s) => /\d\.\d|(?:^|\s)\.\d/.test(ascii(String(s ?? '')));
+export const mustConfirmValue = (...copies) => copies.some(hasDecimalPoint);
