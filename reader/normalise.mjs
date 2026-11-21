@@ -8,7 +8,8 @@ export const num = (s) => { const t = norm(s).replace(/,/g, ''); return /^-?\d+(
 export const same = (a, b) => { const na = num(a), nb = num(b); return na !== null && nb !== null ? na === nb : loose(a) === loose(b); };
 // Dose: the characters of the dose as written ("1 - 0 - 1" = "1-0-1"; "TDS (3 times a day)" = "TDS"). Never "TDS" = "1-1-1":
 // those are different copies of the paper and a reader that rewrites one into the other has interpreted it.
-export const doseOf = (s) => loose(String(s ?? '').replace(/\(.*?\)/g, ''));
+// A "/" in a dose is a fraction ("1/2-0-1/2"), so it is kept: "1/2-0-1/2" is not "12-0-12".
+export const doseOf = (s) => norm(String(s ?? '').replace(/\(.*?\)/g, '')).replace(/[^\p{L}\p{N}%µ<>.\/\-]/gu, '');
 export const sameDose = (a, b) => doseOf(a) === doseOf(b);
 // Duration: the number and the unit, with the unit's usual spellings read as one ("5 d" = "5 days" = "5 दिन";
 // "2 mo" = "2 months"; a leading "x" or "for" is not part of the duration). The number must be the same.
