@@ -3,13 +3,15 @@
 //
 // What it does: stores shares of confirmed SAMPLE records, serves the doctor's view only while a share is live,
 // logs every open and every refused open, lets the patient stop a share.
-// What it does not do yet: accounts. There is one sample patient and no sign-in, so anyone who can reach the
-// patient page can create shares. That is acceptable ONLY because every record here is invented.
+// Sign-in (auth.mjs): phone number, one SMS code at signup, 6-digit PIN; the PIN is asked again to create or stop a
+// share. Every share belongs to the account that made it. Every account sees the same invented SAMPLE record.
 import http from 'node:http';
 import { readFileSync, writeFileSync, renameSync, existsSync, mkdirSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import { dirname, join, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createAuth } from './auth.mjs';
+import { akashSender, memorySender } from './sms.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PUBLIC = join(HERE, 'public');
@@ -17,7 +19,7 @@ const ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789'; // 31 letters/digits, no loo
 const ALLOWED_MINUTES = [60, 1440, 10080]; // 1 hour, 24 hours, 7 days. Never "forever".
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
 
-export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-record.json'), testMode = false, now = () => Date.now() } = {}) {
+export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-record.json'), testMode = false, now = () => Date.now(), sms = memorySender(), secureCookies = true, authLimits } = {}) {
   const record = JSON.parse(readFileSync(recordPath, 'utf8'));
   let store = { shares: [] };
   if (storePath) {
@@ -30,6 +32,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
     writeFileSync(tmp, JSON.stringify(store));
     renameSync(tmp, storePath); // atomic: never a half-written file
   };
+  const auth = createAuth({ store, save, now, sms, testMode, secureCookies, limits: authLimits });
   const token = () => Array.from(randomBytes(14), b => ALPHABET[b % 31]).join('');
   const stateOf = s => (s.revokedAt ? 'revoked' : now() >= Date.parse(s.expires) ? 'expired' : 'live');
   const log = (s, t) => { s.log.push({ at: new Date(now()).toISOString(), t }); };
@@ -40,7 +43,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
   const tooManyMisses = ip => { const t = now(), a = (misses.get(ip) || []).filter(x => t - x < 60000); a.push(t); misses.set(ip, a); return a.length > 30; };
 
   const send = (res, code, body, type = 'application/json; charset=utf-8') => {
-    res.writeHead(code, { 'content-type': type, 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer' });
+    res.writeHead(code, { 'content-type': type, 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer', 'x-frame-options': 'DENY' });
     res.end(typeof body === 'string' || Buffer.isBuffer(body) ? body : JSON.stringify(body));
   };
   const readJson = req => new Promise((resolve, reject) => {
@@ -59,32 +62,46 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
     try {
       const url = new URL(req.url, 'http://x');
       const path = url.pathname;
-      const ip = req.socket.remoteAddress || '';
+      // Azure App Service puts the caller's address first in x-forwarded-for (with a :port).
+      const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim().replace(/:\d+$/, '');
+      // Every POST must be JSON: a plain cross-site form cannot send it (with SameSite=Strict cookies, against CSRF).
+      if (req.method === 'POST' && !String(req.headers['content-type'] || '').startsWith('application/json')) return send(res, 415, { error: 'Send JSON.' });
       if (req.method === 'GET' && path === '/healthz') return send(res, 200, { ok: true });
       if (req.method === 'GET' && path === '/') return file(res, 'patient.html');
       if (req.method === 'GET' && (path === '/style.css' || path === '/qrcode.js' || path === '/doctor.js' || path === '/patient.js')) return file(res, path.slice(1));
       if (req.method === 'GET' && /^\/s\/[a-z0-9]+$/.test(path)) return file(res, 'doctor.html'); // the shell shows nothing; data comes from /api/s/:id
 
-      // --- patient side (one sample patient, no sign-in yet) ---
+      if (await auth.route(req, res, path, { ip, send, readJson })) return;
+
+      // --- patient side: signed in only. Every account sees the same invented SAMPLE record. ---
+      const cur = path.startsWith('/api/') && !path.startsWith('/api/s/') ? auth.current(req) : null;
+      if (path.startsWith('/api/') && !path.startsWith('/api/s/') && !cur) return send(res, 401, { error: 'Sign in first.' });
+      const mineOnly = s => s.ownerId === cur.account.id;
       if (req.method === 'GET' && path === '/api/record') return send(res, 200, { docs: record.docs.map(d => ({ id: d.id, title: d.title, facility: d.facility, date: d.date_as_written })), testMode, minutes: ALLOWED_MINUTES });
-      if (req.method === 'GET' && path === '/api/shares') return send(res, 200, { shares: store.shares.map(publicShare).reverse() });
+      if (req.method === 'GET' && path === '/api/shares') return send(res, 200, { shares: store.shares.filter(mineOnly).map(publicShare).reverse() });
       if (req.method === 'POST' && path === '/api/shares') {
         const b = await readJson(req);
+        const pin = auth.checkPin(cur.account, b.pin);
+        if (!pin.ok) return send(res, pin.status, pin);
+        const hold = auth.holdUntil(cur.account);
+        if (hold) return send(res, 403, { error: 'New shares are paused until ' + new Date(hold).toISOString() + ', 24 hours after your PIN was reset by SMS. You can still stop shares.', sharesPausedUntil: new Date(hold).toISOString() });
         const docs = Array.isArray(b.docs) ? [...new Set(b.docs)].filter(id => record.docs.some(d => d.id === id)) : [];
         if (!docs.length) return send(res, 400, { error: 'Choose at least one report to share.' });
         const minutes = Number(b.minutes);
         if (!(ALLOWED_MINUTES.includes(minutes) || (testMode && minutes === 1))) return send(res, 400, { error: 'Choose 1 hour, 24 hours or 7 days.' });
         const who = String(b.who || '').slice(0, 80);
         const t = now();
-        const s = { id: token(), docs, who, created: new Date(t).toISOString(), expires: new Date(t + minutes * 60000).toISOString(), minutes, revokedAt: null, log: [] };
+        const s = { id: token(), ownerId: cur.account.id, docs, who, created: new Date(t).toISOString(), expires: new Date(t + minutes * 60000).toISOString(), minutes, revokedAt: null, log: [] };
         log(s, 'You created this share' + (who ? ' for ' + who : '') + '.');
         store.shares.push(s); save();
         return send(res, 201, publicShare(s));
       }
       let m = path.match(/^\/api\/shares\/([a-z0-9]+)\/stop$/);
       if (req.method === 'POST' && m) {
-        const s = store.shares.find(x => x.id === m[1]);
+        const s = store.shares.find(x => x.id === m[1] && mineOnly(x));
         if (!s) return send(res, 404, { error: 'No such share.' });
+        const pin = auth.checkPin(cur.account, (await readJson(req)).pin);
+        if (!pin.ok) return send(res, pin.status, pin);
         if (stateOf(s) === 'live') { s.revokedAt = new Date(now()).toISOString(); log(s, 'You stopped this share.'); save(); }
         return send(res, 200, publicShare(s));
       }
@@ -112,7 +129,12 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const dataDir = process.env.DATA_DIR || join(HERE, 'data');
-  const app = createApp({ storePath: join(dataDir, 'store.json'), testMode: process.env.TEST_MODE === '1' });
+  const testMode = process.env.TEST_MODE === '1';
+  // Real SMS only when the Akash token is set (Azure app settings). Without it, sign-up works only in TEST_MODE,
+  // where the code is shown on screen instead of sent.
+  const sms = process.env.AKASH_SMS_TOKEN ? akashSender({ token: process.env.AKASH_SMS_TOKEN }) : memorySender();
+  if (sms.name === 'memory' && !testMode) console.warn('No AKASH_SMS_TOKEN and no TEST_MODE: codes cannot reach anyone, so nobody can sign up.');
+  const app = createApp({ storePath: join(dataDir, 'store.json'), testMode, sms, secureCookies: process.env.INSECURE_COOKIES !== '1' });
   const port = Number(process.env.PORT || 8080);
   http.createServer(app.handler).listen(port, () => console.log('Abhilekh share server (SAMPLE data) on port ' + port));
 }
