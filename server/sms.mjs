@@ -29,6 +29,11 @@ export function akashSender({ token, fetchImpl = fetch, url = AKASH_URL }) {
   };
 }
 
+// none: no SMS service configured. Sign-up and recovery answer "not switched on" instead of pretending to send.
+export function noSender() {
+  return { name: 'none', async send() { return { ok: false, reason: 'no SMS service configured' }; } };
+}
+
 export function memorySender() {
   const sent = [];
   return { name: 'memory', sent, async send(to, text) { sent.push({ to, text }); return { ok: true }; } };

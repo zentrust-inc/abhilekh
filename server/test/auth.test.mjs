@@ -5,7 +5,7 @@ import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../server.mjs';
-import { memorySender, akashSender } from '../sms.mjs';
+import { memorySender, akashSender, noSender } from '../sms.mjs';
 import { normalisePhone, pinProblem } from '../auth.mjs';
 
 const PIN = '482915';
@@ -256,6 +256,14 @@ test('Akash sender: posts auth_token, to and text as a form; reports an error re
   const aborted = akashSender({ token: 'T', fetchImpl: async () => ({ ok: true, status: 200, json: async () => ({ error: false, message: '0 messages', data: { valid: [], invalid: [{ mobile: '984100', credit: 0, network: 'N/A', status: 'aborted' }] } }) }) });
   assert.equal((await aborted.send('9841000001', 'hi')).ok, false); // error:false but nothing queued is a failure
   assert.throws(() => akashSender({ token: '' }));
+});
+
+test('with no SMS service set up, asking for a code says so and nothing is counted', async () => {
+  const s = await start({ sms: noSender() });
+  const r = await s.phone().call('/api/auth/code', 'POST', { phone: '9841000001' });
+  assert.equal(r.status, 503);
+  assert.match(r.json.error, /not switched on/);
+  s.close();
 });
 
 test('a failed SMS is a plain error, not a crash', async () => {
