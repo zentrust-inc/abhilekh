@@ -35,3 +35,39 @@ test('no label found means no region, never a guess', () => {
   assert.equal(dateRegion([q('Name:', 10, 10, 60, 30)]), null);
   assert.equal(valueRegion([q('Specific', 60, 676, 140, 700), q('gravity', 152, 680, 228, 704)], 'Specific gravity', '1.020'), null);
 });
+
+test('real-page cases: a split colon, a watermark word and the same characters in the range column', () => {
+  const W2 = [
+    q('Date', 44, 306, 93, 330), q(':', 93, 308, 98, 330), q('24/11/2026', 235, 300, 420, 350),
+    q('Result', 520, 440, 600, 470), q('Unit', 700, 440, 750, 470), q('Reference', 940, 440, 1040, 470),
+    q('Sugar', 60, 740, 130, 764), q('Nil', 940, 742, 975, 762),                        // the handwritten Nil was not read, the printed range was
+    q('Specific', 60, 676, 140, 700), q('gravity', 152, 680, 228, 704), q('1.005', 942, 681, 998, 698), q('1.030', 1026, 681, 1082, 698),
+    q('SAMPLE', 700, 560, 1100, 760),                                                   // watermark: far taller than a row
+  ];
+  assert.deepEqual(dateRegion(W2).box, [235, 300, 420, 350]);                           // starts after the label, not on its colon
+  assert.equal(valueRegion(W2, 'Sugar', 'Nil').how, 'column');                          // not the Nil in the range column
+  assert.ok(valueRegion(W2, 'Sugar', 'Nil').box[2] <= 940);
+  assert.deepEqual(rangeRegion(W2, 'Specific gravity').box, [942, 681, 1082, 698]);     // the watermark is not part of the row
+});
+
+test('a date with no readable label: the one word shaped like a date with a four-digit year', () => {
+  const only = [q('Daze', 60, 300, 120, 330), q('2083/08/17', 235, 300, 420, 350), q('1-0-1', 300, 500, 380, 530), q('Rx', 60, 400, 90, 420)];
+  assert.deepEqual(dateRegion(only).box, [235, 300, 420, 350]);
+  assert.equal(dateRegion(only).how, 'shape');
+  assert.equal(dateRegion([q('1-0-1', 300, 500, 380, 530), q('1/2-0-1/2', 300, 540, 420, 570)]), null);                 // doses are not dates
+  assert.equal(dateRegion([q('22/11/2026', 235, 300, 420, 350), q('25/11/2026', 235, 800, 420, 850)]), null);           // two candidates: no guess
+  const nep = [q('मिति', 60, 300, 120, 330), q('२०८३', 235, 300, 300, 350), q('मंसिर', 310, 300, 400, 350), q('५', 410, 300, 430, 350)];
+  assert.deepEqual(dateRegion(nep).box, [235, 300, 430, 350]);                                                          // the Nepali label
+});
+test('a tilted photo: the row runs down the page, so the column box follows it', () => {
+  // the page slopes 0.1 (10 px down per 100 px across); every word's top edge has that slope
+  const tilt = (t, x, y, w, h) => [t, [[x, y], [x + w, y + 0.1 * w], [x + w, y + 0.1 * w + h], [x, y + h]]];
+  const P = [
+    tilt('Result', 520, 440, 80, 30), tilt('Unit', 700, 460, 50, 30), tilt('Reference', 940, 480, 100, 30),
+    tilt('TSH', 60, 520, 50, 30), tilt('Protein', 60, 800, 70, 30),
+  ];
+  const r = valueRegion(P, 'TSH', '2.45');
+  assert.equal(r.how, 'column');
+  const rowAtResult = 520 + 0.1 * (520 - 85) + 15, rowAtUnit = 520 + 0.1 * (690 - 85) + 15;  // the label's middle, carried along the slope
+  assert.ok(r.box[1] < rowAtResult && r.box[3] > rowAtUnit, JSON.stringify(r.box));
+});
