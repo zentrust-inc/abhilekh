@@ -14,6 +14,14 @@
     new IntersectionObserver(function (e) { e[0].isIntersecting ? film.play().catch(function () {}) : film.pause(); }, { threshold: 0.05 }).observe(film);
   }
 
+  // ridges drift at different speeds as you scroll (the hero) and as the footer comes up
+  if (!reduce) {
+    var rs = Array.prototype.slice.call(document.querySelectorAll('.ridges')), rt = false;
+    function ridge() { rt = false; rs.forEach(function (el) { var r = el.parentElement.getBoundingClientRect(); el.style.setProperty('--py', (-r.top) + 'px'); }); }
+    window.addEventListener('scroll', function () { if (!rt) { rt = true; requestAnimationFrame(ridge); } }, { passive: true });
+    ridge();
+  }
+
   var lit = document.querySelector('[data-lit]');
   if (!lit) return;
   var words = Array.prototype.slice.call(lit.querySelectorAll('span'));

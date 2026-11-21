@@ -1,7 +1,7 @@
 # Hero film (HyperFrames source)
 
-The 14-second silent loop behind the abhilekh.org headline: papers rise out of a plastic bag, straighten, are read
-(a light passes) and checked, fly into a phone, and the phone shows a QR code for abhilekh.org; then back to dark so
+The 14-second silent loop behind the abhilekh.org headline: in warm daylight over Himalayan ridges, papers rise out of a plastic bag, straighten, are read
+(a light passes) and checked, fly into a phone, and the phone shows a QR code for abhilekh.org; then fades to warm light so
 the loop is seamless. An animation of shapes only: no real people, no footage, no real records.
 
 Made with HyperFrames 0.9.77 (open source, HTML rendered to video). Everything is local: GSAP and the font are in
