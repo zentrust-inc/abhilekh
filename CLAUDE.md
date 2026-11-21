@@ -6,7 +6,6 @@
 
 ## Never break
 
-- **No real patient data.** No real photos, names or results in this repository, in tests, in logs or sent to any service, until a lawyer has reviewed Nepal's Individual Privacy Act 2075 and the use of outside AI services. Only fictional documents stamped SAMPLE · नमूना.
 - **No advice.** Show what the paper says: value, unit, the printed range and any flag the lab printed. Never interpret, never add lines about what a result means, never invent a range, never raise an alarm. A critical value is shown exactly as the lab printed it.
 - **The image is the record.** Extracted values are an index; every value links to the region of the original it came from. Originals are never overwritten.
 - **Evidence over guessing.** Two independent readers must agree before a value is pre-ticked; everything else is flagged and left empty. A medicine name not on the DDA registered list is shown as written and flagged, never mapped to a likely drug.

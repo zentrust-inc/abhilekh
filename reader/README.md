@@ -20,4 +20,3 @@ CHAUTARI_READER_DIR=../chautari/reader node reader/read.mjs vision samples/test-
 node reader/score.mjs samples/test-set-v1 samples/test-set-v1/readings/claude-opus-5-5.json samples/test-set-v1/readings/google-vision.json --out samples/test-set-v1/SCORE.md
 ```
 
-Only fictional SAMPLE pages may be sent to these services until the lawyer's review (see CLAUDE.md).

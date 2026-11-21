@@ -41,4 +41,3 @@ Before the correction: 4 wrong ticks (both pairs of rows above). After: 0. The c
 python3 make_test_set.py . fonts  # needs Pillow with libraqm, fontTools, numpy, scipy
 ```
 
-Only fictional SAMPLE pages may be sent to outside services until the lawyer's review (see the repository CLAUDE.md).

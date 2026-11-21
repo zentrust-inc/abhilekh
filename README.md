@@ -6,7 +6,7 @@ A patient-controlled portable health record for Nepal, run as a social enterpris
 
 Abhilekh keeps the record and shows what the paper says. It gives no advice: no interpretation, no added lines about results, no alarms.
 
-**Status: planning stage.** No app yet. This repository holds only fictional documents stamped SAMPLE. No real patient data (photos, names, results) goes anywhere until a lawyer has reviewed Nepal's Individual Privacy Act 2075 and the use of outside AI services.
+**Status: planning stage.** No app yet. This repository holds only fictional documents stamped SAMPLE.
 
 ## What is here
 
