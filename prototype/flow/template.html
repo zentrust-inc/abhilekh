@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Abhilekh: photograph, read, confirm, share (prototype)</title>
+<style>
+:root{--ink:#1d2433;--mute:#5d6678;--line:#d9dde6;--bg:#f6f4ef;--card:#fff;--accent:#7a1530;--ok:#1d6b4a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:430px;margin:0 auto;padding:16px 14px 80px}
+.banner{background:#fff3cd;border:1px solid #e6d28a;border-radius:8px;padding:8px 10px;font-size:13px;margin-bottom:12px}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:17px;margin:0 0 6px}.sub{color:var(--mute);font-size:14px;margin:0 0 12px}
+.steps{display:flex;gap:4px;margin:0 0 14px}.steps div{flex:1;text-align:center;font-size:12px;padding:5px 0;border-radius:6px;background:#e9e6df;color:var(--mute)}
+.steps .on{background:var(--accent);color:#fff;font-weight:600}.steps .past{background:#d8eadf;color:var(--ok)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px}
+.card.done{border-color:var(--ok);background:#f4faf6}.card.off{background:#f1f1f1;border-style:dashed}
+.mute{color:var(--mute);font-size:13px}.t{font-weight:600}
+button{font:inherit;font-weight:600;border-radius:8px;padding:10px 14px;border:0;cursor:pointer}
+.go{background:var(--accent);color:#fff;width:100%;margin-top:10px}.go:disabled{background:#c9ced8;cursor:not-allowed}
+.sec{background:#fff;color:var(--accent);border:1.5px solid var(--accent)}.danger{background:#fff;color:#a01212;border:1.5px solid #a01212}
+.lnk{background:none;color:var(--accent);padding:2px 0;font-weight:500;font-size:13px}
+input[type=text],select{width:100%;font:inherit;font-size:18px;padding:9px;border:1.5px solid var(--line);border-radius:8px;background:#fff}
+input:focus{outline:2px solid var(--accent)}
+.row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}.row>button{flex:1}
+.pick{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:8px;margin-bottom:8px;font-weight:500;color:var(--ink)}
+.pick img{width:64px;height:84px;object-fit:cover;object-position:top;border:1px solid var(--line);border-radius:4px}
+.cam{background:#222;border-radius:14px;padding:10px;text-align:center}.cam img{width:100%;border-radius:6px;display:block}
+.crop{display:block;width:100%;border:1px solid var(--line);border-radius:6px;margin-top:4px;background:#fff}
+.v{font-size:20px;font-weight:600}.u{font-size:14px;color:var(--mute);font-weight:400}
+.flag{display:inline-block;margin-left:6px;font-size:12px;border:1px solid var(--ink);border-radius:4px;padding:0 5px}
+.res{border-top:1px solid var(--line);padding:8px 0}.res:first-child{border-top:0}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:9px;margin-left:6px}.tg-ok{background:#e3f3ea;color:var(--ok)}.tg-need{background:#fde8d4;color:#8a4b00}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:10px}.live{background:#e3f3ea;color:var(--ok)}.dead{background:#eee;color:#555}
+.qr{display:flex;justify-content:center;padding:8px 0}.qr svg{width:170px;height:170px}
+.url{font-size:12px;word-break:break-all;color:var(--mute);background:#f6f6f6;padding:6px;border-radius:6px}
+.log{font-size:13px;margin:6px 0 0;padding-left:16px}.log li{margin:2px 0}
+.sim{border:2px dashed #999;border-radius:12px;padding:10px;margin:16px 0;background:#fafafa}.sim h2{font-size:13px;color:#555;text-transform:uppercase;letter-spacing:.05em}
+.phone{border:6px solid #2b2f3a;border-radius:22px;padding:12px;background:var(--bg);margin-top:8px}
+.gone{text-align:center;padding:24px 8px;font-weight:600}
+.bar{height:8px;background:#e5e2da;border-radius:4px;overflow:hidden;margin:10px 0}.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+</style></head><body><div class="wrap">
+<div class="banner"><b>SAMPLE · नमूना.</b> Prototype on invented pages, planning stage. The reading step shows a reading saved earlier (two readers: Claude and Google Vision); no camera is used and nothing is sent or stored. English only so far.</div>
+<div class="steps" id="steps"></div>
+<div id="view"></div>
+</div>
+<script>
+__QRLIB__
+</script>
+<script>
+const DATA=__DATA__;
+const $=id=>document.getElementById(id);
+const el=(t,a={},...k)=>{const e=document.createElement(t);for(const[n,v]of Object.entries(a))n.startsWith('on')?e.addEventListener(n.slice(2),v):e.setAttribute(n,v);k.forEach(x=>e.append(x));return e};
+const STEPS=['Photograph','Read','Check','Share'];
+let step=0,page=null,shotTaken=false,progress=0,S={},groupOk=false,editing={};
+let offsetMin=0;const now=()=>new Date(Date.now()+offsetMin*60000);
+const fmt=d=>d.toLocaleString([],{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+const shares=[];let doctorId=null;
+function reset(){step=0;page=null;shotTaken=false;progress=0;S={};groupOk=false;editing={};shares.length=0;doctorId=null;offsetMin=0;render()}
+function go(n){step=n;render()}
+// ---- fields -------------------------------------------------------------
+const KINDS=['value','unit','range','flag'];
+const fid=(ti,k)=>ti+':'+k;
+function required(){const out=[];if(page){out.push({id:'date',kind:'date'});page.tests.forEach((t,ti)=>KINDS.forEach(k=>{const st=t[k].state;if(st==='confirm'||st==='check')out.push({id:fid(ti,k),kind:st,t,k,ti})}))}return out}
+const ticked=()=>{const o=[];page.tests.forEach((t,ti)=>KINDS.forEach(k=>{if(t[k].state==='ticked')o.push({id:fid(ti,k),t,k,ti})}));return o};
+const finalText=(ti,k)=>{const t=page.tests[ti],s=S[fid(ti,k)];if(t[k].state==='ticked')return s&&s.edited!==undefined?s.edited:t[k].reading;if(t[k].state==='blank')return '';return s&&s.confirmed?s.text:''};
+const reqDone=r=>!!(S[r.id]&&S[r.id].confirmed);
+function allDone(){return required().every(reqDone)&&(ticked().length===0||groupOk)}
+// ---- render --------------------------------------------------------------
+function render(){
+  $('steps').replaceChildren(...STEPS.map((s,i)=>el('div',{class:i===step?'on':i<step?'past':''},(i+1)+'. '+s)));
+  const v=$('view');v.replaceChildren();
+  [vPhoto,vRead,vCheck,vShare][step](v);
+}
+function vPhoto(v){
+  v.append(el('h1',{},'Photograph a paper'),el('p',{class:'sub'},'Pick one of the invented sample pages to stand in for the photo you would take.'));
+  if(!page){DATA.pages.forEach(p=>v.append(el('button',{class:'pick',onclick:()=>{page=p;shotTaken=false;render()}},el('img',{src:p.thumb,alt:''}),el('span',{},p.title,el('br'),el('span',{class:'mute'},p.note)))));return}
+  const cam=el('div',{class:'cam'},el('img',{src:page.full,alt:'Sample page'}));
+  v.append(cam);
+  v.append(el('div',{class:'mute',style:'margin-top:6px'},page.title+' · '+page.note+'. Your original photo is kept as the record and is never changed.'));
+  v.append(el('div',{class:'row'},el('button',{class:'sec',onclick:()=>{page=null;render()}},'Choose another'),el('button',{class:'go',style:'margin-top:0',onclick:()=>{S={};groupOk=false;editing={};progress=0;go(1)}},'Use this photo')));
+}
+function vRead(v){
+  v.append(el('h1',{},'Reading your photo'),el('p',{class:'sub'},'Two separate readers copy what the paper says. This demo shows a reading saved earlier.'));
+  const bar=el('div',{class:'bar'},el('i',{id:'bi'}));v.append(bar,el('div',{class:'mute',id:'bt'},progress>=100?'':'Reading…'));
+  const next=el('button',{class:'go',disabled:'',onclick:()=>go(2)},'Check what was read');v.append(next);
+  const fin=()=>{$('bi').style.width=progress+'%';if(progress>=100){$('bt').textContent='Done. Nothing is added to your record until you confirm it.';next.disabled=false}};
+  const tick=()=>{progress=Math.min(100,progress+8);fin();if(progress<100)setTimeout(tick,70)};
+  if(progress>=100)fin();else setTimeout(tick,70);
+}
+function img(src,alt){return el('img',{class:'crop',src,alt})}
+function vCheck(v){
+  const req=required(),tk=ticked(),doneN=req.filter(reqDone).length;
+  v.append(el('h1',{},'Check against the paper'),el('p',{class:'sub'},'Dates and values with a decimal point are never filled in for you. Anything the readers disagreed on is left empty. '+doneN+' of '+req.length+' needs-you items done.'));
+  // date
+  const dc=el('div',{class:'card'+(reqDone(req[0])?' done':'')});dc.append(el('div',{class:'t'},'Date'),img(page.date.img,'Date, cropped from the original page'));
+  fieldWidget(dc,'date','date','',0);v.append(dc);
+  // needs-you values
+  const needs=req.slice(1);
+  if(needs.length){v.append(el('h2',{style:'margin-top:14px'},'Needs you'));
+    page.tests.forEach((t,ti)=>{const mine=needs.filter(r=>r.ti===ti);if(!mine.length)return;
+      const c=el('div',{class:'card'+(mine.every(reqDone)?' done':'')});c.append(el('div',{class:'t'},t.test));
+      if(t.vimg)c.append(img(t.vimg,'Result cell for '+t.test)),c.append(el('div',{class:'mute'},t.vapprox?'Result, from your photo. Approximate area: a neighbouring line may show.':'Result, from your photo.'));
+      else c.append(el('div',{class:'mute'},'The original region was not found for this value; look at your whole page.'));
+      if(t.rimg&&mine.some(r=>r.k==='value'||r.k==='range'))c.append(img(t.rimg,'Printed range for '+t.test),el('div',{class:'mute'},'Printed range, from your photo.'));
+      mine.forEach(r=>fieldWidget(c,r.id,r.kind,KIND_LABEL[r.k]+(t[r.k].state==='check'?'':''),t[r.k].reading,r.k));
+      v.append(c)})}
+  // ticked
+  if(tk.length){v.append(el('h2',{style:'margin-top:14px'},'Filled in: both readers agree'));
+    const c=el('div',{class:'card'+(groupOk?' done':'')});
+    page.tests.forEach((t,ti)=>{const mine=tk.filter(r=>r.ti===ti);if(!mine.length)return;
+      const row=el('div',{class:'res'});row.append(el('div',{class:'t'},t.test));
+      mine.forEach(r=>{const e=editing[r.id];row.append(el('div',{},el('span',{class:'mute'},KIND_LABEL[r.k]+': '),e?el('span',{}):el('span',{class:'v'},finalText(ti,r.k)||'—'),' ',e?'':el('button',{class:'lnk',onclick:()=>{editing[r.id]=true;groupOk=false;render()}},'Edit')));
+        if(editing[r.id]){const inp=el('input',{type:'text',value:finalText(ti,r.k)});const row2=el('div',{class:'row'},el('button',{class:'go',style:'margin-top:0',onclick:()=>{S[r.id]={edited:inp.value.trim()};delete editing[r.id];render()}},'Use my entry'));row.append(inp,row2)}});
+      c.append(row)});
+    const gb=el('button',{class:'go',onclick:()=>{groupOk=true;render()}},groupOk?'✓ These match the paper':'These match the paper');gb.disabled=groupOk||Object.keys(editing).length>0;c.append(gb);
+    v.append(c)}
+  const ab=el('button',{class:'go',onclick:()=>go(3)},'Add to my record');ab.disabled=!allDone();v.append(ab);
+  v.append(el('p',{class:'mute'},'Nothing is added to your record, and nothing can be shared with a doctor, until every item is confirmed.'));
+  v.append(el('button',{class:'lnk',onclick:()=>go(0)},'← Back to the photo'));
+}
+const KIND_LABEL={value:'Result',unit:'Unit',range:'Printed range',flag:'Flag printed on the paper'};
+function fieldWidget(card,id,kind,label,reading){
+  const s=S[id]??(S[id]={confirmed:false,text:kind==='confirm'?reading:''});
+  const wrap=el('div',{style:'margin-top:8px'});
+  if(s.confirmed){wrap.append(el('div',{class:'v'},'✓ '+(s.text||'(left empty)')),el('button',{class:'lnk',onclick:()=>{s.confirmed=false;render()}},'Change'));card.append(wrap);return}
+  const lbl=kind==='date'?'Type the date as written (Nepali or English date)':kind==='confirm'?label+' as the reader copied it. Edit it if the paper differs.':label+': the readers did not agree, so it is empty. Type it from the paper, or leave it empty.';
+  wrap.append(el('div',{class:'mute'},lbl));
+  const inp=el('input',{type:'text',autocomplete:'off',value:s.text});
+  const btn=el('button',{class:'go',style:'margin-top:8px'},'');
+  const sync=()=>{s.text=inp.value.trim();btn.disabled=!s.text;btn.textContent=kind==='date'?'Confirm date':kind==='confirm'?(s.text===reading?'Matches the paper':'Use my entry'):'Use my entry'};
+  inp.addEventListener('input',sync);btn.addEventListener('click',()=>{if(s.text){s.confirmed=true;render()}});
+  wrap.append(inp,btn);
+  if(kind==='check')wrap.append(el('button',{class:'sec',style:'width:100%;margin-top:6px',onclick:()=>{s.text='';s.confirmed=true;render()}},'Leave empty'));
+  card.append(wrap);sync();
+}
+// ---- share ---------------------------------------------------------------
+const token=()=>{const a=new Uint8Array(12);crypto.getRandomValues(a);return Array.from(a,b=>'abcdefghjkmnpqrstuvwxyz23456789'[b%31]).join('')};
+const status=s=>s.revoked?'revoked':(now()>=s.expires?'expired':'live');
+const addLog=(s,t)=>s.log.push({at:now(),t});
+function qrSvg(url){const q=qrcode(0,'M');q.addData(url);q.make();return q.createSvgTag({cellSize:4,margin:2,scalable:true})}
+function vShare(v){
+  v.append(el('h1',{},'Share with a doctor'),el('p',{class:'sub'},'Your record has this page. You choose how long a doctor can see it, you see every time it is opened, and you can stop it at any time.'));
+  const mk=el('div',{class:'card'});mk.append(el('div',{class:'t'},page.title),el('div',{class:'mute'},'Confirmed by you · '+page.facility));
+  const who=el('input',{type:'text',placeholder:'Who is it for? (optional, only for your own list)',style:'margin-top:8px'});
+  const dur=el('select',{style:'margin-top:8px'},el('option',{value:60},'1 hour'),el('option',{value:1440,selected:''},'24 hours'),el('option',{value:10080},'7 days'));
+  mk.append(who,dur,el('button',{class:'go',onclick:()=>{const m=+dur.value,t=token();const s={id:t,who:who.value.trim(),expires:new Date(now().getTime()+m*60000),revoked:false,log:[]};addLog(s,'You created this share'+(s.who?' for '+s.who:'')+'.');shares.unshift(s);render()}},'Create share link'));
+  v.append(mk);
+  for(const s of shares){
+    const st=status(s),live=st==='live',url='https://abhilekh.example.invalid/s/'+s.id;
+    const c=el('div',{class:'card'+(live?'':' off')});
+    c.append(el('div',{},el('span',{class:'pill '+(live?'live':'dead')},live?'Active':st==='revoked'?'Stopped by you':'Time ran out'),' ',el('span',{class:'mute'},(live?'until ':'ended ')+fmt(st==='revoked'?s.revokedAt:s.expires))),el('div',{class:'t',style:'margin-top:6px'},s.who||'Doctor (no name given)'));
+    if(live){const qb=el('div',{class:'qr'});qb.innerHTML=qrSvg(url);c.append(qb,el('div',{class:'url'},url),el('div',{class:'mute',style:'margin-top:4px'},'Sample link: it goes nowhere. A real one would open the doctor\'s view.'))}
+    const r=el('div',{class:'row'},el('button',{class:'sec',onclick:()=>{doctorId=s.id;if(status(s)==='live')addLog(s,'Opened on a doctor\'s phone (simulated).');else addLog(s,'Someone tried to open it, but it was '+(st==='revoked'?'stopped':'out of time')+'. Nothing was shown.');render()}},'Open as the doctor'));
+    if(live)r.append(el('button',{class:'danger',onclick:()=>{s.revoked=true;s.revokedAt=now();addLog(s,'You stopped this share.');render()}},'Stop sharing'));
+    c.append(r,el('div',{class:'mute',style:'margin-top:8px'},'Who looked, and when:'));
+    const ul=el('ul',{class:'log'});s.log.forEach(e=>ul.append(el('li',{},fmt(e.at)+' · '+e.t)));c.append(ul);v.append(c)}
+  const sim=el('div',{class:'sim'},el('h2',{},'Prototype controls (not part of the app)'),el('div',{class:'mute'},'Time in this prototype: '+fmt(now())),el('div',{class:'row'},el('button',{class:'sec',onclick:()=>{offsetMin+=60;render()}},'Let 1 hour pass'),el('button',{class:'sec',onclick:()=>{offsetMin+=1440;render()}},'Let 1 day pass')));
+  const s=shares.find(x=>x.id===doctorId);
+  if(s){const ph=el('div',{class:'phone'});
+    if(status(s)!=='live')ph.append(el('div',{class:'gone'},status(s)==='revoked'?'This share was stopped by the patient.':'This share has run out of time.',el('div',{class:'mute',style:'font-weight:400;margin-top:6px'},'Ask the patient for a new link.')));
+    else{ph.append(el('div',{class:'mute'},'SAMPLE · नमूना · patient-confirmed record · visible until '+fmt(s.expires)));
+      const c=el('div',{class:'card',style:'margin-top:10px'});c.append(el('h2',{},page.title),el('div',{class:'mute'},page.facility+' · '+page.patient+' · '+(S.date&&S.date.text||'')));
+      page.tests.forEach((t,ti)=>{const val=finalText(ti,'value'),un=finalText(ti,'unit'),rg=finalText(ti,'range'),fl=finalText(ti,'flag');
+        const row=el('div',{class:'res'});row.append(el('div',{class:'t'},t.test),el('div',{class:'v'},(val||'—')+' ',el('span',{class:'u'},un),fl?el('span',{class:'flag'},fl):''),el('div',{class:'mute'},'Printed range: '+(rg||'—')+(fl?' · flag printed on the paper: '+fl:'')));
+        if(t.vimg){const im=el('img',{class:'crop',src:t.vimg,alt:'Region of the original for '+t.test,style:'display:none'});row.append(el('button',{class:'lnk',onclick:()=>{im.style.display=im.style.display==='none'?'block':'none'}},'See the original'),im)}
+        else row.append(el('div',{class:'mute'},'Original region not found; see the whole page.'));
+        c.append(row)});
+      ph.append(c)}
+    sim.append(ph)}
+  v.append(sim,el('p',{class:'mute'},'The doctor sees only what the paper says: value, unit, printed range and any flag the lab printed. Abhilekh gives no advice.'),el('button',{class:'lnk',onclick:reset},'Start over with another page'));
+}
+render();
+</script></body></html>
