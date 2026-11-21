@@ -1,0 +1,923 @@
+{
+ "clean/L21-urine-text-results.png": {
+  "kind": "lab_report",
+  "date_as_printed": "24/11/2026",
+  "facility": "उदाहरण प्याथोलोजी / Namuna Clinical Laboratory (fictional)",
+  "clinician": null,
+  "patient_name": "Parbati Udaharan",
+  "results": [
+   {
+    "test": "Colour",
+    "value": "Pale yellow",
+    "unit": null,
+    "range": "Pale yellow",
+    "flag": null
+   },
+   {
+    "test": "Appearance",
+    "value": "Clear",
+    "unit": null,
+    "range": "Clear",
+    "flag": null
+   },
+   {
+    "test": "Reaction",
+    "value": "Acidic",
+    "unit": null,
+    "range": "Acidic",
+    "flag": null
+   },
+   {
+    "test": "Specific gravity",
+    "value": "1020",
+    "unit": null,
+    "range": "1.005 – 1.030",
+    "flag": null
+   },
+   {
+    "test": "Protein",
+    "value": "Trace",
+    "unit": null,
+    "range": "Nil",
+    "flag": null
+   },
+   {
+    "test": "Sugar",
+    "value": "Nil",
+    "unit": null,
+    "range": "Nil",
+    "flag": null
+   },
+   {
+    "test": "Pus cells",
+    "value": "2-4",
+    "unit": "/HPF",
+    "range": "0 – 5",
+    "flag": null
+   },
+   {
+    "test": "RBC",
+    "value": "Nil",
+    "unit": "/HPF",
+    "range": "0 – 2",
+    "flag": null
+   },
+   {
+    "test": "Epithelial cells",
+    "value": "6-8",
+    "unit": "/HPF",
+    "range": "0 – 5",
+    "flag": "H"
+   }
+  ],
+  "medicines": [],
+  "notes": [
+   "Example Marg, Birgunj · Urine routine examination",
+   "Age/Sex: 52 y / F",
+   "URINE R/E",
+   "Lab Tech."
+  ]
+ },
+ "clean/L22-thyroid-coffee-bleed.png": {
+  "kind": "lab_report",
+  "date_as_printed": "25/11/2026",
+  "facility": "Example Thyroid & Vitamin Centre (fictional)",
+  "clinician": null,
+  "patient_name": "SARITA NAMUNA",
+  "results": [
+   {
+    "test": "TSH",
+    "value": "2.45",
+    "unit": "µIU/mL",
+    "range": "0.40 – 4.00",
+    "flag": null
+   },
+   {
+    "test": "Free T4",
+    "value": "1.1",
+    "unit": "ng/dL",
+    "range": "0.8 – 1.8",
+    "flag": null
+   },
+   {
+    "test": "Total T3",
+    "value": "118",
+    "unit": "ng/dL",
+    "range": "80 – 200",
+    "flag": null
+   },
+   {
+    "test": "Anti-TPO",
+    "value": "28",
+    "unit": "IU/mL",
+    "range": "< 35",
+    "flag": null
+   },
+   {
+    "test": "Vitamin D (25-OH)",
+    "value": "18.2",
+    "unit": "ng/mL",
+    "range": "30 – 100",
+    "flag": "L"
+   }
+  ],
+  "medicines": [],
+  "notes": [
+   "SAMPLE: SERUM",
+   "LAB TECH"
+  ]
+ },
+ "clean/L23-liver-fax.png": {
+  "kind": "lab_report",
+  "date_as_printed": "26/11/2026",
+  "facility": "Example Referral Laboratory (fictional)",
+  "clinician": "Dr. S. Namuna (fictional)",
+  "patient_name": "Chandra Bahadur Namuna",
+  "results": [
+   {
+    "test": "Total bilirubin",
+    "value": "0.8",
+    "unit": "mg/dL",
+    "range": "0.2 – 1.2",
+    "flag": null
+   },
+   {
+    "test": "Direct bilirubin",
+    "value": "0.2",
+    "unit": "mg/dL",
+    "range": "0.0 – 0.3",
+    "flag": null
+   },
+   {
+    "test": "SGOT (AST)",
+    "value": "42",
+    "unit": "U/L",
+    "range": "5 – 40",
+    "flag": "H"
+   },
+   {
+    "test": "SGPT (ALT)",
+    "value": "56",
+    "unit": "U/L",
+    "range": "5 – 40",
+    "flag": "H"
+   },
+   {
+    "test": "Alkaline phosphatase",
+    "value": "118",
+    "unit": "U/L",
+    "range": "44 – 147",
+    "flag": null
+   },
+   {
+    "test": "Total protein",
+    "value": "7.1",
+    "unit": "g/dL",
+    "range": "6.0 – 8.3",
+    "flag": null
+   },
+   {
+    "test": "Albumin",
+    "value": "4.2",
+    "unit": "g/dL",
+    "range": "3.5 – 5.0",
+    "flag": null
+   },
+   {
+    "test": "GGT",
+    "value": "64",
+    "unit": "U/L",
+    "range": "< 55",
+    "flag": "H"
+   }
+  ],
+  "medicines": [],
+  "notes": []
+ },
+ "clean/P21-abbreviated-doses.png": {
+  "kind": "prescription",
+  "date_as_printed": "21/11/2026",
+  "facility": "उदाहरण मेडिकल सेन्टर / Example Medical Centre, Biratnagar",
+  "clinician": "Dr. M. Namuna",
+  "patient_name": "Ram Bahadur Udaharan",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Tab Amlodipine 5 mg",
+    "dose": "OD",
+    "duration": "x 1 month"
+   },
+   {
+    "as_written": "Tab Losartan 50 mg",
+    "dose": "BD",
+    "duration": "x 1 month"
+   },
+   {
+    "as_written": "Tab Gliclazide 80 mg",
+    "dose": "1 tab BD",
+    "duration": "continue"
+   },
+   {
+    "as_written": "Tab Levothyroxine 50 mcg",
+    "dose": "OD empty stomach",
+    "duration": "x 3 mo"
+   },
+   {
+    "as_written": "Tab Furosemide 40 mg",
+    "dose": "OD mane",
+    "duration": "till review"
+   }
+  ],
+  "notes": [
+   "58/M",
+   "HTN, DM2, hypothyroid",
+   "Review with TSH, HbA1c"
+  ]
+ },
+ "clean/P22-child-syrup-ml.png": {
+  "kind": "prescription",
+  "date_as_printed": "22/11/2026",
+  "facility": "Example Child Clinic, Bhaktapur",
+  "clinician": "Dr. N. Udaharan",
+  "patient_name": "Aarav Namuna",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Syp Paracetamol 125 mg/5 ml",
+    "dose": "5 ml TDS",
+    "duration": "x 3 days"
+   },
+   {
+    "as_written": "Syp Amoxinepa 250 mg/5 ml",
+    "dose": "5 ml BD",
+    "duration": "x 5 days"
+   },
+   {
+    "as_written": "Syp Salbutamol 2 mg/5 ml",
+    "dose": "2.5 ml TDS",
+    "duration": "x 3 days"
+   },
+   {
+    "as_written": "Tab Zinc sulfate 20 mg",
+    "dose": "1 tab OD",
+    "duration": "x 10 days"
+   },
+   {
+    "as_written": "ORS",
+    "dose": "after each loose stool",
+    "duration": null
+   }
+  ],
+  "notes": [
+   "4 y/M wt 14 kg",
+   "fever, cough x 3 d",
+   "plenty of fluids"
+  ]
+ },
+ "clean/P23-fractions-decimals.png": {
+  "kind": "prescription",
+  "date_as_printed": "2083/08/17",
+  "facility": "Example Polyclinic, Nepalgunj",
+  "clinician": "Dr. O. Namuna",
+  "patient_name": "Radha Devi Udaharan",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Tab Losartan 25 mg",
+    "dose": "1/2-0-1/2",
+    "duration": "x 1 month"
+   },
+   {
+    "as_written": "Tab Furosemide 20 mg",
+    "dose": "1/2-0-0",
+    "duration": "x 17 days"
+   },
+   {
+    "as_written": "Tab Prednisolone 5 mg",
+    "dose": "0.5-0-0.5",
+    "duration": "x 17 days"
+   },
+   {
+    "as_written": "Tab Amlodipine 2.5 mg",
+    "dose": "0-0-1",
+    "duration": "x 1 month"
+   },
+   {
+    "as_written": "Tab Folic acid 5 mg",
+    "dose": "1-0-0",
+    "duration": "x 3 months"
+   }
+  ],
+  "notes": [
+   "74/F",
+   "HTN, CKD stage 3, fluid overload",
+   "Wt daily, salt restriction"
+  ]
+ },
+ "clean/P24-faded-carbon-steep.png": {
+  "kind": "prescription",
+  "date_as_printed": "2083/08/22",
+  "facility": "उदाहरण अस्पताल / Example Hospital, Dang",
+  "clinician": "Dr. P. Udaharan",
+  "patient_name": "Mina Kumari Namuna",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Cap Doxycycline 100 mg",
+    "dose": "1-0-1",
+    "duration": "x 7 d"
+   },
+   {
+    "as_written": "Tab Ibuprofen 400 mg",
+    "dose": "1-1-1",
+    "duration": "x 3 d"
+   },
+   {
+    "as_written": "Tab Levocetirizine 5 mg",
+    "dose": "0-0-1",
+    "duration": "x 5 d"
+   },
+   {
+    "as_written": "Tab Paracetamol 500 mg",
+    "dose": "1-1-1",
+    "duration": "x 3 d"
+   }
+  ],
+  "notes": [
+   "36/F",
+   "cellulitis R leg",
+   "elevate leg, review 1 wk"
+  ]
+ },
+ "clean/P25-folded-torn-corner.png": {
+  "kind": "prescription",
+  "date_as_printed": "23/11/2026",
+  "facility": "Example Clinic, Lalitpur",
+  "clinician": "Dr. Q. Namuna",
+  "patient_name": "Suresh Udaharan",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Tab Cefixime 200 mg",
+    "dose": "1-0-1",
+    "duration": "x 5 days"
+   },
+   {
+    "as_written": "Tab Metronidazole 400 mg",
+    "dose": "1-1-1",
+    "duration": "x 5 days"
+   },
+   {
+    "as_written": "Tab Domperidone 10 mg",
+    "dose": "1-0-1",
+    "duration": "x 5 days"
+   },
+   {
+    "as_written": "Tab Ranitidine 150 mg",
+    "dose": "1-0-1",
+    "duration": "x 14 days"
+   }
+  ],
+  "notes": [
+   "27/M",
+   "loose motion, vomiting x 2 d",
+   "ORS, soft diet"
+  ]
+ },
+ "clean/P26-narrow-caps-lookalikes-glare.png": {
+  "kind": "prescription",
+  "date_as_printed": "2083/08/24",
+  "facility": "Example Medical Hall, Hetauda",
+  "clinician": "Dr. R. Udaharan",
+  "patient_name": "GOPAL NAMUNA",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "TAB ASPIRIN 75 MG",
+    "dose": "0-1-0",
+    "duration": "X 4 DAYS"
+   },
+   {
+    "as_written": "TAB AMLODIPINE 5 MG",
+    "dose": "1-0-0",
+    "duration": "X 1 MONTH"
+   },
+   {
+    "as_written": "TAB LOSARTAN 50 MG",
+    "dose": "1-0-1",
+    "duration": "X 1 MONTH"
+   },
+   {
+    "as_written": "TAB OMEPRAZOLE 20 MG",
+    "dose": "0-0-1",
+    "duration": "X 4 WEEKS"
+   }
+  ],
+  "notes": [
+   "47/M",
+   "CHEST PAIN, ? ANGINA",
+   "ECG, TROP-I TODAY",
+   "R. UDAHARAN (signature)"
+  ]
+ },
+ "clean/P27-devanagari-weeks-months.png": {
+  "kind": "prescription",
+  "date_as_printed": "२०८३ मंसिर ६",
+  "facility": "उदाहरण स्वास्थ्य चौकी",
+  "clinician": "डा. एस. उदाहरण",
+  "patient_name": "Kamal Namuna",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Tab Albendazole 400 mg",
+    "dose": "एक पटक",
+    "duration": null
+   },
+   {
+    "as_written": "Tab Folic acid 5 mg",
+    "dose": "बिहान १",
+    "duration": "३ महिना"
+   },
+   {
+    "as_written": "Cap Omeprazole 20 mg",
+    "dose": "खाली पेटमा १",
+    "duration": "२ हप्ता"
+   },
+   {
+    "as_written": "Tab Metronidazole 400 mg",
+    "dose": "१-१-१",
+    "duration": "७ दिन"
+   }
+  ],
+  "notes": [
+   "33/M",
+   "पेट दुख्ने, कमजोरी",
+   "२ हप्तामा फेरि आउने"
+  ]
+ },
+ "photo/L21-urine-text-results.jpg": {
+  "kind": "lab_report",
+  "date_as_printed": "24/11/2026",
+  "facility": "Namuna Clinical Laboratory (fictional)",
+  "clinician": null,
+  "patient_name": "Parbati Maharan",
+  "results": [
+   {
+    "test": "Colour",
+    "value": "Pale yellow",
+    "unit": null,
+    "range": "Pale yellow",
+    "flag": null
+   },
+   {
+    "test": "Appearance",
+    "value": "Clear",
+    "unit": null,
+    "range": "Clear",
+    "flag": null
+   },
+   {
+    "test": "Reaction",
+    "value": "Acidic",
+    "unit": null,
+    "range": "Acidic",
+    "flag": null
+   },
+   {
+    "test": "Specific gravity",
+    "value": "1020",
+    "unit": null,
+    "range": "1.005 – 1.030",
+    "flag": null
+   },
+   {
+    "test": "Protein",
+    "value": "Trace",
+    "unit": null,
+    "range": "Nil",
+    "flag": null
+   },
+   {
+    "test": "Sugar",
+    "value": "Nil",
+    "unit": null,
+    "range": "Nil",
+    "flag": null
+   },
+   {
+    "test": "Pus cells",
+    "value": "2-4",
+    "unit": "/HPF",
+    "range": "0 – 5",
+    "flag": null
+   },
+   {
+    "test": "RBC",
+    "value": "Nil",
+    "unit": "/HPF",
+    "range": "0 – 2",
+    "flag": null
+   },
+   {
+    "test": "Epithelial cells",
+    "value": "6-8",
+    "unit": "/HPF",
+    "range": "0 – 5",
+    "flag": "H"
+   }
+  ],
+  "medicines": [],
+  "notes": [
+   "उदाहरण प्याथोलोजी",
+   "Example Marg, Birgunj · Urine routine examination",
+   "Age/Sex: 52 y / F",
+   "URINE R/E",
+   "Lab Tech."
+  ]
+ },
+ "photo/L22-thyroid-coffee-bleed.jpg": {
+  "kind": "lab_report",
+  "date_as_printed": "25/11/2026",
+  "facility": "Example Thyroid & Vitamin Centre (fictional)",
+  "clinician": null,
+  "patient_name": "SARITA NAMUNA",
+  "results": [
+   {
+    "test": "TSH",
+    "value": "2.45",
+    "unit": "µIU/mL",
+    "range": "0.40 – 4.00",
+    "flag": null
+   },
+   {
+    "test": "Free T4",
+    "value": "1.1",
+    "unit": "ng/dL",
+    "range": "0.8 – 1.8",
+    "flag": null
+   },
+   {
+    "test": "Total T3",
+    "value": "118",
+    "unit": "ng/dL",
+    "range": "80 – 200",
+    "flag": null
+   },
+   {
+    "test": "Anti-TPO",
+    "value": "28",
+    "unit": "IU/mL",
+    "range": "< 35",
+    "flag": null
+   },
+   {
+    "test": "Vitamin D (25-OH)",
+    "value": "18.2",
+    "unit": "ng/mL",
+    "range": "30 – 100",
+    "flag": "L"
+   }
+  ],
+  "medicines": [],
+  "notes": [
+   "उदाहरण डायग्नोस्टिक",
+   "Tel 00-0000000 · Thyroid profile, anti-TPO, vitamin D",
+   "Age/Sex: 39 Y/F",
+   "SAMPLE: SERUM",
+   "LAB TECH"
+  ]
+ },
+ "photo/L23-liver-fax.jpg": {
+  "kind": "lab_report",
+  "date_as_printed": "26/11/2026",
+  "facility": "Example Referral Laboratory (fictional)",
+  "clinician": "Dr. S. Namuna (fictional)",
+  "patient_name": "Chandra Bahadur Namuna",
+  "results": [
+   {
+    "test": "Total bilirubin",
+    "value": "0.8",
+    "unit": "mg/dL",
+    "range": "0.2 - 1.2",
+    "flag": null
+   },
+   {
+    "test": "Direct bilirubin",
+    "value": "0.2",
+    "unit": "mg/dL",
+    "range": "0.0 - 0.3",
+    "flag": null
+   },
+   {
+    "test": "SGOT (AST)",
+    "value": "42",
+    "unit": "U/L",
+    "range": "5 - 40",
+    "flag": "H"
+   },
+   {
+    "test": "SGPT (ALT)",
+    "value": "56",
+    "unit": "U/L",
+    "range": "5 - 40",
+    "flag": "H"
+   },
+   {
+    "test": "Alkaline phosphatase",
+    "value": "118",
+    "unit": "U/L",
+    "range": "44 - 147",
+    "flag": null
+   },
+   {
+    "test": "Total protein",
+    "value": "7.1",
+    "unit": "g/dL",
+    "range": "6.0 - 8.3",
+    "flag": null
+   },
+   {
+    "test": "Albumin",
+    "value": "4.2",
+    "unit": "g/dL",
+    "range": "3.5 - 5.0",
+    "flag": null
+   },
+   {
+    "test": "GGT",
+    "value": "64",
+    "unit": "U/L",
+    "range": "< 55",
+    "flag": "H"
+   }
+  ],
+  "medicines": [],
+  "notes": []
+ },
+ "photo/P21-abbreviated-doses.jpg": {
+  "kind": "prescription",
+  "date_as_printed": "21/11/2026",
+  "facility": "Example Medical Centre, Biratnagar",
+  "clinician": "Dr. M. Namuna, MBBS MD",
+  "patient_name": "Ram Bahadur Udaharan",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Tab Amlodipine 5 mg",
+    "dose": "OD",
+    "duration": "x 1 month"
+   },
+   {
+    "as_written": "Tab Losartan 50 mg",
+    "dose": "BD",
+    "duration": "x 1 month"
+   },
+   {
+    "as_written": "Tab Gliclazide 80 mg",
+    "dose": "1 tab BD",
+    "duration": "continue"
+   },
+   {
+    "as_written": "Tab Levothyroxine 50 mcg",
+    "dose": "OD empty stomach",
+    "duration": "x 3 mo"
+   },
+   {
+    "as_written": "Tab Furosemide 40 mg",
+    "dose": "OD mane",
+    "duration": "till review"
+   }
+  ],
+  "notes": [
+   "58/M",
+   "HTN, DM-2, hypothyroid",
+   "Review with TSH, HbA1c"
+  ]
+ },
+ "photo/P22-child-syrup-ml.jpg": {
+  "kind": "prescription",
+  "date_as_printed": "22/11/2026",
+  "facility": "Example Child Clinic, Bhaktapur",
+  "clinician": "Dr. N. Udaharan",
+  "patient_name": "Aarav Namuna",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Syp Paracetamol 125 mg/5 ml",
+    "dose": "5 ml TDS",
+    "duration": "× 3 days"
+   },
+   {
+    "as_written": "Syp Amoxinepa 250 mg/5 ml",
+    "dose": "5 ml BD",
+    "duration": "× 5 days"
+   },
+   {
+    "as_written": "Syp Salbutamol 2 mg/5 ml",
+    "dose": "2.5 ml TDS",
+    "duration": "× 3 days"
+   },
+   {
+    "as_written": "Tab Zinc sulfate 20 mg",
+    "dose": "1 tab OD",
+    "duration": "× 10 days"
+   },
+   {
+    "as_written": "ORS",
+    "dose": "after each loose stool",
+    "duration": null
+   }
+  ],
+  "notes": [
+   "4 y/M wt 14 kg",
+   "fever, cough × 3 d",
+   "plenty of fluids"
+  ]
+ },
+ "photo/P23-fractions-decimals.jpg": {
+  "kind": "prescription",
+  "date_as_printed": "2083/08/17",
+  "facility": "Example Polyclinic, Nepalgunj",
+  "clinician": "Dr. O. Namuna",
+  "patient_name": "Radha Devi Udaharan",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Tab Losartan 25 mg",
+    "dose": "1/2-0-1/2",
+    "duration": "x 1 month"
+   },
+   {
+    "as_written": "Tab Furosemide 20 mg",
+    "dose": "1/2-0-0",
+    "duration": "x 17 days"
+   },
+   {
+    "as_written": "Tab Prednisolone 5 mg",
+    "dose": "0.5-0-0.5",
+    "duration": "x 17 days"
+   },
+   {
+    "as_written": "Tab Amlodipine 2.5 mg",
+    "dose": "0-0-1",
+    "duration": "x 1 month"
+   },
+   {
+    "as_written": "Tab Folic acid 5 mg",
+    "dose": "1-0-0",
+    "duration": "x 3 months"
+   }
+  ],
+  "notes": [
+   "74/F",
+   "HTN, CKD stage 3, fluid overload",
+   "Wt daily, salt restriction"
+  ]
+ },
+ "photo/P24-faded-carbon-steep.jpg": {
+  "kind": "prescription",
+  "date_as_printed": "2083/08/22",
+  "facility": "उदाहरण अस्पताल",
+  "clinician": "Dr. P. Udaharan",
+  "patient_name": "Mina Kumari Namuna",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Cap Doxycycline 100 mg",
+    "dose": "1-0-1",
+    "duration": "x 7 d"
+   },
+   {
+    "as_written": "Tab Ibuprofen 400 mg",
+    "dose": "1-1-1",
+    "duration": "x 3 d"
+   },
+   {
+    "as_written": "Tab Levocetirizine 5 mg",
+    "dose": "0-0-1",
+    "duration": "x 5 d"
+   },
+   {
+    "as_written": "Tab Paracetamol 500 mg",
+    "dose": "1-1-1",
+    "duration": "x 3 d"
+   }
+  ],
+  "notes": [
+   "Example Hospital, Dang · NMC 00000 (fictional) · patient copy",
+   "36/F",
+   "cellulitis R lg",
+   "elevate leg review 1 wk"
+  ]
+ },
+ "photo/P25-folded-torn-corner.jpg": {
+  "kind": "prescription",
+  "date_as_printed": "23/11/2026",
+  "facility": "Example Clinic, Lalitpur",
+  "clinician": "Dr. Q. Namuna MBBS",
+  "patient_name": "Suresh Udaharan",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Tab Cefixime 200 mg",
+    "dose": "1-0-1",
+    "duration": "x 5 day"
+   },
+   {
+    "as_written": "Tab Metronidazole 400 mg",
+    "dose": "1-1-1",
+    "duration": "x 5 days"
+   },
+   {
+    "as_written": "Tab Domperidone 10 mg",
+    "dose": "1-0-1",
+    "duration": "x 5 day"
+   },
+   {
+    "as_written": "Tab Ranitidine 150 mg",
+    "dose": "1-0-1",
+    "duration": "x 14 day"
+   }
+  ],
+  "notes": [
+   "27/M",
+   "loose motion, vomiting x 2 d",
+   "ORS, soft diet",
+   "Reg. 00000 (fictional)",
+   "Signature: Q. Namuna"
+  ]
+ },
+ "photo/P26-narrow-caps-lookalikes-glare.jpg": {
+  "kind": "prescription",
+  "date_as_printed": "2083/08/14",
+  "facility": "Example Medical Hall, Hetauda",
+  "clinician": "Dr. R. Udaharan MBBS",
+  "patient_name": "GOPAL NAMUNA",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "TAB ASPIRIN 75 MG",
+    "dose": "0-1-0",
+    "duration": "X 4 DAYS"
+   },
+   {
+    "as_written": "TAB AMLODIPINE 5 MG",
+    "dose": "1-0-0",
+    "duration": "X 1 MONTH"
+   },
+   {
+    "as_written": "TAB LOSARTAN 50 MG",
+    "dose": "1-0-1",
+    "duration": "X 1 MONTH"
+   },
+   {
+    "as_written": "TAB OMEPRAZOLE 20 MG",
+    "dose": "0-0-1",
+    "duration": "X 4 WEEKS"
+   }
+  ],
+  "notes": [
+   "47/M",
+   "CHEST PAIN, ? ANGINA",
+   "ECG, TROP-I TODAY",
+   "Signed: R. UDAHARAN",
+   "NMC 00000 (fictional)"
+  ]
+ },
+ "photo/P27-devanagari-weeks-months.jpg": {
+  "kind": "prescription",
+  "date_as_printed": "२०८३ मंसिर ५",
+  "facility": "उदाहरण स्वास्थ्य चौकी",
+  "clinician": "डा. एस. उदाहरण",
+  "patient_name": "Kamal Namuna",
+  "results": [],
+  "medicines": [
+   {
+    "as_written": "Tab Albendazole 400 mg",
+    "dose": "एक पटक",
+    "duration": null
+   },
+   {
+    "as_written": "Tab Folic acid 5 mg",
+    "dose": "बिहान १",
+    "duration": "३ महिना"
+   },
+   {
+    "as_written": "Cap Omeprazole 20 mg",
+    "dose": "खाली पेटमा १",
+    "duration": "२ हप्ता"
+   },
+   {
+    "as_written": "Tab Metronidazole 400 mg",
+    "dose": "१-१-१",
+    "duration": "७ दिन"
+   }
+  ],
+  "notes": [
+   "33/M",
+   "पेट दुख्ने, कमजोरी",
+   "२ हप्तामा फेरि आउने",
+   "Example Health Post, Dolakha · NMC 00000 (fictional)"
+  ]
+ }
+}
