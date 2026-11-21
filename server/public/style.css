@@ -1,0 +1,41 @@
+:root{--ink:#1d2433;--mute:#5d6678;--line:#d9dde6;--bg:#f6f4ef;--card:#fff;--accent:#7a1530;--ok:#1d6b4a;--warn:#8a4b00}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:430px;margin:0 auto;padding:16px 14px 80px}
+.banner{background:#fff3cd;border:1px solid #e6d28a;border-radius:8px;padding:8px 10px;font-size:13px;margin-bottom:14px}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:17px;margin:0 0 8px}.sub{color:var(--mute);font-size:14px;margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px}
+.card.off{background:#f1f1f1;border-style:dashed}
+label.opt{display:flex;gap:8px;align-items:flex-start;padding:6px 0;font-size:15px}
+input[type=text]{width:100%;font-size:16px;padding:9px;border:1.5px solid var(--line);border-radius:8px;font-family:inherit}
+select{font:inherit;padding:8px;border:1.5px solid var(--line);border-radius:8px;width:100%;background:#fff}
+button{font:inherit;font-weight:600;border-radius:8px;padding:10px 14px;border:0;cursor:pointer}
+.go{background:var(--accent);color:#fff;width:100%;margin-top:10px}.go:disabled{background:#c9ced8;cursor:not-allowed}
+.sec{background:#fff;color:var(--accent);border:1.5px solid var(--accent);padding:8px 12px;font-weight:600}
+.danger{background:#fff;color:#a01212;border:1.5px solid #a01212}
+.row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}.row>button{flex:1}
+.mute{color:var(--mute);font-size:13px}.pill{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:10px}
+.live{background:#e3f3ea;color:var(--ok)}.dead{background:#eee;color:#555}
+.qr{display:flex;justify-content:center;padding:8px 0}.qr svg{width:180px;height:180px}
+.url{font-size:12px;word-break:break-all;color:var(--mute);background:#f6f6f6;padding:6px;border-radius:6px}
+.log{font-size:13px;margin:6px 0 0;padding-left:16px}.log li{margin:2px 0}
+.sim{border:2px dashed #999;border-radius:12px;padding:10px;margin:18px 0 12px;background:#fafafa}
+.sim h2{font-size:14px;color:#555;text-transform:uppercase;letter-spacing:.05em}
+.phone{border:6px solid #2b2f3a;border-radius:22px;padding:12px;background:var(--bg);margin-top:8px}
+.res{border-top:1px solid var(--line);padding:8px 0}.res:first-of-type{border-top:0}
+.t{font-weight:600}.v{font-size:20px;font-weight:600}.u{font-size:14px;color:var(--mute);font-weight:400}
+.flag{display:inline-block;margin-left:6px;font-size:12px;border:1px solid var(--ink);border-radius:4px;padding:0 5px}
+.orig{background:none;color:var(--accent);padding:2px 0;font-weight:500;font-size:13px}
+.crop{display:block;width:100%;border:1px solid var(--line);border-radius:6px;margin-top:4px;background:#fff}
+.gone{text-align:center;padding:24px 8px;font-weight:600}
+</style></head><body><div class="wrap">
+<div class="banner"><b>SAMPLE · नमूना.</b> Prototype on invented pages, planning stage. Nothing is stored or sent anywhere: the link below goes nowhere and the log lives only in this page. English only so far.</div>
+<h1>Share with a doctor</h1>
+<p class="sub">You choose what a doctor can see and for how long. You can stop a share at any time, and you see every time it is opened.</p>
+
+<div class="card" id="make">
+  <h2>New share</h2>
+  <div id="docs"></div>
+  <label class="mute" for="who" style="display:block;margin-top:8px">Who is it for? (only for your own list, optional)</label>
+  <input type="text" id="who" placeholder="e.g. Dr. Namuna, Example Clinic">
+  <label class="mute" for="dur" style="display:block;margin-top:8px">How long can they see it?</label>
+  <select id="dur"><option value="60">1 hour</option><option value="1440" selected>24 hours</option><option value="10080">7 days</option></select>

@@ -39,3 +39,5 @@ t = open('prototype/share/template.html', encoding='utf8').read()
 t = t.replace('__QRLIB__', lib.replace('</script>', '<\\/script>')).replace('__DATA__', json.dumps(dict(docs=docs), ensure_ascii=False))
 open('prototype/share/index.html', 'w', encoding='utf8').write(t)
 print({d['id']: [(r['test'], bool(r['img'])) for r in d['results']] for d in docs})
+# The share server (server/) serves the same invented sample record, so it is written next to the page.
+open('server/data/sample-record.json', 'w', encoding='utf8').write(json.dumps(dict(docs=docs), ensure_ascii=False))

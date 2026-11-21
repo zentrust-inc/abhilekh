@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Abhilekh: share with a doctor (SAMPLE)</title><link rel="stylesheet" href="/style.css"></head><body><div class="wrap">
+<div class="banner"><b>SAMPLE · नमूना.</b> Prototype on invented pages, planning stage. Links and the access log are real and kept by the server; the records are fictional. There is no sign-in yet. English only so far.</div>
+<h1>Share with a doctor</h1>
+<p class="sub">You choose what a doctor can see and for how long. You can stop a share at any time, and you see every time it is opened.</p>
+<div class="card" id="make">
+  <h2>New share</h2>
+  <div id="docs"></div>
+  <label class="mute" for="who" style="display:block;margin-top:8px">Who is it for? (only for your own list, optional)</label>
+  <input type="text" id="who" maxlength="80" placeholder="e.g. Dr. Namuna, Example Clinic">
+  <label class="mute" for="dur" style="display:block;margin-top:8px">How long can they see it?</label>
+  <select id="dur"></select>
+  <button class="go" id="create">Create share link</button>
+  <div class="mute" id="makeErr" style="margin-top:6px;color:#a01212"></div>
+</div>
+<h2 id="shHead" style="display:none">Your shares</h2>
+<div id="shares"></div>
+<p class="mute">The doctor sees only what the paper says: value, unit, printed range and any flag the lab printed. Abhilekh gives no advice.</p>
+</div>
+<script src="/qrcode.js"></script><script src="/patient.js"></script></body></html>
