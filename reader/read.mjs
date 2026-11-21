@@ -11,12 +11,13 @@ const engine = args.shift();
 const out = args[args.indexOf('--out') + 1];
 const budget = args.includes('--budget') ? +args[args.indexOf('--budget') + 1] : 1.0;
 const dirs = args.filter((a, i) => !a.startsWith('--') && args[i - 1] !== '--out' && args[i - 1] !== '--budget');
-// 'vision' reuses the Chautari reader's Google Cloud Vision engine (plain text lines, no JSON):
+// 'vision' reuses the Chautari reader's Google Cloud Vision engine (text lines and word boxes, no JSON):
 // CHAUTARI_READER_DIR points to a checkout of zentrust-inc/chautari/reader; key VISION_API_KEY.
 async function readVision(file) {
   const v = await import(`${process.env.CHAUTARI_READER_DIR}/engine-vision.mjs`);
-  const [r] = await v.readLines(file);
-  return { lines: r.lines };
+  // words with their four corners are kept next to the lines: they are the regions of the original (rule 3), see regions.mjs
+  const words = await v.readWords(file);
+  return { lines: v.visionLines(words), words };
 }
 const read = { claude: readClaude, gemini: readGemini, vision: readVision }[engine];
 if (!read || !out) { console.error('usage: node read.mjs <claude|gemini> <dir...> --out file.json'); process.exit(1); }
