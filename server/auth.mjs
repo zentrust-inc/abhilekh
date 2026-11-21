@@ -111,6 +111,7 @@ export function createAuth({ store, save, now = () => Date.now(), sms, testMode 
     if (path === '/api/auth/code') {
       const phone = normalisePhone(b.phone);
       if (!phone) return send(res, 400, { error: 'Enter a Nepal mobile number, 10 digits starting with 98, 97 or 96.' }), true;
+      if (sms.name === 'none') return send(res, 503, { error: 'Codes by SMS are not switched on yet, so new sign-ups and new phones cannot be added. Try again later.' }), true;
       const mine = store.smsLog.filter(x => x.phone === phone);
       const last = mine.reduce((m, x) => Math.max(m, x.at), 0);
       if (t - last < L.phoneCooldownMs) return send(res, 429, { error: 'A code was just sent. Wait a minute before asking again.' }), true;

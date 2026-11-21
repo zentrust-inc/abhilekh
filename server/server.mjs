@@ -11,7 +11,7 @@ import { randomBytes } from 'node:crypto';
 import { dirname, join, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createAuth } from './auth.mjs';
-import { akashSender, memorySender } from './sms.mjs';
+import { akashSender, memorySender, noSender } from './sms.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PUBLIC = join(HERE, 'public');
@@ -130,10 +130,10 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
 if (import.meta.url === `file://${process.argv[1]}`) {
   const dataDir = process.env.DATA_DIR || join(HERE, 'data');
   const testMode = process.env.TEST_MODE === '1';
-  // Real SMS only when the Akash token is set (Azure app settings). Without it, sign-up works only in TEST_MODE,
-  // where the code is shown on screen instead of sent.
-  const sms = process.env.AKASH_SMS_TOKEN ? akashSender({ token: process.env.AKASH_SMS_TOKEN }) : memorySender();
-  if (sms.name === 'memory' && !testMode) console.warn('No AKASH_SMS_TOKEN and no TEST_MODE: codes cannot reach anyone, so nobody can sign up.');
+  // Real SMS only when the Akash token is set (Azure app settings). Without it: in TEST_MODE the code is shown on
+  // screen; otherwise the server says plainly that codes are not switched on (never "sent" when nothing was sent).
+  const sms = process.env.AKASH_SMS_TOKEN ? akashSender({ token: process.env.AKASH_SMS_TOKEN }) : testMode ? memorySender() : noSender();
+  console.log('SMS sender: ' + sms.name);
   const app = createApp({ storePath: join(dataDir, 'store.json'), testMode, sms, secureCookies: process.env.INSECURE_COOKIES !== '1' });
   const port = Number(process.env.PORT || 8080);
   http.createServer(app.handler).listen(port, () => console.log('Abhilekh share server (SAMPLE data) on port ' + port));
