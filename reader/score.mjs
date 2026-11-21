@@ -6,11 +6,12 @@
 // Nothing here interprets a result: it only compares copies of the paper.
 import { readFile, writeFile } from 'node:fs/promises';
 import { loadList, checkMedicine } from './medicine-check.mjs';
-import { norm, loose, num, same, sameDose, sameDur, confirmsDose } from './normalise.mjs';
+import { norm, loose, num, same, sameDose, sameDur, confirmsDose, mustConfirmValue } from './normalise.mjs';
 const LIST = new URL('./dda/nlem-2021.json', import.meta.url).pathname;
 const ESSENTIAL = loadList(LIST);
 
 const args = process.argv.slice(2);
+const noWithhold = args.includes('--no-withhold'); // the earlier rule (agreement alone pre-ticks dates and decimal values), kept to compare
 const strictDose = args.includes('--strict-dose'); // the earlier rule (characters must stand as written), kept to compare
 const out = args.includes('--out') ? args[args.indexOf('--out') + 1] : null;
 const pos = args.filter((a, i) => !a.startsWith('--') && args[i - 1] !== '--out');
@@ -37,16 +38,16 @@ function findMed(list, asWritten) {
 
 // ---- per field: what each reader said, whether they agree, whether that matches the key ----
 const rows = [];
-const tally = { fields: 0, rightEmpty: 0, ticked: 0, rightTicks: 0, wrongTicks: 0, flagged: 0, missing: 0, addedFlags: 0, addedRanges: 0 };
+const tally = { fields: 0, rightEmpty: 0, ticked: 0, rightTicks: 0, wrongTicks: 0, flagged: 0, missing: 0, addedFlags: 0, addedRanges: 0, withheld: 0, withheldRight: 0, withheldWrong: 0 };
 // the same counts per kind of field (date, result value, unit, range, flag, medicine name, dose, duration)
 const kinds = new Map();
 const kindOf = (label) => label === 'date' ? 'date' : /^(medicine|dose|duration): /.test(label) ? label.split(': ')[0].replace('medicine', 'medicine name') : `result ${label.split(': ').pop()}`;
-function field(doc, variant, label, truth, values, cmp = same) {
+function field(doc, variant, label, truth, values, cmp = same, mustConfirm = false) {
   const blank = (v) => ['', '-'].includes(norm(v));
   const present = values.filter((v) => v !== undefined);
   const agree = present.length === values.length && present.every((v) => blank(v) ? blank(values[0]) : cmp(v, values[0] ?? ''));
   tally.fields++;
-  const k = kinds.get(kindOf(label)) ?? kinds.set(kindOf(label), { fields: 0, right: 0, wrong: 0, empty: 0, check: 0 }).get(kindOf(label));
+  const k = kinds.get(kindOf(label)) ?? kinds.set(kindOf(label), { fields: 0, right: 0, wrong: 0, empty: 0, check: 0, withheld: 0 }).get(kindOf(label));
   k.fields++;
   if (agree && blank(values[0])) { // every reader left it empty
     if (blank(truth)) { rows.push({ doc, variant, label, truth: '', values, status: 'ok' }); tally.rightEmpty++; k.empty++; return; }
@@ -54,6 +55,11 @@ function field(doc, variant, label, truth, values, cmp = same) {
   }
   const ticked = agree && present.length > 0;
   const right = ticked && cmp(values[0] ?? '', truth ?? '');
+  if (ticked && mustConfirm && !noWithhold) { // the readers agree, but the patient must confirm this kind of field herself: not pre-ticked
+    tally.withheld++; k.withheld++; right ? tally.withheldRight++ : tally.withheldWrong++;
+    rows.push({ doc, variant, label, truth: truth ?? '', values, status: right ? 'confirm' : 'confirm (readers agree, but wrong)' });
+    return;
+  }
   if (ticked) { tally.ticked++; right ? (tally.rightTicks++, k.right++) : (tally.wrongTicks++, k.wrong++); }
   else { (present.length === 0 ? tally.missing++ : tally.flagged++); k.check++; }
   rows.push({ doc, variant, label, truth: truth ?? '', values, status: !ticked ? 'check' : right ? 'ok' : 'WRONG' });
@@ -87,13 +93,13 @@ for (const d of key.documents) {
     const confs = confirmers.map((c) => c.data[file]?.lines ?? []);
     const whole = (lines) => lines.join('  ');
     const date = reads.map((x) => x.date_as_printed ?? undefined);
-    field(d.id, variant, 'date', d.date.as_written, [...date, ...confs.map((ls) => confirmValue(whole(ls), date[0], 'text'))]);
+    field(d.id, variant, 'date', d.date.as_written, [...date, ...confs.map((ls) => confirmValue(whole(ls), date[0], 'text'))], same, true);
     for (const r of d.results ?? []) {
       // a value and unit written together ("2-4 /HPF") may be copied as one field or split in two: both are exact copies
       const hits = reads.map((x) => findResult(x.results, r.test)).map((h) => h && !r.unit && h.unit && same(`${h.value} ${h.unit}`, r.value) ? { ...h, value: r.value, unit: '' } : h);
       const rows2 = confs.map((ls) => rowOf(ls, hits[0]?.test));
       const c = (k, kind = 'text') => rows2.map((row) => hits[0] ? confirmValue(row, hits[0][k], kind) : undefined);
-      field(d.id, variant, `${r.test}: value`, r.value, [...hits.map((h) => h?.value), ...c('value')]);
+      field(d.id, variant, `${r.test}: value`, r.value, [...hits.map((h) => h?.value), ...c('value')], same, mustConfirmValue(...hits.map((h) => h?.value), ...hits.map((h) => h?.range)));
       field(d.id, variant, `${r.test}: unit`, r.unit, [...hits.map((h) => h ? (h.unit ?? '') : undefined), ...c('unit')]);
       field(d.id, variant, `${r.test}: range`, r.reference_range, [...hits.map((h) => h ? (h.range ?? '') : undefined), ...c('range')]);
       field(d.id, variant, `${r.test}: flag`, r.flag_printed, [...hits.map((h) => h ? (h.flag ?? '') : undefined), ...c('flag', 'flag')]);
@@ -183,17 +189,20 @@ const mode = all.length > 1 ? `agreement of ${all.join(' + ')} (a field is ticke
 const lines = [
   `# Reader score on ${setDir.split('/').pop()} (fictional SAMPLE documents)`, '',
   `Mode: ${mode}. ${key.documents.length} documents × clean scan and phone photo. Planning stage: a score on invented documents, not a result on real records.`, '',
-  '| | Fields | Ticked | Right ticks | **Wrong ticks** | Correctly left empty | To check | Not found | Flags added | Ranges added |', '|---|---|---|---|---|---|---|---|---|---|',
-  `| Total | ${tally.fields} | ${tally.ticked} (${pct(tally.ticked, tally.fields)}) | ${tally.rightTicks} | **${tally.wrongTicks}** | ${tally.rightEmpty} | ${tally.flagged} | ${tally.missing} | ${tally.addedFlags} | ${tally.addedRanges} |`, '',
-  '## By kind of field', '', '| Kind | Fields | Right ticks | **Wrong ticks** | Correctly left empty | To check |', '|---|---|---|---|---|---|',
-  ...[...kinds].map(([name, k]) => `| ${name} | ${k.fields} | ${k.right} | **${k.wrong}** | ${k.empty} | ${k.check} |`), '',
-  '## By document', '', '| Doc | Version | Fields | Right ticks | **Wrong ticks** | Correctly left empty | To check |', '|---|---|---|---|---|---|---|',
+  '| | Fields | Ticked | Right ticks | **Wrong ticks** | Patient must confirm | Correctly left empty | To check | Not found | Flags added | Ranges added |', '|---|---|---|---|---|---|---|---|---|---|---|',
+  `| Total | ${tally.fields} | ${tally.ticked} (${pct(tally.ticked, tally.fields)}) | ${tally.rightTicks} | **${tally.wrongTicks}** | ${tally.withheld} | ${tally.rightEmpty} | ${tally.flagged} | ${tally.missing} | ${tally.addedFlags} | ${tally.addedRanges} |`, '',
+  '## By kind of field', '', '| Kind | Fields | Right ticks | **Wrong ticks** | Patient must confirm | Correctly left empty | To check |', '|---|---|---|---|---|---|---|',
+  ...[...kinds].map(([name, k]) => `| ${name} | ${k.fields} | ${k.right} | **${k.wrong}** | ${k.withheld} | ${k.empty} | ${k.check} |`), '',
+  '## By document', '', '| Doc | Version | Fields | Right ticks | **Wrong ticks** | Patient must confirm | Correctly left empty | To check |', '|---|---|---|---|---|---|---|---|',
   ...key.documents.flatMap((d) => ['clean', 'photo'].map((variant) => {
     const r = rows.filter((x) => x.doc === d.id && x.variant === variant);
     const t = (f) => r.filter(f).length;
     const empty = t((x) => x.status === 'ok' && x.truth === ''), ok = t((x) => x.status === 'ok') - empty;
-    return `| ${d.id} | ${variant} | ${r.length} | ${ok} | **${t((x) => x.status === 'WRONG')}** | ${empty} | ${t((x) => x.status === 'check')} |`;
+    return `| ${d.id} | ${variant} | ${r.length} | ${ok} | **${t((x) => x.status === 'WRONG')}** | ${t((x) => x.status.startsWith('confirm'))} | ${empty} | ${t((x) => x.status === 'check')} |`;
   })), '',
+  ...(noWithhold ? ['Run with --no-withhold: agreement alone pre-ticks dates and decimal values (the earlier rule).', ''] : [
+    '## Must confirm (dates and decimal values)', '',
+    `Dates are never pre-ticked. A result value is not pre-ticked when any reader's copy of the value or of the printed range holds a decimal point. The patient confirms these herself, with the crop of the original beside each. Of ${tally.withheld} such fields where the readers agreed, **${tally.withheldWrong}** would have been wrong ticks under the earlier rule and ${tally.withheldRight} would have been right. Readers disagreeing is still "to check".`, '']),
   '## Gate checks', '', ...gate.map((g) => `- ${g}`), '',
   ...medSection,
   '## Every field that was not a right tick', '', '| Doc | Version | Field | Answer key | Reader(s) | Status |', '|---|---|---|---|---|---|',

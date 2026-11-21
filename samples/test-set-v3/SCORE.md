@@ -2,47 +2,51 @@
 
 Mode: agreement of claude-opus-5-5 + google-vision (a field is ticked only when every reader has the same characters). 10 documents × clean scan and phone photo. Planning stage: a score on invented documents, not a result on real records.
 
-| | Fields | Ticked | Right ticks | **Wrong ticks** | Correctly left empty | To check | Not found | Flags added | Ranges added |
-|---|---|---|---|---|---|---|---|---|---|
-| Total | 382 | 194 (51%) | 191 | **3** | 50 | 138 | 0 | 0 | 0 |
+| | Fields | Ticked | Right ticks | **Wrong ticks** | Patient must confirm | Correctly left empty | To check | Not found | Flags added | Ranges added |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Total | 382 | 176 (46%) | 176 | **0** | 18 | 50 | 138 | 0 | 0 | 0 |
 
 ## By kind of field
 
-| Kind | Fields | Right ticks | **Wrong ticks** | Correctly left empty | To check |
-|---|---|---|---|---|---|
-| date | 20 | 9 | **2** | 0 | 9 |
-| medicine name | 62 | 35 | **0** | 0 | 27 |
-| dose | 62 | 28 | **0** | 0 | 34 |
-| duration | 62 | 25 | **0** | 4 | 33 |
-| result value | 44 | 23 | **1** | 0 | 20 |
-| result unit | 44 | 29 | **0** | 12 | 3 |
-| result range | 44 | 36 | **0** | 0 | 8 |
-| result flag | 44 | 6 | **0** | 34 | 4 |
+| Kind | Fields | Right ticks | **Wrong ticks** | Patient must confirm | Correctly left empty | To check |
+|---|---|---|---|---|---|---|
+| date | 20 | 0 | **0** | 11 | 0 | 9 |
+| medicine name | 62 | 35 | **0** | 0 | 0 | 27 |
+| dose | 62 | 28 | **0** | 0 | 0 | 34 |
+| duration | 62 | 25 | **0** | 0 | 4 | 33 |
+| result value | 44 | 17 | **0** | 7 | 0 | 20 |
+| result unit | 44 | 29 | **0** | 0 | 12 | 3 |
+| result range | 44 | 36 | **0** | 0 | 0 | 8 |
+| result flag | 44 | 6 | **0** | 0 | 34 | 4 |
 
 ## By document
 
-| Doc | Version | Fields | Right ticks | **Wrong ticks** | Correctly left empty | To check |
-|---|---|---|---|---|---|---|
-| P21 | clean | 16 | 3 | **0** | 0 | 13 |
-| P21 | photo | 16 | 2 | **0** | 0 | 14 |
-| P22 | clean | 16 | 3 | **0** | 1 | 12 |
-| P22 | photo | 16 | 3 | **0** | 1 | 12 |
-| P23 | clean | 16 | 8 | **1** | 0 | 7 |
-| P23 | photo | 16 | 12 | **1** | 0 | 3 |
-| P24 | clean | 13 | 7 | **0** | 0 | 6 |
-| P24 | photo | 13 | 7 | **0** | 0 | 6 |
-| P25 | clean | 13 | 10 | **0** | 0 | 3 |
-| P25 | photo | 13 | 5 | **0** | 0 | 8 |
-| P26 | clean | 13 | 9 | **0** | 0 | 4 |
-| P26 | photo | 13 | 9 | **0** | 0 | 4 |
-| P27 | clean | 13 | 9 | **0** | 1 | 3 |
-| P27 | photo | 13 | 7 | **0** | 1 | 5 |
-| L21 | clean | 37 | 17 | **1** | 14 | 5 |
-| L21 | photo | 37 | 5 | **0** | 14 | 18 |
-| L22 | clean | 21 | 11 | **0** | 4 | 6 |
-| L22 | photo | 21 | 12 | **0** | 4 | 5 |
-| L23 | clean | 33 | 26 | **0** | 5 | 2 |
-| L23 | photo | 33 | 26 | **0** | 5 | 2 |
+| Doc | Version | Fields | Right ticks | **Wrong ticks** | Patient must confirm | Correctly left empty | To check |
+|---|---|---|---|---|---|---|---|
+| P21 | clean | 16 | 2 | **0** | 1 | 0 | 13 |
+| P21 | photo | 16 | 1 | **0** | 1 | 0 | 14 |
+| P22 | clean | 16 | 2 | **0** | 1 | 1 | 12 |
+| P22 | photo | 16 | 2 | **0** | 1 | 1 | 12 |
+| P23 | clean | 16 | 8 | **0** | 1 | 0 | 7 |
+| P23 | photo | 16 | 12 | **0** | 1 | 0 | 3 |
+| P24 | clean | 13 | 7 | **0** | 0 | 0 | 6 |
+| P24 | photo | 13 | 7 | **0** | 0 | 0 | 6 |
+| P25 | clean | 13 | 9 | **0** | 1 | 0 | 3 |
+| P25 | photo | 13 | 5 | **0** | 0 | 0 | 8 |
+| P26 | clean | 13 | 9 | **0** | 0 | 0 | 4 |
+| P26 | photo | 13 | 9 | **0** | 0 | 0 | 4 |
+| P27 | clean | 13 | 9 | **0** | 0 | 1 | 3 |
+| P27 | photo | 13 | 6 | **0** | 1 | 1 | 5 |
+| L21 | clean | 37 | 17 | **0** | 1 | 14 | 5 |
+| L21 | photo | 37 | 4 | **0** | 1 | 14 | 18 |
+| L22 | clean | 21 | 11 | **0** | 0 | 4 | 6 |
+| L22 | photo | 21 | 11 | **0** | 1 | 4 | 5 |
+| L23 | clean | 33 | 23 | **0** | 3 | 5 | 2 |
+| L23 | photo | 33 | 22 | **0** | 4 | 5 | 2 |
+
+## Must confirm (dates and decimal values)
+
+Dates are never pre-ticked. A result value is not pre-ticked when any reader's copy of the value or of the printed range holds a decimal point. The patient confirms these herself, with the crop of the original beside each. Of 18 such fields where the readers agreed, **3** would have been wrong ticks under the earlier rule and 15 would have been right. Readers disagreeing is still "to check".
 
 ## Gate checks
 
@@ -122,6 +126,7 @@ Exact matches only. Not found means: shown as written and flagged for the patien
 
 | Doc | Version | Field | Answer key | Reader(s) | Status |
 |---|---|---|---|---|---|
+| P21 | clean | date | 21/11/2026 | 21/11/2026 / 21/11/2026 | confirm |
 | P21 | clean | medicine: Tab Amlodipine 5 mg | Tab Amlodipine 5 mg | Tab Amlodipine 5 mg / «not seen» | check |
 | P21 | clean | duration: Tab Amlodipine 5 mg | x 1 month | x 1 month / «not seen» | check |
 | P21 | clean | medicine: Tab Losartan 50 mg | Tab Losartan 50 mg | Tab Losartan 50 mg / «not seen» | check |
@@ -135,6 +140,7 @@ Exact matches only. Not found means: shown as written and flagged for the patien
 | P21 | clean | duration: Tab Levothyroxine 50 mcg | x 3 mo | x 3 mo / «not seen» | check |
 | P21 | clean | medicine: Tab Furosemide 40 mg | Tab Furosemide 40 mg | Tab Furosemide 40 mg / «not seen» | check |
 | P21 | clean | duration: Tab Furosemide 40 mg | till review | till review / «not seen» | check |
+| P21 | photo | date | 21/11/2026 | 21/11/2026 / 21/11/2026 | confirm |
 | P21 | photo | medicine: Tab Amlodipine 5 mg | Tab Amlodipine 5 mg | Tab Amlodipine 5 mg / «not seen» | check |
 | P21 | photo | duration: Tab Amlodipine 5 mg | x 1 month | x 1 month / «not seen» | check |
 | P21 | photo | medicine: Tab Losartan 50 mg | Tab Losartan 50 mg | Tab Losartan 50 mg / «not seen» | check |
@@ -149,6 +155,7 @@ Exact matches only. Not found means: shown as written and flagged for the patien
 | P21 | photo | medicine: Tab Furosemide 40 mg | Tab Furosemide 40 mg | Tab Furosemide 40 mg / «not seen» | check |
 | P21 | photo | dose: Tab Furosemide 40 mg | OD mane | OD mane / «not seen» | check |
 | P21 | photo | duration: Tab Furosemide 40 mg | till review | till review / «not seen» | check |
+| P22 | clean | date | 22/11/2026 | 22/11/2026 / 22/11/2026 | confirm |
 | P22 | clean | medicine: Syp Paracetamol 125 mg/5 ml | Syp Paracetamol 125 mg/5 ml | Syp Paracetamol 125 mg/5 ml / «not seen» | check |
 | P22 | clean | dose: Syp Paracetamol 125 mg/5 ml | 5 ml TDS | 5 ml TDS / «not seen» | check |
 | P22 | clean | duration: Syp Paracetamol 125 mg/5 ml | x 3 days | x 3 days / «not seen» | check |
@@ -161,6 +168,7 @@ Exact matches only. Not found means: shown as written and flagged for the patien
 | P22 | clean | duration: Tab Zinc sulfate 20 mg | x 10 days | x 10 days / «not seen» | check |
 | P22 | clean | medicine: ORS | ORS | ORS / «not seen» | check |
 | P22 | clean | dose: ORS | after each loose stool | after each loose stool / «not seen» | check |
+| P22 | photo | date | 22/11/2026 | 22/11/2026 / 22/11/2026 | confirm |
 | P22 | photo | medicine: Syp Paracetamol 125 mg/5 ml | Syp Paracetamol 125 mg/5 ml | Syp Paracetamol 125 mg/5 ml / «not seen» | check |
 | P22 | photo | dose: Syp Paracetamol 125 mg/5 ml | 5 ml TDS | 5 ml TDS / «not seen» | check |
 | P22 | photo | duration: Syp Paracetamol 125 mg/5 ml | x 3 days | × 3 days / «not seen» | check |
@@ -173,7 +181,7 @@ Exact matches only. Not found means: shown as written and flagged for the patien
 | P22 | photo | duration: Tab Zinc sulfate 20 mg | x 10 days | × 10 days / «not seen» | check |
 | P22 | photo | medicine: ORS | ORS | ORS / «not seen» | check |
 | P22 | photo | dose: ORS | after each loose stool | after each loose stool / «not seen» | check |
-| P23 | clean | date | 2083/08/1 | 2083/08/17 / 2083/08/17 | WRONG |
+| P23 | clean | date | 2083/08/1 | 2083/08/17 / 2083/08/17 | confirm (readers agree, but wrong) |
 | P23 | clean | dose: Tab Furosemide 20 mg | 1/2-0-0 | 1/2-0-0 / «not seen» | check |
 | P23 | clean | duration: Tab Furosemide 20 mg | x 1 days | x 17 days / «not seen» | check |
 | P23 | clean | dose: Tab Prednisolone 5 mg | 0.5-0-0.5 | 0.5-0-0.5 / «not seen» | check |
@@ -181,7 +189,7 @@ Exact matches only. Not found means: shown as written and flagged for the patien
 | P23 | clean | medicine: Tab Folic acid 5 mg | Tab Folic acid 5 mg | Tab Folic acid 5 mg / «not seen» | check |
 | P23 | clean | dose: Tab Folic acid 5 mg | 1-0-0 | 1-0-0 / «not seen» | check |
 | P23 | clean | duration: Tab Folic acid 5 mg | x 3 months | x 3 months / «not seen» | check |
-| P23 | photo | date | 2083/08/1 | 2083/08/17 / 2083/08/17 | WRONG |
+| P23 | photo | date | 2083/08/1 | 2083/08/17 / 2083/08/17 | confirm (readers agree, but wrong) |
 | P23 | photo | duration: Tab Furosemide 20 mg | x 1 days | x 17 days / «not seen» | check |
 | P23 | photo | dose: Tab Prednisolone 5 mg | 0.5-0-0.5 | 0.5-0-0.5 / «not seen» | check |
 | P23 | photo | duration: Tab Prednisolone 5 mg | x 1 days | x 17 days / «not seen» | check |
@@ -197,6 +205,7 @@ Exact matches only. Not found means: shown as written and flagged for the patien
 | P24 | photo | medicine: Tab Paracetamol 500 mg | Tab Paracetamol 500 mg | Tab Paracetamol 500 mg / «not seen» | check |
 | P24 | photo | dose: Tab Paracetamol 500 mg | 1-1-1 | 1-1-1 / «not seen» | check |
 | P24 | photo | duration: Tab Paracetamol 500 mg | x 3 d | x 3 d / «not seen» | check |
+| P25 | clean | date | 23/11/2026 | 23/11/2026 / 23/11/2026 | confirm |
 | P25 | clean | medicine: Tab Cefixime 200 mg | Tab Cefixime 200 mg | Tab Cefixime 200 mg / «not seen» | check |
 | P25 | clean | dose: Tab Cefixime 200 mg | 1-0-1 | 1-0-1 / «not seen» | check |
 | P25 | clean | dose: Tab Metronidazole 400 mg | 1-1-1 | 1-1-1 / «not seen» | check |
@@ -219,17 +228,19 @@ Exact matches only. Not found means: shown as written and flagged for the patien
 | P27 | clean | date | २०८३ मंसिर ५ | २०८३ मंसिर ६ / «not seen» | check |
 | P27 | clean | medicine: Tab Folic acid 5 mg | Tab Folic acid 5 mg | Tab Folic acid 5 mg / «not seen» | check |
 | P27 | clean | dose: Tab Metronidazole 400 mg | १-१-१ | १-१-१ / «not seen» | check |
+| P27 | photo | date | २०८३ मंसिर ५ | २०८३ मंसिर ५ / २०८३ मंसिर ५ | confirm |
 | P27 | photo | medicine: Tab Folic acid 5 mg | Tab Folic acid 5 mg | Tab Folic acid 5 mg / «not seen» | check |
 | P27 | photo | dose: Tab Folic acid 5 mg | बिहान १ | बिहान १ / «not seen» | check |
 | P27 | photo | duration: Tab Folic acid 5 mg | ३ महिना | ३ महिना / «not seen» | check |
 | P27 | photo | dose: Cap Omeprazole 20 mg | खाली पेटमा १ | खाली पेटमा १ / «not seen» | check |
 | P27 | photo | dose: Tab Metronidazole 400 mg | १-१-१ | १-१-१ / «not seen» | check |
 | L21 | clean | date | 24/11/2026 | 24/11/2026 / «not seen» | check |
-| L21 | clean | Specific gravity: value | 1.020 | 1020 / 1020 | WRONG |
+| L21 | clean | Specific gravity: value | 1.020 | 1020 / 1020 | confirm (readers agree, but wrong) |
 | L21 | clean | Pus cells: value | 2-4 | 2-4 / «not seen» | check |
 | L21 | clean | RBC: value | Nil | Nil / «not seen» | check |
 | L21 | clean | Epithelial cells: value | 6-8 | 6-8 / «not seen» | check |
 | L21 | clean | Epithelial cells: flag | H | H / «not seen» | check |
+| L21 | photo | date | 24/11/2026 | 24/11/2026 / 24/11/2026 | confirm |
 | L21 | photo | Reaction: value | Acidic | Acidic / «not seen» | check |
 | L21 | photo | Reaction: range | Acidic | Acidic / «not seen» | check |
 | L21 | photo | Specific gravity: value | 1.020 | 1020 / «not seen» | check |
@@ -258,8 +269,16 @@ Exact matches only. Not found means: shown as written and flagged for the patien
 | L22 | photo | TSH: value | 2.45 | 2.45 / «not seen» | check |
 | L22 | photo | Free T4: value | 1.1 | 1.1 / «not seen» | check |
 | L22 | photo | Anti-TPO: value | 28 | 28 / «not seen» | check |
+| L22 | photo | Vitamin D (25-OH): value | 18.2 | 18.2 / 18.2 | confirm |
 | L22 | photo | Vitamin D (25-OH): flag | L | L / «not seen» | check |
+| L23 | clean | date | 26/11/2026 | 26/11/2026 / 26/11/2026 | confirm |
+| L23 | clean | Total bilirubin: value | 0.8 | 0.8 / 0.8 | confirm |
+| L23 | clean | Direct bilirubin: value | 0.2 | 0.2 / 0.2 | confirm |
 | L23 | clean | Total protein: value | 7.1 | 7.1 / «not seen» | check |
 | L23 | clean | Albumin: value | 4.2 | 4.2 / «not seen» | check |
+| L23 | photo | date | 26/11/2026 | 26/11/2026 / 26/11/2026 | confirm |
 | L23 | photo | Total bilirubin: value | 0.8 | 0.8 / «not seen» | check |
 | L23 | photo | Total bilirubin: range | 0.2 – 1.2 | 0.2 - 1.2 / «not seen» | check |
+| L23 | photo | Direct bilirubin: value | 0.2 | 0.2 / 0.2 | confirm |
+| L23 | photo | Total protein: value | 7.1 | 7.1 / 7.1 | confirm |
+| L23 | photo | Albumin: value | 4.2 | 4.2 / 4.2 | confirm |

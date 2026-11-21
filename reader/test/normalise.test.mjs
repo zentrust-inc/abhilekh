@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { sameDose, sameDur, durOf, same } from '../normalise.mjs';
+import { sameDose, sameDur, durOf, same, hasDecimalPoint, mustConfirmValue } from '../normalise.mjs';
 
 test('doses: spacing, dashes and a bracketed gloss do not matter; a different dose does', () => {
   assert.ok(sameDose('1 - 0 - 1', '1-0-1'));
@@ -65,4 +65,14 @@ test('a fraction in a dose is not its digits run together: 1/2-0-1/2 is not 12-0
   assert.ok(sameDose('1/2 - 0 - 1/2', '1/2-0-1/2'));
   assert.ok(sameDose('1/2-0-1/2', '१/२-०-१/२'));
   assert.ok(same('2083/08/10', '20830810'));   // dates and values are compared as before
+});
+
+test('must confirm: a decimal point in the value or in the printed range, not only in the reading', () => {
+  assert.ok(hasDecimalPoint('1.020') && hasDecimalPoint('2.45') && hasDecimalPoint('.5') && hasDecimalPoint('१.५'));
+  assert.ok(!hasDecimalPoint('1020') && !hasDecimalPoint('2-4') && !hasDecimalPoint('7,500') && !hasDecimalPoint('Nil') && !hasDecimalPoint(''));
+  assert.ok(mustConfirmValue('1.020', '1.020'));
+  assert.ok(mustConfirmValue('1020', '1.005 - 1.030'));     // the v3 miss: both readers lost the dot, the printed range still shows one
+  assert.ok(mustConfirmValue('1020', '1020', undefined, '1.005-1.030'));
+  assert.ok(!mustConfirmValue('140', '135 - 145'));
+  assert.ok(!mustConfirmValue('Nil', undefined, ''));
 });
