@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Abhilekh share (prototype)</title>
+<style>
+:root{--ink:#1d2433;--mute:#5d6678;--line:#d9dde6;--bg:#f6f4ef;--card:#fff;--accent:#7a1530;--ok:#1d6b4a;--warn:#8a4b00}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:430px;margin:0 auto;padding:16px 14px 80px}
+.banner{background:#fff3cd;border:1px solid #e6d28a;border-radius:8px;padding:8px 10px;font-size:13px;margin-bottom:14px}
+h1{font-size:20px;margin:0 0 2px}h2{font-size:17px;margin:0 0 8px}.sub{color:var(--mute);font-size:14px;margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px}
+.card.off{background:#f1f1f1;border-style:dashed}
+label.opt{display:flex;gap:8px;align-items:flex-start;padding:6px 0;font-size:15px}
+input[type=text]{width:100%;font-size:16px;padding:9px;border:1.5px solid var(--line);border-radius:8px;font-family:inherit}
+select{font:inherit;padding:8px;border:1.5px solid var(--line);border-radius:8px;width:100%;background:#fff}
+button{font:inherit;font-weight:600;border-radius:8px;padding:10px 14px;border:0;cursor:pointer}
+.go{background:var(--accent);color:#fff;width:100%;margin-top:10px}.go:disabled{background:#c9ced8;cursor:not-allowed}
+.sec{background:#fff;color:var(--accent);border:1.5px solid var(--accent);padding:8px 12px;font-weight:600}
+.danger{background:#fff;color:#a01212;border:1.5px solid #a01212}
+.row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}.row>button{flex:1}
+.mute{color:var(--mute);font-size:13px}.pill{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:10px}
+.live{background:#e3f3ea;color:var(--ok)}.dead{background:#eee;color:#555}
+.qr{display:flex;justify-content:center;padding:8px 0}.qr svg{width:180px;height:180px}
+.url{font-size:12px;word-break:break-all;color:var(--mute);background:#f6f6f6;padding:6px;border-radius:6px}
+.log{font-size:13px;margin:6px 0 0;padding-left:16px}.log li{margin:2px 0}
+.sim{border:2px dashed #999;border-radius:12px;padding:10px;margin:18px 0 12px;background:#fafafa}
+.sim h2{font-size:14px;color:#555;text-transform:uppercase;letter-spacing:.05em}
+.phone{border:6px solid #2b2f3a;border-radius:22px;padding:12px;background:var(--bg);margin-top:8px}
+.res{border-top:1px solid var(--line);padding:8px 0}.res:first-of-type{border-top:0}
+.t{font-weight:600}.v{font-size:20px;font-weight:600}.u{font-size:14px;color:var(--mute);font-weight:400}
+.flag{display:inline-block;margin-left:6px;font-size:12px;border:1px solid var(--ink);border-radius:4px;padding:0 5px}
+.orig{background:none;color:var(--accent);padding:2px 0;font-weight:500;font-size:13px}
+.crop{display:block;width:100%;border:1px solid var(--line);border-radius:6px;margin-top:4px;background:#fff}
+.gone{text-align:center;padding:24px 8px;font-weight:600}
+</style></head><body><div class="wrap">
+<div class="banner"><b>SAMPLE · नमूना.</b> Prototype on invented pages, planning stage. Nothing is stored or sent anywhere: the link below goes nowhere and the log lives only in this page. English only so far.</div>
+<h1>Share with a doctor</h1>
+<p class="sub">You choose what a doctor can see and for how long. You can stop a share at any time, and you see every time it is opened.</p>
+
+<div class="card" id="make">
+  <h2>New share</h2>
+  <div id="docs"></div>
+  <label class="mute" for="who" style="display:block;margin-top:8px">Who is it for? (only for your own list, optional)</label>
+  <input type="text" id="who" placeholder="e.g. Dr. Namuna, Example Clinic">
+  <label class="mute" for="dur" style="display:block;margin-top:8px">How long can they see it?</label>
+  <select id="dur"><option value="60">1 hour</option><option value="1440" selected>24 hours</option><option value="10080">7 days</option></select>
+  <button class="go" id="create">Create share link</button>
+  <div class="mute" id="makeErr" style="margin-top:6px;color:#a01212"></div>
+</div>
+
+<h2 id="shHead" style="display:none">Your shares</h2>
+<div id="shares"></div>
+
+<div class="sim"><h2>Prototype controls (not part of the app)</h2>
+  <div class="mute" id="clock"></div>
+  <div class="row"><button class="sec" id="p1h">Let 1 hour pass</button><button class="sec" id="p1d">Let 1 day pass</button></div>
+  <div class="mute" style="margin-top:6px">The doctor's side is shown below after you press "Open as the doctor" on a share.</div>
+  <div id="doctor"></div>
+</div>
+<p class="mute">The doctor sees only what the paper says: value, unit, printed range and any flag the lab printed. Abhilekh gives no advice.</p>
+</div>
+<script>
+__QRLIB__
+</script>
+<script>
+const DATA=__DATA__;
+const $=id=>document.getElementById(id);
+const el=(t,a={},...k)=>{const e=document.createElement(t);for(const[n,v]of Object.entries(a))n.startsWith('on')?e.addEventListener(n.slice(2),v):e.setAttribute(n,v);k.forEach(x=>e.append(x));return e};
+let offsetMin=0;const now=()=>new Date(Date.now()+offsetMin*60000);
+const fmt=d=>d.toLocaleString([], {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+const shares=[];let doctorId=null;
+const token=()=>{const a=new Uint8Array(12);crypto.getRandomValues(a);return Array.from(a,b=>'abcdefghjkmnpqrstuvwxyz23456789'[b%31]).join('')};
+const status=s=>s.revoked?'revoked':(now()>=s.expires?'expired':'live');
+const addLog=(s,t)=>s.log.push({at:now(),t});
+// docs picker
+DATA.docs.forEach(d=>{const cb=el('input',{type:'checkbox',id:'d-'+d.id,checked:''});$('docs').append(el('label',{class:'opt',for:'d-'+d.id},cb,el('span',{},d.title,el('br'),el('span',{class:'mute'},d.facility+' · '+d.date))))});
+$('create').onclick=()=>{
+  const chosen=DATA.docs.filter(d=>$('d-'+d.id).checked);
+  if(!chosen.length){$('makeErr').textContent='Choose at least one report to share.';return}
+  $('makeErr').textContent='';
+  const mins=+$('dur').value,t=token();
+  const s={id:t,docs:chosen.map(d=>d.id),who:$('who').value.trim(),created:now(),expires:new Date(now().getTime()+mins*60000),minutes:mins,revoked:false,log:[]};
+  addLog(s,'You created this share'+(s.who?' for '+s.who:'')+'.');
+  shares.unshift(s);$('who').value='';render();
+};
+function qrSvg(url){const q=qrcode(0,'M');q.addData(url);q.make();return q.createSvgTag({cellSize:4,margin:2,scalable:true})}
+function render(){
+  $('clock').textContent='Time in this prototype: '+fmt(now());
+  $('shHead').style.display=shares.length?'':'none';
+  const box=$('shares');box.replaceChildren();
+  for(const s of shares){
+    const st=status(s),live=st==='live',url='https://abhilekh.example.invalid/s/'+s.id;
+    const card=el('div',{class:'card'+(live?'':' off')});
+    card.append(el('div',{},el('span',{class:'pill '+(live?'live':'dead')},live?'Active':(st==='revoked'?'Stopped by you':'Time ran out')),' ',el('span',{class:'mute'},(live?'until ':'ended ')+fmt(st==='revoked'?s.revokedAt:s.expires))));
+    card.append(el('div',{class:'t',style:'margin-top:6px'},s.who||'Doctor (no name given)'),el('div',{class:'mute'},s.docs.map(id=>DATA.docs.find(d=>d.id===id).title).join(', ')));
+    if(live){const qb=el('div',{class:'qr'});qb.innerHTML=qrSvg(url);card.append(qb,el('div',{class:'url'},url),el('div',{class:'mute',style:'margin-top:4px'},'Sample link: it goes nowhere. A real one would open the doctor\'s view.'));}
+    const row=el('div',{class:'row'},el('button',{class:'sec',onclick:()=>{doctorId=s.id;openAsDoctor(s);render()}},'Open as the doctor'));
+    if(live)row.append(el('button',{class:'danger',onclick:()=>{s.revoked=true;s.revokedAt=now();addLog(s,'You stopped this share.');render()}},'Stop sharing'));
+    card.append(row);
+    card.append(el('div',{class:'mute',style:'margin-top:8px'},'Who looked, and when:'));
+    const ul=el('ul',{class:'log'});s.log.forEach(e=>ul.append(el('li',{},fmt(e.at)+' · '+e.t)));card.append(ul);
+    box.append(card);
+  }
+  renderDoctor();
+}
+function openAsDoctor(s){
+  const st=status(s);
+  if(st==='live')addLog(s,'Opened on a doctor\'s phone (simulated).');
+  else addLog(s,'Someone tried to open it, but it was '+(st==='revoked'?'stopped':'out of time')+'. Nothing was shown.');
+}
+function renderDoctor(){
+  const box=$('doctor');box.replaceChildren();
+  const s=shares.find(x=>x.id===doctorId);if(!s)return;
+  const ph=el('div',{class:'phone'});
+  const st=status(s);
+  if(st!=='live'){ph.append(el('div',{class:'gone'},st==='revoked'?'This share was stopped by the patient.':'This share has run out of time.',el('div',{class:'mute',style:'font-weight:400;margin-top:6px'},'Ask the patient for a new link.')));box.append(ph);return}
+  ph.append(el('div',{class:'mute'},'SAMPLE · नमूना · patient-confirmed record · visible until '+fmt(s.expires)));
+  for(const id of s.docs){
+    const d=DATA.docs.find(x=>x.id===id);
+    const c=el('div',{class:'card',style:'margin-top:10px'});
+    c.append(el('h2',{},d.title),el('div',{class:'mute'},d.facility+' · '+d.patient+' · '+d.date_as_written));
+    d.results.forEach((r,i)=>{
+      const row=el('div',{class:'res'});
+      row.append(el('div',{class:'t'},r.test),el('div',{class:'v'},r.value+' ',el('span',{class:'u'},r.unit||''),r.flag?el('span',{class:'flag',title:'printed on the paper'},r.flag):''));
+      row.append(el('div',{class:'mute'},'Printed range: '+(r.range||'—')+(r.flag?' · flag printed on the paper: '+r.flag:'')));
+      if(r.img){const im=el('img',{class:'crop',src:r.img,alt:'Region of the original page for '+r.test,style:'display:none'});row.append(el('button',{class:'orig',onclick:()=>{im.style.display=im.style.display==='none'?'block':'none'}},'See the original'),im)}
+      else row.append(el('div',{class:'mute'},'Original region not found; see the whole page.'));
+      c.append(row)});
+    ph.append(c);
+  }
+  box.append(ph);
+}
+$('p1h').onclick=()=>{offsetMin+=60;render()};$('p1d').onclick=()=>{offsetMin+=1440;render()};
+render();
+</script></body></html>
