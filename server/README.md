@@ -26,3 +26,15 @@ pages and crops as the share prototype). `server/public/qrcode.js` is qrcode-gen
 - **Unknown links** return 404 and are not logged (no share to log against); more than 30 misses a minute from one address are slowed down. The limiter is per process and per address, not a defence against a determined attacker.
 - Links are 14 characters from 31 letters and digits (about 69 bits), not guessable in practice.
 - English only; the QR code is drawn but not yet scanned by a phone; not tested with real people.
+
+## Where it runs (SAMPLE demo only)
+
+Azure App Service, Linux, Node 22, Basic B1 (about USD 0.018 an hour, about USD 13 a month), Central India.
+Resource group `rg-abhilekh`, plan `plan-abhilekh`, app `abhilekh-share-sample`, address
+`https://abhilekh-share-sample.azurewebsites.net` (HTTPS only, TLS 1.2 minimum, FTPS off).
+App settings: `DATA_DIR=/home/data-demo` (persistent disk), `SCM_DO_BUILD_DURING_DEPLOYMENT=false`, `PORT` and `WEBSITES_PORT=8080`.
+Deployed by zipping `server/` (without `test/`) and `az webapp deploy --type zip` from Azure Cloud Shell, with GitHub signed in for the clone only and signed out afterwards.
+To stop the cost: delete the resource group `rg-abhilekh`; Chautari's `rg-chautari` is separate and untouched.
+
+Checked on the live address (with `TEST_MODE=1`, later removed): a 1-minute share opened (200), then after a minute was refused (410) with the refusal in the log;
+a stopped share was refused (410) with the refusal logged; "forever" was refused (400). Not checked there: a phone scanning the QR code.
