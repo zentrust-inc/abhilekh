@@ -1,7 +1,39 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Abhilekh: share with a doctor (SAMPLE)</title><link rel="stylesheet" href="/style.css"></head><body><div class="wrap">
-<div class="banner"><b>SAMPLE · नमूना.</b> Prototype on invented pages, planning stage. Links and the access log are real and kept by the server; the records are fictional. There is no sign-in yet. English only so far.</div>
+<div class="banner"><b>SAMPLE · नमूना.</b> Prototype on invented pages, planning stage. Links and the access log are real and kept by the server; the records are fictional. Sign-in is by mobile number and PIN; every account sees the same invented sample record. English only so far.</div>
+<div id="auth" style="display:none">
+<h1>Sign in to Abhilekh</h1>
+<p class="sub">Your mobile number gets one SMS code the first time. After that you use your 6-digit PIN on this phone.</p>
+<div class="card" id="stepPhone">
+  <label class="mute" for="phone" style="display:block">Mobile number</label>
+  <input type="text" id="phone" inputmode="tel" autocomplete="tel" placeholder="98XXXXXXXX">
+  <div id="pinLogin">
+    <label class="mute" for="loginPin" style="display:block;margin-top:8px">PIN (6 digits)</label>
+    <input type="password" id="loginPin" inputmode="numeric" maxlength="6" autocomplete="current-password">
+    <button class="go" id="loginBtn">Sign in</button>
+  </div>
+  <button class="sec" id="codeBtn" style="width:100%;margin-top:10px">New here, new phone or forgot PIN? Get a code by SMS</button>
+</div>
+<div class="card" id="stepCode" style="display:none">
+  <label class="mute" for="code" style="display:block">Code from the SMS</label>
+  <input type="text" id="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+  <div class="mute" id="testCode"></div>
+  <button class="go" id="verifyBtn">Continue</button>
+</div>
+<div class="card" id="stepPin" style="display:none">
+  <p id="pinIntro" style="margin-top:0"></p>
+  <label class="mute" for="pin1" style="display:block">New 6-digit PIN</label>
+  <input type="password" id="pin1" inputmode="numeric" maxlength="6" autocomplete="new-password">
+  <label class="mute" for="pin2" style="display:block;margin-top:8px">The same PIN again</label>
+  <input type="password" id="pin2" inputmode="numeric" maxlength="6" autocomplete="new-password">
+  <button class="go" id="pinBtn">Save PIN</button>
+</div>
+<div class="mute" id="authErr" style="color:#a01212"></div>
+</div>
+<div id="app" style="display:none">
+<p class="mute" style="text-align:right;margin:0"><span id="who-am-i"></span> · <button class="orig" id="logoutBtn">Sign out</button></p>
+<div class="banner" id="paused" style="display:none"></div>
 <h1>Share with a doctor</h1>
 <p class="sub">You choose what a doctor can see and for how long. You can stop a share at any time, and you see every time it is opened.</p>
 <div class="card" id="make">
@@ -11,11 +43,14 @@
   <input type="text" id="who" maxlength="80" placeholder="e.g. Dr. Namuna, Example Clinic">
   <label class="mute" for="dur" style="display:block;margin-top:8px">How long can they see it?</label>
   <select id="dur"></select>
+  <label class="mute" for="sharePin" style="display:block;margin-top:8px">Your PIN, to confirm</label>
+  <input type="password" id="sharePin" inputmode="numeric" maxlength="6" autocomplete="current-password">
   <button class="go" id="create">Create share link</button>
   <div class="mute" id="makeErr" style="margin-top:6px;color:#a01212"></div>
 </div>
 <h2 id="shHead" style="display:none">Your shares</h2>
 <div id="shares"></div>
 <p class="mute">The doctor sees only what the paper says: value, unit, printed range and any flag the lab printed. Abhilekh gives no advice.</p>
+</div>
 </div>
 <script src="/qrcode.js"></script><script src="/patient.js"></script></body></html>

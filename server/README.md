@@ -9,10 +9,34 @@ Plans, not results: this is a plan under test, run only on invented SAMPLE Â· à¤
 
 ## Run
 
-    cd server && npm test          # 9 tests, node:test, no packages to install
+    cd server && npm test          # 25 tests, node:test, no packages to install
     PORT=8080 DATA_DIR=./data node server.mjs
 
-`TEST_MODE=1` also allows a 1-minute share so expiry can be watched on a live URL. Never set it in a real deployment.
+`TEST_MODE=1` also allows a 1-minute share so expiry can be watched on a live URL, and, when no SMS token is set,
+shows the sign-in code on screen instead of sending it. Never set it in a real deployment.
+`INSECURE_COOKIES=1` drops the Secure cookie flag for plain-http local runs only.
+
+## Sign-in (auth.mjs, sms.mjs)
+
+Plan agreed 21 Nov 2026 (status log; PRD rev. 3.3, Security and consent):
+
+- Sign up with a Nepal mobile number (98, 97, 96): **one SMS code**, then a **6-digit PIN** (runs, repeats and
+  halves like 123456, 111111, 123123 are refused).
+- After that: PIN on the same phone. The phone is remembered by a device cookie, so the PIN alone does not work
+  from another phone; a new phone gets an SMS code.
+- SMS again only for recovery: **new phone, forgotten PIN, lockout**. Recovery signs out every other phone and
+  **pauses new shares for 24 hours**; stopping a share is never paused.
+- The PIN is asked again to **create or stop a share**. Every share belongs to the account that made it.
+- Wrong PIN: 5 in a row means a 15-minute wait; 10 means a code by SMS. A code works 10 minutes, 5 tries, once.
+- SMS limits (cost and abuse): one a minute, 3 an hour and 5 a day per number; 10 an hour per connection;
+  200 a day in total. The SMS text carries no health content.
+- Stored: phone number, scrypt hash of the PIN, SHA-256 of codes, sessions and device tokens; never a plain code,
+  PIN or token. Cookies are HttpOnly, Secure, SameSite=Strict; every POST must be JSON.
+- Later, not here: passkeys (rpId abhilekh.org), family profiles, consent records.
+
+SMS: Akash SMS v3 (`POST https://sms.aakashsms.com/sms/v3/send/`, form fields auth_token, to, text; docs at
+bitbucket.org/aakashsms/api, branch v4). About Rs 1 per code (one credit per SMS). The token is set only as the
+Azure app setting `AKASH_SMS_TOKEN`, never in the repository. Without it (and without TEST_MODE) nobody can sign up.
 
 ## Rebuild the sample record
 
@@ -21,7 +45,8 @@ pages and crops as the share prototype). `server/public/qrcode.js` is qrcode-gen
 
 ## What it does not do yet
 
-- **No accounts.** One sample patient, no sign-in: anyone who can reach the patient page can create shares. Acceptable only because every record is invented. Real records need sign-in first.
+- **One record for everyone.** Every account sees the same invented SAMPLE record; each patient's own confirmed
+  record comes next.
 - **Storage is one JSON file** (atomic writes). Fine for a demo; a real record needs a database and backups.
 - **Unknown links** return 404 and are not logged (no share to log against); more than 30 misses a minute from one address are slowed down. The limiter is per process and per address, not a defence against a determined attacker.
 - Links are 14 characters from 31 letters and digits (about 69 bits), not guessable in practice.
