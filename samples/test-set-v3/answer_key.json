@@ -1,0 +1,861 @@
+{
+  "set": "Abhilekh fictional test set v3 (held-out: new hands, new notations, new damage)",
+  "made": "2026-11-21",
+  "note": "Every person, clinician, clinic, lab and registration number is invented. Amoxinepa is an invented brand. Ground truth is what the writer meant. dose_as_written and duration_as_written are the exact copies a reader should return.",
+  "documents": [
+    {
+      "id": "P21",
+      "file_clean": "clean/P21-abbreviated-doses.png",
+      "file_photo": "photo/P21-abbreviated-doses.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "prescription",
+      "style": "loopy cursive hand (Homemade Apple); doses written as abbreviations, durations on a second line",
+      "facility": "Example Medical Centre, Biratnagar",
+      "clinician": "Dr. M. Namuna",
+      "clinician_reg": "NMC 00000 (fictional)",
+      "patient": {
+        "name": "Ram Bahadur Udaharan",
+        "age": "58 y",
+        "sex": "M",
+        "address": null
+      },
+      "date": {
+        "as_written": "21/11/2026",
+        "calendar": "AD"
+      },
+      "diagnosis_as_written": "HTN, DM-2, hypothyroid",
+      "medicines": [
+        {
+          "as_written": "Tab Amlodipine 5 mg",
+          "generic": "amlodipine",
+          "strength": "5 mg",
+          "form": "tablet",
+          "dose": "once daily (OD)",
+          "dose_as_written": "OD",
+          "timing": null,
+          "duration": "1 month",
+          "duration_as_written": "x 1 month",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Losartan 50 mg",
+          "generic": "losartan",
+          "strength": "50 mg",
+          "form": "tablet",
+          "dose": "twice daily (BD)",
+          "dose_as_written": "BD",
+          "timing": null,
+          "duration": "1 month",
+          "duration_as_written": "x 1 month",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Gliclazide 80 mg",
+          "generic": "gliclazide",
+          "strength": "80 mg",
+          "form": "tablet",
+          "dose": "1 tablet twice daily",
+          "dose_as_written": "1 tab BD",
+          "timing": null,
+          "duration": "continue",
+          "duration_as_written": "continue",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Levothyroxine 50 mcg",
+          "generic": "levothyroxine",
+          "strength": "50 mcg",
+          "form": "tablet",
+          "dose": "once daily, empty stomach",
+          "dose_as_written": "OD empty stomach",
+          "timing": null,
+          "duration": "3 months",
+          "duration_as_written": "x 3 mo",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Furosemide 40 mg",
+          "generic": "furosemide",
+          "strength": "40 mg",
+          "form": "tablet",
+          "dose": "once daily, morning",
+          "dose_as_written": "OD mane",
+          "timing": null,
+          "duration": "till review",
+          "duration_as_written": "till review",
+          "dda_expected": "registered generic"
+        }
+      ],
+      "advice": [
+        "Review with TSH, HbA1c"
+      ],
+      "traps": [
+        "doses are letters or words (OD, BD, 1 tab BD, OD mane): copy them, never turn them into 1-0-0 or 1-0-1",
+        "durations 'continue' and 'till review' are not numbers: copy as written",
+        "duration on a second line below the dose, not beside it"
+      ]
+    },
+    {
+      "id": "P22",
+      "file_clean": "clean/P22-child-syrup-ml.png",
+      "file_photo": "photo/P22-child-syrup-ml.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "prescription",
+      "style": "small pad, round child-clinic hand (Mansalva); syrups dosed in ml, dose and duration on a second line under each name",
+      "facility": "Example Child Clinic, Bhaktapur",
+      "clinician": "Dr. N. Udaharan",
+      "clinician_reg": null,
+      "patient": {
+        "name": "Aarav Namuna",
+        "age": "4 y",
+        "sex": "M",
+        "address": null
+      },
+      "date": {
+        "as_written": "22/11/2026",
+        "calendar": "AD"
+      },
+      "diagnosis_as_written": "fever, cough x 3 d",
+      "medicines": [
+        {
+          "as_written": "Syp Paracetamol 125 mg/5 ml",
+          "generic": "paracetamol",
+          "strength": "125 mg/5 ml",
+          "form": "syrup",
+          "dose": "5 ml three times daily",
+          "dose_as_written": "5 ml TDS",
+          "timing": null,
+          "duration": "3 days",
+          "duration_as_written": "x 3 days",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Syp Amoxinepa 250 mg/5 ml",
+          "generic": null,
+          "strength": "250 mg/5 ml",
+          "form": "syrup",
+          "dose": "5 ml twice daily",
+          "dose_as_written": "5 ml BD",
+          "timing": null,
+          "duration": "5 days",
+          "duration_as_written": "x 5 days",
+          "dda_expected": "NOT FOUND — invented brand; must be flagged for a person to confirm, never guessed"
+        },
+        {
+          "as_written": "Syp Salbutamol 2 mg/5 ml",
+          "generic": "salbutamol",
+          "strength": "2 mg/5 ml",
+          "form": "syrup",
+          "dose": "2.5 ml three times daily",
+          "dose_as_written": "2.5 ml TDS",
+          "timing": null,
+          "duration": "3 days",
+          "duration_as_written": "x 3 days",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Zinc sulfate 20 mg",
+          "generic": "zinc sulfate",
+          "strength": "20 mg",
+          "form": "tablet",
+          "dose": "1 tablet once daily",
+          "dose_as_written": "1 tab OD",
+          "timing": null,
+          "duration": "10 days",
+          "duration_as_written": "x 10 days",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "ORS",
+          "generic": "oral rehydration salts",
+          "strength": null,
+          "form": "powder",
+          "dose": "after each loose stool",
+          "dose_as_written": "after each loose stool",
+          "timing": null,
+          "duration": null,
+          "duration_as_written": null,
+          "dda_expected": "registered generic"
+        }
+      ],
+      "advice": [
+        "plenty of fluids"
+      ],
+      "traps": [
+        "2.5 ml: the decimal point matters, 25 ml would be ten times the dose",
+        "'125 mg/5 ml' contains a slash: copy it, do not turn it into 1255",
+        "Amoxinepa is an invented brand: shown as written and flagged, never mapped to amoxicillin",
+        "weight 14 kg is not a dose",
+        "ORS has no duration: leave empty"
+      ]
+    },
+    {
+      "id": "P23",
+      "file_clean": "clean/P23-fractions-decimals.png",
+      "file_photo": "photo/P23-fractions-decimals.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "prescription",
+      "style": "thin pen hand (Zeyada); fractional and decimal doses; 1/7 look-alikes in the date, durations and a dose",
+      "facility": "Example Polyclinic, Nepalgunj",
+      "clinician": "Dr. O. Namuna",
+      "clinician_reg": "NMC 00000 (fictional)",
+      "patient": {
+        "name": "Radha Devi Udaharan",
+        "age": "74 y",
+        "sex": "F",
+        "address": null
+      },
+      "date": {
+        "as_written": "2083/08/1",
+        "calendar": "BS"
+      },
+      "diagnosis_as_written": "HTN, CKD stage 3, fluid overload",
+      "medicines": [
+        {
+          "as_written": "Tab Losartan 25 mg",
+          "generic": "losartan",
+          "strength": "25 mg",
+          "form": "tablet",
+          "dose": "half a tablet morning and night",
+          "dose_as_written": "1/2-0-1/2",
+          "timing": null,
+          "duration": "1 month",
+          "duration_as_written": "x 1 month",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Furosemide 20 mg",
+          "generic": "furosemide",
+          "strength": "20 mg",
+          "form": "tablet",
+          "dose": "half a tablet in the morning",
+          "dose_as_written": "1/2-0-0",
+          "timing": null,
+          "duration": "1 day",
+          "duration_as_written": "x 1 days",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Prednisolone 5 mg",
+          "generic": "prednisolone",
+          "strength": "5 mg",
+          "form": "tablet",
+          "dose": "0.5 morning and night",
+          "dose_as_written": "0.5-0-0.5",
+          "timing": null,
+          "duration": "1 day",
+          "duration_as_written": "x 1 days",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Amlodipine 2.5 mg",
+          "generic": "amlodipine",
+          "strength": "2.5 mg",
+          "form": "tablet",
+          "dose": "once at night",
+          "dose_as_written": "0-0-1",
+          "timing": null,
+          "duration": "1 month",
+          "duration_as_written": "x 1 month",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Folic acid 5 mg",
+          "generic": "folic acid",
+          "strength": "5 mg",
+          "form": "tablet",
+          "dose": "once in the morning",
+          "dose_as_written": "1-0-0",
+          "timing": null,
+          "duration": "3 months",
+          "duration_as_written": "x 3 months",
+          "dda_expected": "registered generic"
+        }
+      ],
+      "advice": [
+        "Wt daily, salt restriction"
+      ],
+      "traps": [
+        "fractions: 1/2-0-1/2 must not become 12-0-12 or 1-0-1, and 0.5-0-0.5 must not become 5-0-5",
+        "2.5 mg strength: the decimal point matters",
+        "1 written like 7 in the date (2083/08/1, no leading zero), in two durations and in the folic acid dose; the intended digit is 1",
+        "the dash-tolerant dose rule must leave 1/2-0-1/2 and 0.5-0-0.5 alone"
+      ]
+    },
+    {
+      "id": "P24",
+      "file_clean": "clean/P24-faded-carbon-steep.png",
+      "file_photo": "photo/P24-faded-carbon-steep.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "prescription",
+      "style": "pale-blue carbon copy, faint pen (Nothing You Could Do); the PHOTO is taken at a steep angle with a finger shadow",
+      "facility": "Example Hospital, Dang",
+      "clinician": "Dr. P. Udaharan",
+      "clinician_reg": "NMC 00000 (fictional)",
+      "patient": {
+        "name": "Mina Kumari Namuna",
+        "age": "36 y",
+        "sex": "F",
+        "address": null
+      },
+      "date": {
+        "as_written": "2083/08/22",
+        "calendar": "BS"
+      },
+      "diagnosis_as_written": "cellulitis R leg",
+      "medicines": [
+        {
+          "as_written": "Cap Doxycycline 100 mg",
+          "generic": "doxycycline",
+          "strength": "100 mg",
+          "form": "capsule",
+          "dose": "1-0-1",
+          "dose_as_written": "1-0-1",
+          "timing": null,
+          "duration": "7 days",
+          "duration_as_written": "x 7 d",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Ibuprofen 400 mg",
+          "generic": "ibuprofen",
+          "strength": "400 mg",
+          "form": "tablet",
+          "dose": "1-1-1",
+          "dose_as_written": "1-1-1",
+          "timing": null,
+          "duration": "3 days",
+          "duration_as_written": "x 3 d",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Levocetirizine 5 mg",
+          "generic": "levocetirizine",
+          "strength": "5 mg",
+          "form": "tablet",
+          "dose": "0-0-1",
+          "dose_as_written": "0-0-1",
+          "timing": null,
+          "duration": "5 days",
+          "duration_as_written": "x 5 d",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Paracetamol 500 mg",
+          "generic": "paracetamol",
+          "strength": "500 mg",
+          "form": "tablet",
+          "dose": "1-1-1",
+          "dose_as_written": "1-1-1",
+          "timing": null,
+          "duration": "3 days",
+          "duration_as_written": "x 3 d",
+          "dda_expected": "registered generic"
+        }
+      ],
+      "advice": [
+        "elevate leg, review 1 wk"
+      ],
+      "traps": [
+        "low contrast: faint blue-grey ink on pale blue paper",
+        "steep photo angle and a shadow across the left part of the lower lines",
+        "1-0-1, 1-1-1, 0-0-1, 1-1-1 differ by a single digit (ibuprofen and paracetamol share 1-1-1 x 3 d)"
+      ]
+    },
+    {
+      "id": "P25",
+      "file_clean": "clean/P25-folded-torn-corner.png",
+      "file_photo": "photo/P25-folded-torn-corner.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "prescription",
+      "style": "tall narrow hand (Just Another Hand) on a small pad; folded in four (a vertical crease through the durations) with the top-right corner torn off",
+      "facility": "Example Clinic, Lalitpur",
+      "clinician": "Dr. Q. Namuna",
+      "clinician_reg": null,
+      "patient": {
+        "name": "Suresh Udaharan",
+        "age": "27 y",
+        "sex": "M",
+        "address": null
+      },
+      "date": {
+        "as_written": "23/11/2026",
+        "calendar": "AD"
+      },
+      "diagnosis_as_written": "loose motion, vomiting x 2 d",
+      "medicines": [
+        {
+          "as_written": "Tab Cefixime 200 mg",
+          "generic": "cefixime",
+          "strength": "200 mg",
+          "form": "tablet",
+          "dose": "1-0-1",
+          "dose_as_written": "1-0-1",
+          "timing": null,
+          "duration": "5 days",
+          "duration_as_written": "x 5 days",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Metronidazole 400 mg",
+          "generic": "metronidazole",
+          "strength": "400 mg",
+          "form": "tablet",
+          "dose": "1-1-1",
+          "dose_as_written": "1-1-1",
+          "timing": null,
+          "duration": "5 days",
+          "duration_as_written": "x 5 days",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Domperidone 10 mg",
+          "generic": "domperidone",
+          "strength": "10 mg",
+          "form": "tablet",
+          "dose": "1-0-1",
+          "dose_as_written": "1-0-1",
+          "timing": null,
+          "duration": "5 days",
+          "duration_as_written": "x 5 days",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Ranitidine 150 mg",
+          "generic": "ranitidine",
+          "strength": "150 mg",
+          "form": "tablet",
+          "dose": "1-0-1",
+          "dose_as_written": "1-0-1",
+          "timing": null,
+          "duration": "14 days",
+          "duration_as_written": "x 14 days",
+          "dda_expected": "registered generic"
+        }
+      ],
+      "advice": [
+        "ORS, soft diet"
+      ],
+      "traps": [
+        "a fold crease runs down through the first digits of the durations",
+        "the torn corner removed part of the header (not scored); every scored field is still on the page",
+        "four near-identical dose patterns: 1-0-1 / 1-1-1"
+      ]
+    },
+    {
+      "id": "P26",
+      "file_clean": "clean/P26-narrow-caps-lookalikes-glare.png",
+      "file_photo": "photo/P26-narrow-caps-lookalikes-glare.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "prescription",
+      "style": "narrow pencil capitals (Sue Ellen Francisco), all upper case; 1/7, 4/9, 0/6 and 2/7 look-alikes; the PHOTO is under-exposed with a flash highlight over the middle lines",
+      "facility": "Example Medical Hall, Hetauda",
+      "clinician": "Dr. R. Udaharan",
+      "clinician_reg": "NMC 00000 (fictional)",
+      "patient": {
+        "name": "Gopal Namuna",
+        "age": "47 y",
+        "sex": "M",
+        "address": null
+      },
+      "date": {
+        "as_written": "2083/08/24",
+        "calendar": "BS"
+      },
+      "diagnosis_as_written": "CHEST PAIN, ? ANGINA",
+      "medicines": [
+        {
+          "as_written": "TAB ASPIRIN 75 MG",
+          "generic": "aspirin",
+          "strength": "75 mg",
+          "form": "tablet",
+          "dose": "0-1-0",
+          "dose_as_written": "0-1-0",
+          "timing": null,
+          "duration": "4 days",
+          "duration_as_written": "X 4 DAYS",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "TAB AMLODIPINE 5 MG",
+          "generic": "amlodipine",
+          "strength": "5 mg",
+          "form": "tablet",
+          "dose": "1-0-0",
+          "dose_as_written": "1-0-0",
+          "timing": null,
+          "duration": "1 month",
+          "duration_as_written": "X 1 MONTH",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "TAB LOSARTAN 50 MG",
+          "generic": "losartan",
+          "strength": "50 mg",
+          "form": "tablet",
+          "dose": "1-0-1",
+          "dose_as_written": "1-0-1",
+          "timing": null,
+          "duration": "1 month",
+          "duration_as_written": "X 1 MONTH",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "TAB OMEPRAZOLE 20 MG",
+          "generic": "omeprazole",
+          "strength": "20 mg",
+          "form": "capsule",
+          "dose": "0-0-1",
+          "dose_as_written": "0-0-1",
+          "timing": null,
+          "duration": "4 weeks",
+          "duration_as_written": "X 4 WEEKS",
+          "dda_expected": "registered generic"
+        }
+      ],
+      "advice": [
+        "ECG, TROP-I TODAY"
+      ],
+      "traps": [
+        "upper-case writing: the characters are the same whatever the case",
+        "1 drawn like 7, 4 like 9, 0 like 6, 2 like 7: a reader that cannot tell must leave the field empty, not guess",
+        "photo: a flash highlight washes out part of the page and the rest is under-exposed"
+      ]
+    },
+    {
+      "id": "P27",
+      "file_clean": "clean/P27-devanagari-weeks-months.png",
+      "file_photo": "photo/P27-devanagari-weeks-months.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "prescription",
+      "style": "Devanagari calligraphic hand (Amita) with English drug names in Kalam; doses in Devanagari words and digits, durations in weeks and months",
+      "facility": "Example Health Post, Dolakha",
+      "clinician": "डा. एस. उदाहरण",
+      "clinician_reg": "NMC 00000 (fictional)",
+      "patient": {
+        "name": "Kamal Namuna",
+        "age": "33 y",
+        "sex": "M",
+        "address": null
+      },
+      "date": {
+        "as_written": "२०८३ मंसिर ५",
+        "calendar": "BS"
+      },
+      "diagnosis_as_written": "पेट दुख्ने, कमजोरी",
+      "medicines": [
+        {
+          "as_written": "Tab Albendazole 400 mg",
+          "generic": "albendazole",
+          "strength": "400 mg",
+          "form": "tablet",
+          "dose": "once",
+          "dose_as_written": "एक पटक",
+          "timing": null,
+          "duration": null,
+          "duration_as_written": null,
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Folic acid 5 mg",
+          "generic": "folic acid",
+          "strength": "5 mg",
+          "form": "tablet",
+          "dose": "1 in the morning",
+          "dose_as_written": "बिहान १",
+          "timing": null,
+          "duration": "3 months",
+          "duration_as_written": "३ महिना",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Cap Omeprazole 20 mg",
+          "generic": "omeprazole",
+          "strength": "20 mg",
+          "form": "capsule",
+          "dose": "1 on an empty stomach",
+          "dose_as_written": "खाली पेटमा १",
+          "timing": null,
+          "duration": "2 weeks",
+          "duration_as_written": "२ हप्ता",
+          "dda_expected": "registered generic"
+        },
+        {
+          "as_written": "Tab Metronidazole 400 mg",
+          "generic": "metronidazole",
+          "strength": "400 mg",
+          "form": "tablet",
+          "dose": "1-1-1",
+          "dose_as_written": "१-१-१",
+          "timing": null,
+          "duration": "7 days",
+          "duration_as_written": "७ दिन",
+          "dda_expected": "registered generic"
+        }
+      ],
+      "advice": [
+        "२ हप्तामा फेरि आउने (return in 2 weeks)"
+      ],
+      "traps": [
+        "date with a Nepali month name: कार्तिक/मंसिर written in words, not digits",
+        "doses in Devanagari words (एक पटक, बिहान १, खाली पेटमा १): copy as written, do not translate or turn into digits",
+        "durations in weeks and months (हप्ता, महिना), a unit v1 and v2 never had",
+        "the first line has no duration: leave empty"
+      ]
+    },
+    {
+      "id": "L21",
+      "file_clean": "clean/L21-urine-text-results.png",
+      "file_photo": "photo/L21-urine-text-results.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "lab_report",
+      "style": "printed form, results written by hand (Nothing You Could Do): words, a decimal and ranges as results",
+      "facility": "Namuna Clinical Laboratory (fictional)",
+      "patient": {
+        "name": "Parbati Udaharan",
+        "age": "52 y",
+        "sex": "F",
+        "address": null
+      },
+      "date": {
+        "as_written": "24/11/2026",
+        "calendar": "AD"
+      },
+      "ordered_by": null,
+      "results": [
+        {
+          "test": "Colour",
+          "value": "Pale yellow",
+          "unit": "",
+          "reference_range": "Pale yellow",
+          "flag_printed": null
+        },
+        {
+          "test": "Appearance",
+          "value": "Clear",
+          "unit": "",
+          "reference_range": "Clear",
+          "flag_printed": null
+        },
+        {
+          "test": "Reaction",
+          "value": "Acidic",
+          "unit": "",
+          "reference_range": "Acidic",
+          "flag_printed": null
+        },
+        {
+          "test": "Specific gravity",
+          "value": "1.020",
+          "unit": "",
+          "reference_range": "1.005 – 1.030",
+          "flag_printed": null
+        },
+        {
+          "test": "Protein",
+          "value": "Trace",
+          "unit": "",
+          "reference_range": "Nil",
+          "flag_printed": null
+        },
+        {
+          "test": "Sugar",
+          "value": "Nil",
+          "unit": "",
+          "reference_range": "Nil",
+          "flag_printed": null
+        },
+        {
+          "test": "Pus cells",
+          "value": "2-4",
+          "unit": "/HPF",
+          "reference_range": "0 – 5",
+          "flag_printed": null
+        },
+        {
+          "test": "RBC",
+          "value": "Nil",
+          "unit": "/HPF",
+          "reference_range": "0 – 2",
+          "flag_printed": null
+        },
+        {
+          "test": "Epithelial cells",
+          "value": "6-8",
+          "unit": "/HPF",
+          "reference_range": "0 – 5",
+          "flag_printed": "H"
+        }
+      ],
+      "comment": null,
+      "critical_values": [],
+      "traps": [
+        "results that are words (Pale yellow, Clear, Trace, Nil): copied as written",
+        "'2-4' and '6-8' are ranges of counts, not subtractions; '/HPF' is the unit",
+        "specific gravity 1.020 keeps its trailing zero",
+        "protein 'Trace' against a printed range of 'Nil': no flag is printed for it and none may be added; epithelial cells 6-8 carries a hand-written H"
+      ]
+    },
+    {
+      "id": "L22",
+      "file_clean": "clean/L22-thyroid-coffee-bleed.png",
+      "file_photo": "photo/L22-thyroid-coffee-bleed.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "lab_report",
+      "style": "printed form, results in a wide rough hand (Rock Salt); a coffee ring over the Free T4 and Total T3 rows; writing from the back of the sheet shows through, mirrored",
+      "facility": "Example Thyroid & Vitamin Centre (fictional)",
+      "patient": {
+        "name": "Sarita Namuna",
+        "age": "39 y",
+        "sex": "F",
+        "address": null
+      },
+      "date": {
+        "as_written": "25/11/2026",
+        "calendar": "AD"
+      },
+      "ordered_by": null,
+      "results": [
+        {
+          "test": "TSH",
+          "value": "2.45",
+          "unit": "µIU/mL",
+          "reference_range": "0.40 – 4.00",
+          "flag_printed": null
+        },
+        {
+          "test": "Free T4",
+          "value": "1.1",
+          "unit": "ng/dL",
+          "reference_range": "0.8 – 1.8",
+          "flag_printed": null
+        },
+        {
+          "test": "Total T3",
+          "value": "118",
+          "unit": "ng/dL",
+          "reference_range": "80 – 200",
+          "flag_printed": null
+        },
+        {
+          "test": "Anti-TPO",
+          "value": "28",
+          "unit": "IU/mL",
+          "reference_range": "< 35",
+          "flag_printed": null
+        },
+        {
+          "test": "Vitamin D (25-OH)",
+          "value": "18.2",
+          "unit": "ng/mL",
+          "reference_range": "30 – 100",
+          "flag_printed": "L"
+        }
+      ],
+      "comment": "Sample: serum",
+      "critical_values": [],
+      "traps": [
+        "units with µ (µIU/mL) and slashes",
+        "coffee ring over two values: still readable, a reader must not guess a digit it cannot see",
+        "mirrored bleed-through text ('Invoice no 4471', 'paid in full') is not part of the report",
+        "vitamin D 18.2 carries a hand-written L next to the value: copy it"
+      ]
+    },
+    {
+      "id": "L23",
+      "file_clean": "clean/L23-liver-fax.png",
+      "file_photo": "photo/L23-liver-fax.jpg",
+      "fictional": true,
+      "stamp": "SAMPLE · नमूना",
+      "kind": "lab_report",
+      "style": "printed report; the PHOTO is a fax (shrunk, thresholded, noisy, scan-line dropouts, a streak)",
+      "facility": "Example Referral Laboratory (fictional)",
+      "patient": {
+        "name": "Chandra Bahadur Namuna",
+        "age": "55 y",
+        "sex": "M",
+        "address": null
+      },
+      "date": {
+        "as_written": "26/11/2026",
+        "calendar": "AD"
+      },
+      "ordered_by": null,
+      "results": [
+        {
+          "test": "Total bilirubin",
+          "value": "0.8",
+          "unit": "mg/dL",
+          "reference_range": "0.2 – 1.2",
+          "flag_printed": null
+        },
+        {
+          "test": "Direct bilirubin",
+          "value": "0.2",
+          "unit": "mg/dL",
+          "reference_range": "0.0 – 0.3",
+          "flag_printed": null
+        },
+        {
+          "test": "SGOT (AST)",
+          "value": "42",
+          "unit": "U/L",
+          "reference_range": "5 – 40",
+          "flag_printed": "H"
+        },
+        {
+          "test": "SGPT (ALT)",
+          "value": "56",
+          "unit": "U/L",
+          "reference_range": "5 – 40",
+          "flag_printed": "H"
+        },
+        {
+          "test": "Alkaline phosphatase",
+          "value": "118",
+          "unit": "U/L",
+          "reference_range": "44 – 147",
+          "flag_printed": null
+        },
+        {
+          "test": "Total protein",
+          "value": "7.1",
+          "unit": "g/dL",
+          "reference_range": "6.0 – 8.3",
+          "flag_printed": null
+        },
+        {
+          "test": "Albumin",
+          "value": "4.2",
+          "unit": "g/dL",
+          "reference_range": "3.5 – 5.0",
+          "flag_printed": null
+        },
+        {
+          "test": "GGT",
+          "value": "64",
+          "unit": "U/L",
+          "reference_range": "< 55",
+          "flag_printed": "H"
+        }
+      ],
+      "comment": null,
+      "critical_values": [],
+      "traps": [
+        "fax noise on a printed page: Vision is usually strong here, the test is whether Claude is as exact",
+        "printed flag H on three rows is copied; none is added to the others",
+        "0.0 – 0.3 keeps its '0.0'",
+        "a streak down the right side"
+      ]
+    }
+  ]
+}

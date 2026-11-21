@@ -1,0 +1,54 @@
+﻿doc,kind,item,as_written / test,value / dose,unit / strength,range / duration,DDA expected / flag printed
+P21,medicine,amlodipine,Tab Amlodipine 5 mg,once daily (OD),5 mg,1 month,registered generic
+P21,medicine,losartan,Tab Losartan 50 mg,twice daily (BD),50 mg,1 month,registered generic
+P21,medicine,gliclazide,Tab Gliclazide 80 mg,1 tablet twice daily,80 mg,continue,registered generic
+P21,medicine,levothyroxine,Tab Levothyroxine 50 mcg,"once daily, empty stomach",50 mcg,3 months,registered generic
+P21,medicine,furosemide,Tab Furosemide 40 mg,"once daily, morning",40 mg,till review,registered generic
+P22,medicine,paracetamol,Syp Paracetamol 125 mg/5 ml,5 ml three times daily,125 mg/5 ml,3 days,registered generic
+P22,medicine,(unknown),Syp Amoxinepa 250 mg/5 ml,5 ml twice daily,250 mg/5 ml,5 days,"NOT FOUND — invented brand; must be flagged for a person to confirm, never guessed"
+P22,medicine,salbutamol,Syp Salbutamol 2 mg/5 ml,2.5 ml three times daily,2 mg/5 ml,3 days,registered generic
+P22,medicine,zinc sulfate,Tab Zinc sulfate 20 mg,1 tablet once daily,20 mg,10 days,registered generic
+P22,medicine,oral rehydration salts,ORS,after each loose stool,,,registered generic
+P23,medicine,losartan,Tab Losartan 25 mg,half a tablet morning and night,25 mg,1 month,registered generic
+P23,medicine,furosemide,Tab Furosemide 20 mg,half a tablet in the morning,20 mg,1 day,registered generic
+P23,medicine,prednisolone,Tab Prednisolone 5 mg,0.5 morning and night,5 mg,1 day,registered generic
+P23,medicine,amlodipine,Tab Amlodipine 2.5 mg,once at night,2.5 mg,1 month,registered generic
+P23,medicine,folic acid,Tab Folic acid 5 mg,once in the morning,5 mg,3 months,registered generic
+P24,medicine,doxycycline,Cap Doxycycline 100 mg,1-0-1,100 mg,7 days,registered generic
+P24,medicine,ibuprofen,Tab Ibuprofen 400 mg,1-1-1,400 mg,3 days,registered generic
+P24,medicine,levocetirizine,Tab Levocetirizine 5 mg,0-0-1,5 mg,5 days,registered generic
+P24,medicine,paracetamol,Tab Paracetamol 500 mg,1-1-1,500 mg,3 days,registered generic
+P25,medicine,cefixime,Tab Cefixime 200 mg,1-0-1,200 mg,5 days,registered generic
+P25,medicine,metronidazole,Tab Metronidazole 400 mg,1-1-1,400 mg,5 days,registered generic
+P25,medicine,domperidone,Tab Domperidone 10 mg,1-0-1,10 mg,5 days,registered generic
+P25,medicine,ranitidine,Tab Ranitidine 150 mg,1-0-1,150 mg,14 days,registered generic
+P26,medicine,aspirin,TAB ASPIRIN 75 MG,0-1-0,75 mg,4 days,registered generic
+P26,medicine,amlodipine,TAB AMLODIPINE 5 MG,1-0-0,5 mg,1 month,registered generic
+P26,medicine,losartan,TAB LOSARTAN 50 MG,1-0-1,50 mg,1 month,registered generic
+P26,medicine,omeprazole,TAB OMEPRAZOLE 20 MG,0-0-1,20 mg,4 weeks,registered generic
+P27,medicine,albendazole,Tab Albendazole 400 mg,once,400 mg,,registered generic
+P27,medicine,folic acid,Tab Folic acid 5 mg,1 in the morning,5 mg,3 months,registered generic
+P27,medicine,omeprazole,Cap Omeprazole 20 mg,1 on an empty stomach,20 mg,2 weeks,registered generic
+P27,medicine,metronidazole,Tab Metronidazole 400 mg,1-1-1,400 mg,7 days,registered generic
+L21,result,Colour,Colour,Pale yellow,,Pale yellow,
+L21,result,Appearance,Appearance,Clear,,Clear,
+L21,result,Reaction,Reaction,Acidic,,Acidic,
+L21,result,Specific gravity,Specific gravity,1.020,,1.005 – 1.030,
+L21,result,Protein,Protein,Trace,,Nil,
+L21,result,Sugar,Sugar,Nil,,Nil,
+L21,result,Pus cells,Pus cells,2-4,/HPF,0 – 5,
+L21,result,RBC,RBC,Nil,/HPF,0 – 2,
+L21,result,Epithelial cells,Epithelial cells,6-8,/HPF,0 – 5,H
+L22,result,TSH,TSH,2.45,µIU/mL,0.40 – 4.00,
+L22,result,Free T4,Free T4,1.1,ng/dL,0.8 – 1.8,
+L22,result,Total T3,Total T3,118,ng/dL,80 – 200,
+L22,result,Anti-TPO,Anti-TPO,28,IU/mL,< 35,
+L22,result,Vitamin D (25-OH),Vitamin D (25-OH),18.2,ng/mL,30 – 100,L
+L23,result,Total bilirubin,Total bilirubin,0.8,mg/dL,0.2 – 1.2,
+L23,result,Direct bilirubin,Direct bilirubin,0.2,mg/dL,0.0 – 0.3,
+L23,result,SGOT (AST),SGOT (AST),42,U/L,5 – 40,H
+L23,result,SGPT (ALT),SGPT (ALT),56,U/L,5 – 40,H
+L23,result,Alkaline phosphatase,Alkaline phosphatase,118,U/L,44 – 147,
+L23,result,Total protein,Total protein,7.1,g/dL,6.0 – 8.3,
+L23,result,Albumin,Albumin,4.2,g/dL,3.5 – 5.0,
+L23,result,GGT,GGT,64,U/L,< 55,H
