@@ -62,6 +62,9 @@ const b64u=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-')
 const unb64u=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
 const PK_OK=!!(window.PublicKeyCredential&&navigator.credentials&&window.AuthenticatorAttestationResponse&&'getPublicKey' in AuthenticatorAttestationResponse.prototype);
 let PK_ON=false,ME=null;
+// This device remembers that fingerprint or face is already on for it (the server only knows the account has some). Light use of browser storage.
+const pkHere=()=>{try{return localStorage.getItem('abhPk')==='1'}catch(e){return false}};
+const pkMark=on=>{try{on?localStorage.setItem('abhPk','1'):localStorage.removeItem('abhPk')}catch(e){}};
 // Proof for creating or stopping a share: the PIN if typed, otherwise fingerprint or face on a phone set up for this account.
 async function confirmAuth(pin){
   if(pin)return{pin};
@@ -86,7 +89,8 @@ function pkShow(me){
   ME=me;
   $('pkNudge').style.display=(PK_ON&&PK_OK&&!(me.passkeys>0))?'':'none';
   shareMode();
-  $('pkCard').style.display=PK_ON&&PK_OK?'':'none';
+  if(!(me.passkeys>0))pkMark(false); // turned off elsewhere: this device forgets too
+  $('pkCard').style.display=PK_ON&&PK_OK&&!pkHere()?'':'none'; // already set up on this device: nothing to show but Sign out
   if(!PK_ON||!PK_OK)return;
   const n=me.passkeys||0;
   $('pkText').textContent=n?'On for '+n+' device'+(n>1?'s':'')+'. Next time, one touch signs you in. A touch also confirms creating or stopping a share; your PIN still works.':'Off. Turn it on to sign in with one touch instead of typing a PIN. Your device does the check; Abhilekh never sees a fingerprint or a face.';
@@ -97,6 +101,7 @@ $('passkeyBtn').onclick=async()=>{authErr();try{
   const c=await navigator.credentials.get({publicKey:{challenge:unb64u(o.challenge),rpId:o.rpId,userVerification:'required',timeout:60000}});
   const r=c.response;
   await post('/api/auth/passkey/login',{challenge:o.challenge,id:c.id,clientDataJSON:b64u(r.clientDataJSON),authenticatorData:b64u(r.authenticatorData),signature:b64u(r.signature)});
+  pkMark(true);
   await enter()}catch(e){authErr(e.name==='NotAllowedError'?new Error('Cancelled. Use your PIN or a code.'):e)}};
 $('welcomePasskey').onclick=$('passkeyBtn').onclick;
 $('pkOn').onclick=async()=>{pkErr();try{
@@ -104,7 +109,7 @@ $('pkOn').onclick=async()=>{pkErr();try{
   const c=await navigator.credentials.create({publicKey:{rp:{id:o.rpId,name:'Abhilekh'},user:{id:unb64u(o.user.id),name:o.user.name,displayName:o.user.name},challenge:unb64u(o.challenge),pubKeyCredParams:o.algs.map(alg=>({type:'public-key',alg})),authenticatorSelection:{residentKey:'required',userVerification:'required'},excludeCredentials:o.exclude.map(id=>({type:'public-key',id:unb64u(id)})),attestation:'none',timeout:60000}});
   const r=c.response;
   const me=await post('/api/auth/passkey/register',{challenge:o.challenge,id:c.id,clientDataJSON:b64u(r.clientDataJSON),authenticatorData:b64u(r.getAuthenticatorData()),publicKey:b64u(r.getPublicKey()),publicKeyAlgorithm:r.getPublicKeyAlgorithm()});
-  $('pkPin').value='';pkShow(me)}catch(e){pkErr(e)}};
+  $('pkPin').value='';pkMark(true);pkShow(me)}catch(e){pkErr(e)}};
 $('pkOff').onclick=async()=>{pkErr();try{pkShow(await post('/api/auth/passkey/remove'))}catch(e){pkErr(e)}};
 let started=false;
 async function enter(){
