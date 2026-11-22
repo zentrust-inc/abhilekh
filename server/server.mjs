@@ -4,7 +4,7 @@
 // What it does: stores shares of confirmed SAMPLE records, serves the doctor's view only while a share is live,
 // logs every open and every refused open, lets the patient stop a share.
 // Sign-in (auth.mjs): Nepal mobile number (one SMS code), email address (one code by email) or Google, then a 6-digit PIN; the PIN is asked again to create or stop a
-// share. Every share belongs to the account that made it. Every account sees the same invented SAMPLE record.
+// share. Every share belongs to the account that made it. Every account has its own record; it starts empty, and the patient can add the invented SAMPLE papers to it.
 import http from 'node:http';
 import { readFileSync, writeFileSync, renameSync, existsSync, mkdirSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
@@ -20,13 +20,14 @@ const ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789'; // 31 letters/digits, no loo
 const ALLOWED_MINUTES = [60, 1440, 10080]; // 1 hour, 24 hours, 7 days. Never "forever".
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
 
-export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-record.json'), testMode = false, now = () => Date.now(), sms = memorySender(), mail = memoryMail(), google = null, rp = null, secureCookies = true, authLimits } = {}) {
+export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-record.json'), testMode = false, seedSample = false, now = () => Date.now(), sms = memorySender(), mail = memoryMail(), google = null, rp = null, secureCookies = true, authLimits } = {}) {
   const record = JSON.parse(readFileSync(recordPath, 'utf8'));
   let store = { shares: [] };
   if (storePath) {
     mkdirSync(dirname(storePath), { recursive: true });
     if (existsSync(storePath)) store = JSON.parse(readFileSync(storePath, 'utf8'));
   }
+  store.records = store.records || {}; // one record per account: { label, docs: [] }. Nobody else's papers are ever visible.
   const save = () => {
     if (!storePath) return;
     const tmp = storePath + '.tmp';
@@ -78,7 +79,19 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
       const cur = path.startsWith('/api/') && !path.startsWith('/api/s/') ? auth.current(req) : null;
       if (path.startsWith('/api/') && !path.startsWith('/api/s/') && !cur) return send(res, 401, { error: 'Sign in first.' });
       const mineOnly = s => s.ownerId === cur.account.id;
-      if (req.method === 'GET' && path === '/api/record') return send(res, 200, { docs: record.docs.map(d => ({ id: d.id, title: d.title, facility: d.facility, date: d.date_as_written })), testMode, minutes: ALLOWED_MINUTES });
+      const mine = () => (store.records[cur.account.id] = store.records[cur.account.id] || { label: '', docs: seedSample ? record.docs.map(d => ({ ...JSON.parse(JSON.stringify(d)), origin: 'sample' })) : [] }); // seedSample: tests only
+      const summary = () => { const r = mine(); return { label: r.label, docs: r.docs.map(d => ({ id: d.id, title: d.title, facility: d.facility, date: d.date_as_written, origin: d.origin || 'sample', results: d.results.map(({ img, ...r }) => r) })), testMode, minutes: ALLOWED_MINUTES }; };
+      if (req.method === 'GET' && path === '/api/record') return send(res, 200, summary());
+      if (req.method === 'POST' && path === '/api/record/sample') { // copy the invented SAMPLE papers into THIS account only; asking twice adds nothing
+        const r = mine();
+        for (const d of record.docs) if (!r.docs.some(x => x.id === d.id)) r.docs.push({ ...JSON.parse(JSON.stringify(d)), origin: 'sample' });
+        save(); return send(res, 200, summary());
+      }
+      if (req.method === 'POST' && path === '/api/record/label') {
+        const b = await readJson(req);
+        mine().label = String(b.label || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+        save(); return send(res, 200, summary());
+      }
       if (req.method === 'GET' && path === '/api/shares') return send(res, 200, { shares: store.shares.filter(mineOnly).map(publicShare).reverse() });
       if (req.method === 'POST' && path === '/api/shares') {
         const b = await readJson(req);
@@ -86,7 +99,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
         if (!pin.ok) return send(res, pin.status, pin);
         const hold = auth.holdUntil(cur.account);
         if (hold) return send(res, 403, { error: 'New shares are paused until ' + new Date(hold).toISOString() + ', 24 hours after your PIN was reset with a new code. You can still stop shares.', sharesPausedUntil: new Date(hold).toISOString() });
-        const docs = Array.isArray(b.docs) ? [...new Set(b.docs)].filter(id => record.docs.some(d => d.id === id)) : [];
+        const docs = Array.isArray(b.docs) ? [...new Set(b.docs)].filter(id => mine().docs.some(d => d.id === id)) : [];
         if (!docs.length) return send(res, 400, { error: 'Choose at least one report to share.' });
         const minutes = Number(b.minutes);
         if (!(ALLOWED_MINUTES.includes(minutes) || (testMode && minutes === 1))) return send(res, 400, { error: 'Choose 1 hour, 24 hours or 7 days.' });
@@ -118,7 +131,10 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
           return send(res, 410, { state: st });
         }
         log(s, 'Opened on a doctor\'s phone.'); save();
-        return send(res, 200, { state: 'live', expires: s.expires, docs: record.docs.filter(d => s.docs.includes(d.id)) });
+        // The owner's own papers. (Shares made before records were per patient point at the same ids in the shared SAMPLE file.)
+        const own = (store.records[s.ownerId] || { docs: [] }).docs;
+        const docs = s.docs.map(id => own.find(d => d.id === id) || record.docs.find(d => d.id === id)).filter(Boolean);
+        return send(res, 200, { state: 'live', expires: s.expires, docs });
       }
       send(res, 404, { error: 'not found' });
     } catch (e) {

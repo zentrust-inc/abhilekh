@@ -14,7 +14,7 @@ async function start(opts = {}) {
   let t = Date.parse('2026-11-21T10:00:00Z');
   const clock = { now: () => t, advance: min => { t += min * 60000; } };
   const sms = opts.sms || memorySender();
-  const app = createApp({ now: clock.now, sms, secureCookies: false, ...opts });
+  const app = createApp({ now: clock.now, sms, secureCookies: false, seedSample: true, ...opts });
   const srv = http.createServer(app.handler);
   await new Promise(r => srv.listen(0, '127.0.0.1', r));
   const base = 'http://127.0.0.1:' + srv.address().port;

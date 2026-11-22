@@ -39,7 +39,7 @@ function fakeAuthenticator({ rpId = RP.id, origin = RP.origin } = {}) {
 async function start(opts = {}) {
   let t = Date.parse('2026-11-22T10:00:00Z');
   const sms = memorySender();
-  const app = createApp({ now: () => t, sms, secureCookies: false, rp: RP, ...opts });
+  const app = createApp({ now: () => t, sms, secureCookies: false, rp: RP, seedSample: true, ...opts });
   const srv = http.createServer(app.handler);
   await new Promise(r => srv.listen(0, '127.0.0.1', r));
   const base = 'http://127.0.0.1:' + srv.address().port;
