@@ -25,9 +25,9 @@ async function start(opts = {}) {
       if (body !== undefined && !h['content-type']) h['content-type'] = 'application/json';
       const ck = Object.entries(jar).filter(([, v]) => v).map(([k, v]) => k + '=' + v).join('; ');
       if (ck) h.cookie = ck;
-      const r = await fetch(base + p, { method, headers: h, body: body === undefined ? undefined : (typeof body === 'string' ? body : JSON.stringify(body)) });
+      const r = await fetch(base + p, { method, headers: h, body: body === undefined ? undefined : (typeof body === 'string' ? body : JSON.stringify(body)), redirect: 'manual' });
       for (const c of r.headers.getSetCookie()) { const [kv] = c.split(';'); const i = kv.indexOf('='); jar[kv.slice(0, i)] = kv.slice(i + 1); }
-      return { status: r.status, json: await r.json().catch(() => null), cookies: r.headers.getSetCookie() };
+      return { status: r.status, json: await r.json().catch(() => null), cookies: r.headers.getSetCookie(), location: r.headers.get('location') };
     };
     return { call, jar };
   };
@@ -429,4 +429,199 @@ test('a store written before email existed (keyed by phone) still signs in', asy
   const again = s2.phone(); again.jar.abh_d = me.jar.abh_d;
   assert.equal((await again.call('/api/auth/login', 'POST', { phone: '9841000001', pin: PIN })).status, 200);
   assert.equal((await again.call('/api/me')).json.phone, '984****001');
+});
+
+// ---------- Google sign-in ----------
+const jwt = claims => 'e30.' + Buffer.from(JSON.stringify(claims)).toString('base64url') + '.sig';
+function fakeGoogle() {
+  const g = { clientId: 'cid.apps.googleusercontent.com', clientSecret: 'secret-not-real', redirectUri: 'https://app.abhilekh.org/api/auth/google/callback', calls: [], next: null };
+  g.fetchImpl = async (url, init) => {
+    g.calls.push({ url, body: new URLSearchParams(init.body) });
+    if (!g.next) return { ok: false, status: 400, json: async () => ({ error: 'invalid_grant' }) };
+    return { ok: true, status: 200, json: async () => ({ id_token: jwt(g.next()) }) };
+  };
+  return g;
+}
+// Runs start, then the callback Google would send the browser to, for the claims given.
+async function googleRound(s, g, br, claims = {}, { intent, code = 'abc', mutate } = {}) {
+  const st = await br.call('/api/auth/google/start' + (intent ? '?intent=' + intent : ''));
+  assert.equal(st.status, 302);
+  const u = new URL(st.location);
+  g.next = () => ({ iss: 'https://accounts.google.com', aud: g.clientId, sub: '1001', email: 'asha@gmail.com', email_verified: true, exp: Math.floor(s.clock.now() / 1000) + 3600, nonce: u.searchParams.get('nonce'), ...claims });
+  if (mutate) mutate(u);
+  return { start: st, url: u, cb: await br.call('/api/auth/google/callback?code=' + code + '&state=' + (u.searchParams.get('state'))) };
+}
+
+test('Google off: the options say so, and start answers plainly', async () => {
+  const s = await start(); after(s);
+  const br = s.phone();
+  assert.deepEqual((await br.call('/api/auth/options')).json, { sms: true, email: true, google: false });
+  assert.equal((await br.call('/api/auth/google/start')).status, 503);
+  const n = await start({ sms: noSender(), mail: noMail() }); after(n);
+  assert.deepEqual((await n.phone().call('/api/auth/options')).json, { sms: false, email: false, google: false });
+});
+
+test('Google start: redirects to Google with only openid email, a state and a nonce, and binds the state to this browser', async () => {
+  const g = fakeGoogle(), s = await start({ google: g }); after(s);
+  const br = s.phone();
+  assert.equal((await br.call('/api/auth/options')).json.google, true);
+  const st = await br.call('/api/auth/google/start');
+  assert.equal(st.status, 302);
+  const u = new URL(st.location);
+  assert.equal(u.origin + u.pathname, 'https://accounts.google.com/o/oauth2/v2/auth');
+  assert.equal(u.searchParams.get('client_id'), g.clientId);
+  assert.equal(u.searchParams.get('redirect_uri'), g.redirectUri);
+  assert.equal(u.searchParams.get('response_type'), 'code');
+  assert.equal(u.searchParams.get('scope'), 'openid email');
+  assert.ok(u.searchParams.get('state').length >= 30 && u.searchParams.get('nonce').length >= 30);
+  const ck = st.cookies.find(c => c.startsWith('abh_gs='));
+  assert.match(ck, /HttpOnly/); assert.match(ck, /SameSite=Lax/);
+  assert.ok(ck.includes(u.searchParams.get('state')));
+  assert.ok(!st.location.includes(g.clientSecret));
+});
+
+test('Google sign-up: new account sets a PIN once, then shares need that PIN; the email shown is masked', async () => {
+  const g = fakeGoogle(), s = await start({ google: g }); after(s);
+  const br = s.phone();
+  const r = await googleRound(s, g, br);
+  assert.equal(r.cb.status, 302); assert.equal(r.cb.location, '/?g=1');
+  assert.equal(g.calls.length, 1);
+  assert.equal(g.calls[0].url, 'https://oauth2.googleapis.com/token');
+  assert.equal(g.calls[0].body.get('grant_type'), 'authorization_code');
+  assert.equal(g.calls[0].body.get('client_secret'), g.clientSecret);
+  assert.equal((await br.call('/api/me')).status, 401); // not signed in until the PIN is set
+  const gt = r.cb.cookies.find(c => c.startsWith('abh_gt='));
+  assert.match(gt, /HttpOnly/);
+  const t = await br.call('/api/auth/google/ticket', 'POST', {});
+  assert.equal(t.status, 200); assert.equal(t.json.isNew, true);
+  assert.equal((await br.call('/api/auth/google/ticket', 'POST', {})).status, 400); // the cookie is gone
+  const p = await br.call('/api/auth/pin', 'POST', { ticket: t.json.ticket, pin: PIN });
+  assert.equal(p.status, 200);
+  assert.equal(p.json.email, 'a***@gmail.com'); assert.equal(p.json.kind, 'google'); assert.equal(p.json.phone, undefined);
+  assert.equal((await br.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60 })).status, 400); // no PIN, no share
+  assert.equal((await br.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, pin: PIN })).status, 201);
+});
+
+test('Google sign-in on another device: no code and no PIN to get in; the PIN is still asked for a share', async () => {
+  const g = fakeGoogle(), s = await start({ google: g }); after(s);
+  const a = s.phone();
+  await googleRound(s, g, a);
+  const t = await a.call('/api/auth/google/ticket', 'POST', {});
+  await a.call('/api/auth/pin', 'POST', { ticket: t.json.ticket, pin: PIN });
+  const b = s.phone();
+  const r = await googleRound(s, g, b);
+  assert.equal(r.cb.status, 302); assert.equal(r.cb.location, '/');
+  assert.equal((await b.call('/api/me')).status, 200);
+  assert.equal((await b.call('/api/me')).json.kind, 'google');
+  assert.equal((await b.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60 })).status, 400);
+  assert.equal((await b.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, pin: PIN })).status, 201);
+  assert.equal(s.sms.sent.length, 0);
+});
+
+test('forgotten PIN on a Google account: sign in with Google again, set a new PIN, other devices out, new shares paused 24 hours', async () => {
+  const g = fakeGoogle(), s = await start({ google: g }); after(s);
+  const old = s.phone(), nw = s.phone();
+  await googleRound(s, g, old);
+  await old.call('/api/auth/pin', 'POST', { ticket: (await old.call('/api/auth/google/ticket', 'POST', {})).json.ticket, pin: PIN });
+  const r = await googleRound(s, g, nw, {}, { intent: 'reset' });
+  assert.equal(r.cb.location, '/?g=1');
+  const t = await nw.call('/api/auth/google/ticket', 'POST', {});
+  assert.equal(t.json.isNew, false);
+  const p = await nw.call('/api/auth/pin', 'POST', { ticket: t.json.ticket, pin: '590284' });
+  assert.equal(p.status, 200); assert.notEqual(p.json.sharesPausedUntil, null);
+  assert.equal((await old.call('/api/me')).status, 401);
+  assert.equal((await nw.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, pin: '590284' })).status, 403);
+  // reset for a Google account that does not exist is refused, nothing is created
+  const stranger = s.phone();
+  const x = await googleRound(s, g, stranger, { sub: '999', email: 'nobody@gmail.com' }, { intent: 'reset' });
+  assert.equal(x.cb.location, '/?gerr=noaccount');
+});
+
+test('wrong PINs on a Google account point back to Google, not to SMS', async () => {
+  const g = fakeGoogle(), s = await start({ google: g }); after(s);
+  const br = s.phone();
+  await googleRound(s, g, br);
+  await br.call('/api/auth/pin', 'POST', { ticket: (await br.call('/api/auth/google/ticket', 'POST', {})).json.ticket, pin: PIN });
+  let last;
+  for (let i = 0; i < 5; i++) last = await br.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, pin: '111112' });
+  assert.equal(last.status, 423); assert.match(last.json.error, /sign in with Google again/i); assert.doesNotMatch(last.json.error, /SMS/);
+});
+
+test('Google callback refuses: wrong or reused state, no cookie, cancelled, bad token, wrong audience or issuer, old token, wrong nonce, unverified email', async () => {
+  const g = fakeGoogle(), s = await start({ google: g }); after(s);
+  const expectErr = async (label, claims, opts, err) => {
+    const r = await googleRound(s, g, s.phone(), claims, opts);
+    assert.equal(r.cb.location, '/?gerr=' + err, label);
+    assert.equal(r.cb.cookies.some(c => c.startsWith('abh_gt=') && !/Max-Age=0/.test(c)), false, label);
+  };
+  await expectErr('wrong audience', { aud: 'someone-else' }, {}, 'failed');
+  await expectErr('wrong issuer', { iss: 'https://evil.example.com' }, {}, 'failed');
+  await expectErr('expired token', { exp: 1 }, {}, 'failed');
+  await expectErr('wrong nonce', { nonce: 'x'.repeat(32) }, {}, 'failed');
+  await expectErr('no subject', { sub: '' }, {}, 'failed');
+  await expectErr('unverified email', { email_verified: false }, {}, 'unverified');
+  await expectErr('no email', { email: undefined }, {}, 'unverified');
+  // state from another browser: the cookie does not match
+  const a = s.phone(), b = s.phone();
+  const st = await a.call('/api/auth/google/start'); g.next = () => ({});
+  const state = new URL(st.location).searchParams.get('state');
+  await b.call('/api/auth/google/start');
+  assert.equal((await b.call('/api/auth/google/callback?code=c&state=' + state)).location, '/?gerr=expired');
+  // unknown state, and no state at all
+  assert.equal((await s.phone().call('/api/auth/google/callback?code=c&state=nope')).location, '/?gerr=expired');
+  assert.equal((await s.phone().call('/api/auth/google/callback?code=c')).location, '/?gerr=expired');
+  // the user pressed Cancel at Google
+  const c = s.phone(); const cs = await c.call('/api/auth/google/start');
+  assert.equal((await c.call('/api/auth/google/callback?error=access_denied&state=' + new URL(cs.location).searchParams.get('state'))).location, '/?gerr=cancelled');
+  // Google's token endpoint refuses the code
+  g.next = null;
+  const d = s.phone(); const ds = await d.call('/api/auth/google/start');
+  assert.equal((await d.call('/api/auth/google/callback?code=bad&state=' + new URL(ds.location).searchParams.get('state'))).location, '/?gerr=failed');
+});
+
+test('a Google state works once: replaying the callback gives nothing', async () => {
+  const g = fakeGoogle(), s = await start({ google: g }); after(s);
+  const br = s.phone();
+  const r = await googleRound(s, g, br);
+  assert.equal(r.cb.location, '/?g=1');
+  const again = await br.call('/api/auth/google/callback?code=abc&state=' + r.url.searchParams.get('state'));
+  assert.equal(again.location, '/?gerr=expired');
+  assert.equal(g.calls.length, 1); // Google was not asked a second time
+});
+
+test('a Google state ends after 10 minutes', async () => {
+  const g = fakeGoogle(), s = await start({ google: g }); after(s);
+  const br = s.phone();
+  const st = await br.call('/api/auth/google/start');
+  s.clock.advance(11);
+  const r = await br.call('/api/auth/google/callback?code=abc&state=' + new URL(st.location).searchParams.get('state'));
+  assert.equal(r.location, '/?gerr=expired');
+  assert.equal(g.calls.length, 0);
+});
+
+test('one account per sign-in method: a Google account and an email account with the same address are separate; the Google id decides, not the address', async () => {
+  const g = fakeGoogle(), mail = memoryMail(), s = await start({ google: g, mail }); after(s);
+  const a = s.phone(), b = s.phone();
+  await googleRound(s, g, a, { sub: '1001', email: 'asha@gmail.com' });
+  await a.call('/api/auth/pin', 'POST', { ticket: (await a.call('/api/auth/google/ticket', 'POST', {})).json.ticket, pin: PIN });
+  assert.equal((await a.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, pin: PIN })).status, 201);
+  await emailSignUp(s, mail, b, 'asha@gmail.com', '590284');
+  assert.equal((await b.call('/api/shares')).json.shares.length, 0);
+  // the same person changes their Google address: still the same account, shares still there
+  const c = s.phone();
+  const r = await googleRound(s, g, c, { sub: '1001', email: 'asha.new@gmail.com' });
+  assert.equal(r.cb.location, '/');
+  assert.equal((await c.call('/api/shares')).json.shares.length, 1);
+  assert.equal((await c.call('/api/me')).json.email, 'a***@gmail.com');
+  // a different Google id with the same address is a different account
+  const d = s.phone();
+  const r2 = await googleRound(s, g, d, { sub: '2002', email: 'asha@gmail.com' });
+  assert.equal(r2.cb.location, '/?g=1');
+});
+
+test('Google start is slowed down for one connection', async () => {
+  const g = fakeGoogle(), s = await start({ google: g }); after(s);
+  const br = s.phone();
+  for (let i = 0; i < 20; i++) assert.equal((await br.call('/api/auth/google/start')).status, 302);
+  assert.equal((await br.call('/api/auth/google/start')).status, 429);
 });

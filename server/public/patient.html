@@ -4,8 +4,10 @@
 <div class="banner"><b>SAMPLE · नमूना.</b> Prototype on invented pages, planning stage. Links and the access log are real and kept by the server; the records are fictional. Sign-in is by mobile number or email, and a PIN; every account sees the same invented sample record. English only so far.</div>
 <div id="auth" style="display:none">
 <h1>Sign in to Abhilekh</h1>
-<p class="sub">Your mobile number gets one SMS code the first time, or your email address gets one code by mail. After that you use your 6-digit PIN on this device.</p>
+<p class="sub">Continue with Google, or your mobile number gets one SMS code the first time, or your email address gets one code by mail. A PIN protects sharing; on a phone or email account you also use it to sign in on that device.</p>
 <div class="card" id="stepPhone">
+  <a id="googleBtn" href="/api/auth/google/start" style="display:none;text-decoration:none"><button class="go" style="width:100%">Continue with Google</button></a>
+  <div class="mute" id="orLine" style="display:none;text-align:center;margin:10px 0">or use a mobile number or email</div>
   <label class="mute" for="phone" style="display:block">Mobile number (Nepal) or email</label>
   <input type="text" id="phone" inputmode="email" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="98XXXXXXXX or name@example.com">
   <div id="pinLogin">
@@ -13,6 +15,7 @@
     <input type="password" id="loginPin" inputmode="numeric" maxlength="6" autocomplete="current-password">
     <button class="go" id="loginBtn">Sign in</button>
   </div>
+  <div class="mute" id="googleReset" style="display:none;margin-top:10px"><a href="/api/auth/google/start?intent=reset">Forgot your PIN on a Google account? Sign in with Google again</a></div>
   <button class="sec" id="codeBtn" style="width:100%;margin-top:10px">New here, new device or forgot PIN? Get a code (SMS for a number, mail for an email)</button>
 </div>
 <div class="card" id="stepCode" style="display:none">

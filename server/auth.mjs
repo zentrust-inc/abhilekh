@@ -3,6 +3,10 @@
 // Design (status log 2026-11-21, PRD rev. 3.3 "Security and consent"):
 //   - Sign up with a Nepal mobile number (ONE SMS code) or with an email address (ONE code by email), then the patient
 //     sets a 6-digit PIN. One account per sign-in method: a phone account and an email account are separate accounts.
+//   - Or "Continue with Google" (OAuth code flow, scope openid email): Google proves who the person is, so there is no
+//     code. A new Google account sets a PIN once; after that Google signs the person in on any device. The PIN is still
+//     asked to create or stop a share. A forgotten PIN is reset by signing in with Google again (same hold as recovery).
+//     The Google account is keyed by Google's permanent id (sub), not by the email address, which can change.
 //   - Afterwards: PIN on the same phone. The phone is remembered by a device cookie, so a PIN alone from another
 //     phone is not enough.
 //   - A code (SMS or email, the same channel as the account) again only for recovery: a new phone, a forgotten PIN, or a lockout. Recovery ends every other session and
@@ -67,7 +71,7 @@ export function pinProblem(pin) {
 }
 const hashPin = (pin, salt = randomBytes(16).toString('hex')) => ({ salt, hash: scryptSync(pin, salt, 32).toString('hex') });
 
-export function createAuth({ store, save, now = () => Date.now(), sms, mail = noMail(), testMode = false, secureCookies = true, limits = {} }) {
+export function createAuth({ store, save, now = () => Date.now(), sms, mail = noMail(), google = null, testMode = false, secureCookies = true, limits = {} }) {
   const L = { ...LIMITS, ...limits };
   for (const k of ['accounts', 'sessions', 'codes', 'smsLog']) if (!Array.isArray(store[k])) store[k] = [];
   // Accounts, codes and the send log made before email existed are keyed by phone: give them the new key.
@@ -84,7 +88,7 @@ export function createAuth({ store, save, now = () => Date.now(), sms, mail = no
   };
 
   const cookies = req => Object.fromEntries((req.headers.cookie || '').split(';').map(s => s.trim().split('=')).filter(a => a.length === 2));
-  const cookie = (name, value, maxMs) => `${name}=${value}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${Math.floor(maxMs / 1000)}${secureCookies ? '; Secure' : ''}`;
+  const cookie = (name, value, maxMs, site = 'Strict') => `${name}=${value}; Path=/; HttpOnly; SameSite=${site}; Max-Age=${Math.floor(maxMs / 1000)}${secureCookies ? '; Secure' : ''}`;
 
   function current(req) {
     const c = cookies(req);
@@ -96,21 +100,22 @@ export function createAuth({ store, save, now = () => Date.now(), sms, mail = no
   }
 
   const holdUntil = a => (a.recoveredAt && now() < a.recoveredAt + L.recoveryHoldMs ? a.recoveredAt + L.recoveryHoldMs : null);
-  const label = a => (a.kind === 'email' ? maskEmail(a.email) : maskPhone(a.phone));
-  const channel = a => (a.kind === 'email' ? 'email' : 'SMS');
-  const me = a => ({ ...(a.kind === 'email' ? { email: maskEmail(a.email) } : { phone: maskPhone(a.phone) }), label: label(a), kind: a.kind, created: new Date(a.created).toISOString(), sharesPausedUntil: holdUntil(a) ? new Date(holdUntil(a)).toISOString() : null });
+  const label = a => (a.kind === 'phone' ? maskPhone(a.phone) : maskEmail(a.email));
+  const recoverHow = a => (a.kind === 'email' ? 'get a code by email' : a.kind === 'google' ? 'sign in with Google again' : 'get a code by SMS');
+  const Cap = x => x[0].toUpperCase() + x.slice(1);
+  const me = a => ({ ...(a.kind === 'phone' ? { phone: maskPhone(a.phone) } : { email: maskEmail(a.email) }), label: label(a), kind: a.kind, created: new Date(a.created).toISOString(), sharesPausedUntil: holdUntil(a) ? new Date(holdUntil(a)).toISOString() : null });
 
   // PIN check shared by sign-in and by re-entry before a share is created or stopped.
   function checkPin(a, pin) {
     const t = now();
-    if (a.hardLocked) return { status: 423, error: 'Too many wrong PINs. Get a code by ' + channel(a) + ' to set a new PIN.', needCode: true };
-    if (a.lockedUntil && t < a.lockedUntil) return { status: 423, error: 'Too many wrong PINs. Try again after ' + new Date(a.lockedUntil).toISOString() + ', or get a code by ' + channel(a) + '.', lockedUntil: new Date(a.lockedUntil).toISOString() };
+    if (a.hardLocked) return { status: 423, error: 'Too many wrong PINs. ' + Cap(recoverHow(a)) + ' to set a new PIN.', needCode: true };
+    if (a.lockedUntil && t < a.lockedUntil) return { status: 423, error: 'Too many wrong PINs. Try again after ' + new Date(a.lockedUntil).toISOString() + ', or ' + recoverHow(a) + '.', lockedUntil: new Date(a.lockedUntil).toISOString() };
     if (!/^\d{6}$/.test(String(pin || ''))) return { status: 400, error: 'Enter your 6-digit PIN.' }; // a typo in length is not counted as a try
     const ok = same(hashPin(String(pin), a.pinSalt).hash, a.pinHash);
     if (ok) { a.pinFails = 0; a.lockedUntil = null; save(); return { ok: true }; }
     a.pinFails = (a.pinFails || 0) + 1;
-    if (a.pinFails >= L.pinHardLock) { a.hardLocked = true; save(); return { status: 423, error: 'Too many wrong PINs. Get a code by ' + channel(a) + ' to set a new PIN.', needCode: true }; }
-    if (a.pinFails % L.pinSoftLock === 0) { a.lockedUntil = t + L.pinSoftLockMs; save(); return { status: 423, error: 'Too many wrong PINs. Wait 15 minutes, or get a code by ' + channel(a) + '.', lockedUntil: new Date(a.lockedUntil).toISOString() }; }
+    if (a.pinFails >= L.pinHardLock) { a.hardLocked = true; save(); return { status: 423, error: 'Too many wrong PINs. ' + Cap(recoverHow(a)) + ' to set a new PIN.', needCode: true }; }
+    if (a.pinFails % L.pinSoftLock === 0) { a.lockedUntil = t + L.pinSoftLockMs; save(); return { status: 423, error: 'Too many wrong PINs. Wait 15 minutes, or ' + recoverHow(a) + '.', lockedUntil: new Date(a.lockedUntil).toISOString() }; }
     save();
     return { status: 401, error: 'Wrong PIN. ' + (L.pinSoftLock - (a.pinFails % L.pinSoftLock)) + ' tries left before a 15-minute wait.' };
   }
@@ -123,6 +128,63 @@ export function createAuth({ store, save, now = () => Date.now(), sms, mail = no
     res.setHeader('set-cookie', set);
   }
 
+  // ---- Google sign-in (authorization code flow, server side) ----
+  const oauth = new Map(); // state hash -> { nonce, intent, expires }; a restart only means signing in again
+  const starts = new Map(); // ip -> start times, to slow down hammering
+  const back = (res, query, extra = []) => { res.statusCode = 302; res.setHeader('location', '/' + query); res.setHeader('cache-control', 'no-store'); if (extra.length) res.setHeader('set-cookie', extra); res.end(); };
+  const clearState = () => cookie('abh_gs', '', 0, 'Lax');
+
+  function googleStart(req, res, ip, send) {
+    if (!google) return send(res, 503, { error: 'Google sign-in is not switched on yet.' });
+    const t = now();
+    const a = (starts.get(ip) || []).filter(x => t - x < 10 * MIN); a.push(t); starts.set(ip, a);
+    if (a.length > 20) return send(res, 429, { error: 'Too many tries. Wait a few minutes.' });
+    for (const [k, v] of oauth) if (v.expires <= t) oauth.delete(k);
+    const intent = new URL(req.url, 'http://x').searchParams.get('intent') === 'reset' ? 'reset' : 'login';
+    const state = tok(), nonce = tok();
+    oauth.set(sha(state), { nonce, intent, expires: t + 10 * MIN });
+    const u = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+    for (const [k, v] of Object.entries({ client_id: google.clientId, redirect_uri: google.redirectUri, response_type: 'code', scope: 'openid email', state, nonce, prompt: 'select_account' })) u.searchParams.set(k, v);
+    res.statusCode = 302; res.setHeader('location', u.toString()); res.setHeader('cache-control', 'no-store');
+    // Lax, not Strict: Google sends the browser back with a cross-site navigation, which Strict cookies would miss.
+    res.setHeader('set-cookie', cookie('abh_gs', state, 10 * MIN, 'Lax'));
+    res.end();
+  }
+
+  async function googleCallback(req, res, ip) {
+    const q = new URL(req.url, 'http://x').searchParams, t = now();
+    const state = q.get('state') || '';
+    const rec = oauth.get(sha(state));
+    oauth.delete(sha(state)); // one use
+    // The state must be ours, unused, unexpired, and the same one this browser was given (against login CSRF).
+    if (!rec || rec.expires <= t || cookies(req).abh_gs !== state) return back(res, '?gerr=expired', [clearState()]);
+    if (q.get('error')) return back(res, '?gerr=cancelled', [clearState()]);
+    let claims;
+    try {
+      const r = await google.fetchImpl('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ code: q.get('code') || '', client_id: google.clientId, client_secret: google.clientSecret, redirect_uri: google.redirectUri, grant_type: 'authorization_code' }).toString(), redirect: 'error', signal: AbortSignal.timeout(15000) });
+      const j = await r.json().catch(() => null);
+      if (!r.ok || !j || !j.id_token) throw new Error('token endpoint: HTTP ' + r.status);
+      // The id_token came straight from Google's token endpoint over TLS, so its signature need not be checked again;
+      // what it says about who, for whom, from whom and until when is checked here.
+      claims = JSON.parse(Buffer.from(String(j.id_token).split('.')[1] || '', 'base64url').toString());
+    } catch (e) { console.error('Google sign-in failed:', e.message); return back(res, '?gerr=failed', [clearState()]); }
+    const okIss = claims.iss === 'https://accounts.google.com' || claims.iss === 'accounts.google.com';
+    if (!okIss || claims.aud !== google.clientId || !(claims.exp * 1000 > t) || claims.nonce !== rec.nonce || !claims.sub) return back(res, '?gerr=failed', [clearState()]);
+    const email = normaliseEmail(claims.email);
+    if (!email || claims.email_verified !== true) return back(res, '?gerr=unverified', [clearState()]);
+    const key = 'google:' + claims.sub;
+    const a = store.accounts.find(x => x.key === key);
+    if (a && rec.intent !== 'reset') { // an existing Google account just signs in; the PIN is asked for shares
+      a.email = email; startSession(res, a, null); save();
+      res.setHeader('set-cookie', [...[].concat(res.getHeader('set-cookie') || []), clearState()]);
+      return back(res, '');
+    }
+    if (!a && rec.intent === 'reset') return back(res, '?gerr=noaccount', [clearState()]);
+    const ticket = tok();
+    tickets.set(sha(ticket), { key, kind: 'google', value: email, isNew: !a, expires: t + L.ticketMs });
+    return back(res, '?g=1', [clearState(), cookie('abh_gt', ticket, L.ticketMs, 'Lax')]);
+  }
+
   // Returns true if it handled the request.
   async function route(req, res, path, { ip, send, readJson }) {
     if (!path.startsWith('/api/auth/') && path !== '/api/me') return false;
@@ -130,6 +192,9 @@ export function createAuth({ store, save, now = () => Date.now(), sms, mail = no
       const cur = current(req);
       return send(res, cur ? 200 : 401, cur ? me(cur.account) : { error: 'Not signed in.' }), true;
     }
+    if (req.method === 'GET' && path === '/api/auth/options') return send(res, 200, { sms: sms.name !== 'none', email: mail.name !== 'none', google: !!google }), true;
+    if (req.method === 'GET' && path === '/api/auth/google/start') return googleStart(req, res, ip, send), true;
+    if (req.method === 'GET' && path === '/api/auth/google/callback') return await googleCallback(req, res, ip), true;
     if (req.method !== 'POST') return send(res, 404, { error: 'not found' }), true;
     prune();
     const b = await readJson(req);
@@ -189,7 +254,7 @@ export function createAuth({ store, save, now = () => Date.now(), sms, mail = no
         store.sessions = store.sessions.filter(s => s.accountId !== a.id);
         Object.assign(a, { pinSalt: salt, pinHash: hash, pinFails: 0, lockedUntil: null, hardLocked: false, recoveredAt: t, devices: [] });
       } else {
-        a = { id: tok(), key: tk.key, kind: tk.kind, [tk.kind === 'email' ? 'email' : 'phone']: tk.value, created: t, pinSalt: salt, pinHash: hash, pinFails: 0, lockedUntil: null, hardLocked: false, recoveredAt: null, devices: [] };
+        a = { id: tok(), key: tk.key, kind: tk.kind, [tk.kind === 'phone' ? 'phone' : 'email']: tk.value, created: t, pinSalt: salt, pinHash: hash, pinFails: 0, lockedUntil: null, hardLocked: false, recoveredAt: null, devices: [] };
         store.accounts.push(a);
       }
       const device = tok();
@@ -210,6 +275,15 @@ export function createAuth({ store, save, now = () => Date.now(), sms, mail = no
       startSession(res, a, null);
       save();
       return send(res, 200, me(a)), true;
+    }
+
+    if (path === '/api/auth/google/ticket') {
+      // The browser comes back from Google with the ticket in an HttpOnly cookie; the page trades it for the PIN step.
+      const g = cookies(req).abh_gt;
+      const tk = g && tickets.get(sha(g));
+      res.setHeader('set-cookie', cookie('abh_gt', '', 0, 'Lax'));
+      if (!tk || tk.expires <= t) return send(res, 400, { error: 'This step has timed out. Sign in with Google again.' }), true;
+      return send(res, 200, { ticket: g, isNew: tk.isNew }), true;
     }
 
     if (path === '/api/auth/logout') {
