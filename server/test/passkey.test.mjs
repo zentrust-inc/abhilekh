@@ -220,3 +220,74 @@ test('passkey: at most five per account, and the same phone cannot be added twic
     assert.equal(sixth.begin.status, 400);
   } finally { s.close(); }
 });
+
+// ---- fingerprint/face in place of the PIN for creating and stopping shares ----
+const confirmBody = async (ph, auth, opts) => {
+  const b = await ph.call('/api/auth/passkey/begin', 'POST', { purpose: 'confirm' });
+  assert.equal(b.status, 200, JSON.stringify(b.json));
+  return { passkey: { challenge: b.json.challenge, ...auth.get(b.json.challenge, opts) }, allow: b.json.allow };
+};
+const share = async (ph, proof, extra = {}) => {
+  const rec = (await ph.call('/api/record')).json;
+  return ph.call('/api/shares', 'POST', { docs: [rec.docs[0].id], minutes: 60, who: 'Dr. Namuna', ...proof, ...extra });
+};
+
+test('passkey confirms a share and its stop, with no PIN typed; the PIN still works too', async () => {
+  const s = await start();
+  try {
+    const mine = s.phone(); await s.signUp(mine, '9841112221');
+    const auth = fakeAuthenticator();
+    assert.equal((await s.turnOn(mine, auth)).reg.status, 200);
+    const proof = await confirmBody(mine, auth);
+    assert.deepEqual(proof.allow, [auth.id]); // the phone is told which key to use
+    const made = await share(mine, { passkey: proof.passkey });
+    assert.equal(made.status, 201, JSON.stringify(made.json));
+    const stopped = await mine.call('/api/shares/' + made.json.id + '/stop', 'POST', { passkey: (await confirmBody(mine, auth)).passkey });
+    assert.equal(stopped.status, 200, JSON.stringify(stopped.json));
+    assert.equal(stopped.json.state, 'revoked');
+    assert.equal((await share(mine, { pin: PIN })).status, 201); // the PIN is still accepted
+  } finally { s.close(); }
+});
+
+test('passkey confirm: refused for a wrong key, a replay, a login challenge, an old challenge or another account\'s phone; the PIN counter is untouched', async () => {
+  const s = await start();
+  try {
+    const mine = s.phone(); await s.signUp(mine, '9841112222');
+    const auth = fakeAuthenticator();
+    assert.equal((await s.turnOn(mine, auth)).reg.status, 200);
+    const other = generateKeyPairSync('ec', { namedCurve: 'prime256v1' }).privateKey;
+    for (const [name, o] of Object.entries({ 'wrong key': { key: other }, 'wrong site': { o: 'https://evil.example' }, 'no verification': { flags: 0x01 } }))
+      assert.equal((await share(mine, { passkey: (await confirmBody(mine, auth, o)).passkey })).status, 401, name);
+    const good = await confirmBody(mine, auth);
+    assert.equal((await share(mine, { passkey: good.passkey })).status, 201);
+    assert.equal((await share(mine, { passkey: good.passkey })).status, 401); // replay
+    // a challenge made for signing in is not good for confirming
+    const lb = await mine.call('/api/auth/passkey/begin', 'POST', { purpose: 'login' });
+    assert.equal((await share(mine, { passkey: { challenge: lb.json.challenge, ...auth.get(lb.json.challenge) } })).status, 401);
+    // too old
+    const old = await confirmBody(mine, auth); s.advance(6);
+    assert.equal((await share(mine, { passkey: old.passkey })).status, 401);
+    // another account's phone cannot confirm for me
+    const theirs = s.phone(); await s.signUp(theirs, '9841112223');
+    const theirAuth = fakeAuthenticator();
+    assert.equal((await s.turnOn(theirs, theirAuth)).reg.status, 200);
+    const mb = await mine.call('/api/auth/passkey/begin', 'POST', { purpose: 'confirm' });
+    assert.equal((await share(mine, { passkey: { challenge: mb.json.challenge, ...theirAuth.get(mb.json.challenge) } })).status, 401);
+    // none of that counted as a wrong PIN
+    for (const a of s.app.store().accounts) assert.ok(!a.pinFails && !a.lockedUntil && !a.hardLocked);
+  } finally { s.close(); }
+});
+
+test('passkey confirm: needs sign-in and an account that has one; nothing is created on a refusal', async () => {
+  const s = await start();
+  try {
+    assert.equal((await s.phone().call('/api/auth/passkey/begin', 'POST', { purpose: 'confirm' })).status, 401);
+    const mine = s.phone(); await s.signUp(mine, '9841112224');
+    assert.equal((await mine.call('/api/auth/passkey/begin', 'POST', { purpose: 'confirm' })).status, 400); // none set up
+    const stranger = fakeAuthenticator();
+    const fake = { challenge: 'x', ...stranger.get('x') };
+    assert.equal((await share(mine, { passkey: fake })).status, 401);
+    assert.equal((await mine.call('/api/shares')).json.shares.length, 0);
+    assert.equal((await share(mine, {})).status, 400); // neither PIN nor passkey: asks for the PIN
+  } finally { s.close(); }
+});

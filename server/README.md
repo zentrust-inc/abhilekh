@@ -36,7 +36,7 @@ Plan agreed 21 Nov 2026 (status log; PRD rev. 3.3, Security and consent):
   Google: that is the first check after the OAuth client exists.
 - **Fingerprint or face (passkeys, `passkey.mjs`)**: optional, next to the PIN, never instead of it. Signed in, the patient turns it on
   for a phone (the PIN is asked, so a stolen session cannot add a way in that outlives sign-out). After that one touch signs in. The phone's
-  own unlock does the check; Abhilekh stores only a public key, never a fingerprint or a face. Shares still ask for the PIN. A recovery with a
+  own unlock does the check; Abhilekh stores only a public key, never a fingerprint or a face. The same touch confirms **creating or stopping a share** in place of the PIN (the PIN still works; a passkey answer is a one-time, account-bound proof and does not count towards the PIN lockout). A recovery with a
   code removes every passkey. At most 5 per account. The site name (rpId) is the host of `PUBLIC_URL`. Checked with a software authenticator in
   the tests; **not yet tried on a real phone**.
 - One field on the sign-in page: an "@" means email, anything else is read as a Nepal mobile number. The email is lower-cased; dots and +tags are kept.

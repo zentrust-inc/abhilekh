@@ -82,7 +82,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
       if (req.method === 'GET' && path === '/api/shares') return send(res, 200, { shares: store.shares.filter(mineOnly).map(publicShare).reverse() });
       if (req.method === 'POST' && path === '/api/shares') {
         const b = await readJson(req);
-        const pin = auth.checkPin(cur.account, b.pin);
+        const pin = auth.confirm(cur.account, b);
         if (!pin.ok) return send(res, pin.status, pin);
         const hold = auth.holdUntil(cur.account);
         if (hold) return send(res, 403, { error: 'New shares are paused until ' + new Date(hold).toISOString() + ', 24 hours after your PIN was reset with a new code. You can still stop shares.', sharesPausedUntil: new Date(hold).toISOString() });
@@ -101,7 +101,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
       if (req.method === 'POST' && m) {
         const s = store.shares.find(x => x.id === m[1] && mineOnly(x));
         if (!s) return send(res, 404, { error: 'No such share.' });
-        const pin = auth.checkPin(cur.account, (await readJson(req)).pin);
+        const pin = auth.confirm(cur.account, await readJson(req));
         if (!pin.ok) return send(res, pin.status, pin);
         if (stateOf(s) === 'live') { s.revokedAt = new Date(now()).toISOString(); log(s, 'You stopped this share.'); save(); }
         return send(res, 200, publicShare(s));

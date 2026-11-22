@@ -15,7 +15,8 @@
 //   - The PIN is asked again to create or stop a share.
 //   - Passkeys (fingerprint, face or screen lock; passkey.mjs): optional, next to the PIN, never instead of it. Signed in, the
 //     patient turns it on for a phone (the PIN is asked, so a stolen session cannot add a way in that outlives sign-out).
-//     After that one tap signs in, on any device the passkey reaches. The PIN is still asked to create or stop a share.
+//     After that one tap signs in, on any device the passkey reaches, and the same tap confirms creating or stopping a share
+//     in place of the PIN (confirm(): the PIN still works too).
 //     Recovery (a code or Google after a lost phone or forgotten PIN) removes every passkey, like it ends every device.
 // Stored: phone number or email address, scrypt hash of the PIN, SHA-256 hashes of codes, sessions and device tokens. Never a plain
 // code, PIN or token.
@@ -125,6 +126,24 @@ export function createAuth({ store, save, now = () => Date.now(), sms, mail = no
     if (a.pinFails % L.pinSoftLock === 0) { a.lockedUntil = t + L.pinSoftLockMs; save(); return { status: 423, error: 'Too many wrong PINs. Wait 15 minutes, or ' + recoverHow(a) + '.', lockedUntil: new Date(a.lockedUntil).toISOString() }; }
     save();
     return { status: 401, error: 'Wrong PIN. ' + (L.pinSoftLock - (a.pinFails % L.pinSoftLock)) + ' tries left before a 15-minute wait.' };
+  }
+
+  // Proof that it is the patient, for creating or stopping a share: the PIN, or a fingerprint/face check on a phone already
+  // set up on this account. A passkey answer is bound to a one-time challenge for this account and cannot be guessed, so it
+  // does not count towards the PIN lockout.
+  function confirm(a, b) {
+    const k = b && !b.pin && b.passkey;
+    if (!k) return checkPin(a, b && b.pin);
+    const bad = { status: 401, error: 'Fingerprint or face did not work. Type your PIN instead.' };
+    const t = now(), ck = sha(String(k.challenge || '')), rec = challenges.get(ck);
+    challenges.delete(ck); // one use
+    const pk = (a.passkeys || []).find(p => p.id === String(k.id || ''));
+    if (!rp || !rec || rec.purpose !== 'confirm' || rec.accountId !== a.id || rec.expires <= t || !pk) return bad;
+    try {
+      const r = verifyAssertion(k, pk, { challenge: String(k.challenge), origin: rp.origin, rpId: rp.id });
+      pk.signCount = r.signCount; pk.lastUsed = t; save();
+      return { ok: true };
+    } catch (e) { console.error('Passkey confirm refused:', e.message); return bad; }
   }
 
   function startSession(res, a, deviceToken) {
@@ -304,14 +323,17 @@ export function createAuth({ store, save, now = () => Date.now(), sms, mail = no
       };
 
       if (path === '/api/auth/passkey/begin') {
-        const purpose = b.purpose === 'register' ? 'register' : 'login';
-        const cur = purpose === 'register' ? current(req) : null;
-        if (purpose === 'register') {
-          if (!cur) return send(res, 401, { error: 'Not signed in.' }), true;
+        const purpose = ['register', 'confirm'].includes(b.purpose) ? b.purpose : 'login';
+        const cur = purpose === 'login' ? null : current(req);
+        if (purpose !== 'login' && !cur) return send(res, 401, { error: 'Not signed in.' }), true;
+        if (purpose === 'confirm') {
+          if (!(cur.account.passkeys || []).length) return send(res, 400, { error: 'No fingerprint or face sign-in is set up. Use your PIN.' }), true;
+        } else if (purpose === 'register') {
           const r = checkPin(cur.account, b.pin); // the PIN, so a stolen session cannot add a way back in
           if (!r.ok) return send(res, r.status, r), true;
           if ((cur.account.passkeys || []).length >= L.passkeysPerAccount) return send(res, 400, { error: 'This account already has ' + L.passkeysPerAccount + ' fingerprint or face sign-ins. Remove them first.' }), true;
-        } else {
+        }
+        if (purpose !== 'register') {
           const a = (pkStarts.get(ip) || []).filter(x => t - x < 10 * MIN); a.push(t); pkStarts.set(ip, a);
           if (a.length > 60) return send(res, 429, { error: 'Too many tries. Wait a few minutes.' }), true;
         }
@@ -319,7 +341,8 @@ export function createAuth({ store, save, now = () => Date.now(), sms, mail = no
         const challenge = tok();
         challenges.set(sha(challenge), { purpose, accountId: cur ? cur.account.id : null, expires: t + L.challengeMs });
         const out = { challenge, rpId: rp.id };
-        if (cur) Object.assign(out, { user: { id: Buffer.from(cur.account.id).toString('base64url'), name: label(cur.account) }, exclude: (cur.account.passkeys || []).map(k => k.id), algs: ALGS });
+        if (purpose === 'confirm') out.allow = cur.account.passkeys.map(k => k.id);
+        if (purpose === 'register') Object.assign(out, { user: { id: Buffer.from(cur.account.id).toString('base64url'), name: label(cur.account) }, exclude: (cur.account.passkeys || []).map(k => k.id), algs: ALGS });
         return send(res, 200, out), true;
       }
 
@@ -370,5 +393,5 @@ export function createAuth({ store, save, now = () => Date.now(), sms, mail = no
     return send(res, 404, { error: 'not found' }), true;
   }
 
-  return { route, current, checkPin, holdUntil, tickets };
+  return { route, current, checkPin, confirm, holdUntil, tickets };
 }
