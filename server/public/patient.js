@@ -18,9 +18,11 @@ function render(){
     const row=el('div',{class:'row'});
     if(live){row.append(el('a',{href:url,target:'_blank',rel:'noopener'},el('button',{class:'sec',style:'width:100%'},'Open the link')));
       const pin=el('input',{type:'password',inputmode:'numeric',maxlength:'6',placeholder:'PIN',autocomplete:'current-password',style:'display:none;flex:1'}),err=el('div',{class:'mute',style:'color:#a01212;width:100%'});
+      const askPin=()=>{pin.style.display='';stop.textContent='Confirm stop';pin.focus()};
       const stop=el('button',{class:'danger',onclick:async()=>{
-        if(pin.style.display==='none'){pin.style.display='';stop.textContent='Confirm stop';pin.focus();return}
-        try{await post('/api/shares/'+s.id+'/stop',{pin:pin.value});await load()}catch(e){err.textContent=e.message}}},'Stop sharing');
+        const bio=PK_ON&&PK_OK&&ME&&ME.passkeys>0;
+        if(pin.style.display==='none'&&!bio){askPin();return}
+        try{await post('/api/shares/'+s.id+'/stop',await confirmAuth(pin.value));await load()}catch(e){err.textContent=e.message;if(pin.style.display==='none')askPin()}}},'Stop sharing');
       row.append(stop,pin,err)}
     card.append(row,el('div',{class:'mute',style:'margin-top:8px'},'Who looked, and when:'));
     const ul=el('ul',{class:'log'});s.log.forEach(e=>ul.append(el('li',{},fmt(e.at)+' · '+e.t)));card.append(ul);
@@ -43,13 +45,26 @@ $('logoutBtn').onclick=async()=>{await post('/api/auth/logout');showAuth()};
 const b64u=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 const unb64u=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
 const PK_OK=!!(window.PublicKeyCredential&&navigator.credentials&&window.AuthenticatorAttestationResponse&&'getPublicKey' in AuthenticatorAttestationResponse.prototype);
-let PK_ON=false;
+let PK_ON=false,ME=null;
+// Proof for creating or stopping a share: the PIN if typed, otherwise fingerprint or face on a phone set up for this account.
+async function confirmAuth(pin){
+  if(pin)return{pin};
+  if(!(PK_ON&&PK_OK&&ME&&ME.passkeys>0))throw new Error('Enter your PIN.');
+  try{
+    const o=await post('/api/auth/passkey/begin',{purpose:'confirm'});
+    const c=await navigator.credentials.get({publicKey:{challenge:unb64u(o.challenge),rpId:o.rpId,allowCredentials:o.allow.map(id=>({type:'public-key',id:unb64u(id)})),userVerification:'required',timeout:60000}});
+    const r=c.response;
+    return{passkey:{challenge:o.challenge,id:c.id,clientDataJSON:b64u(r.clientDataJSON),authenticatorData:b64u(r.authenticatorData),signature:b64u(r.signature)}};
+  }catch(e){throw e.name==='NotAllowedError'?new Error('Cancelled. Type your PIN instead.'):e}
+}
 const pkErr=e=>{$('pkErr').textContent=e?(e.name==='NotAllowedError'?'Cancelled. Nothing was changed.':e.message):''};
 function pkShow(me){
+  ME=me;
+  $('sharePinLbl').textContent=(me.passkeys&&PK_ON&&PK_OK)?'Your PIN, or leave empty to use fingerprint or face':'Your PIN, to confirm';
   $('pkCard').style.display=PK_ON&&PK_OK?'':'none';
   if(!PK_ON||!PK_OK)return;
   const n=me.passkeys||0;
-  $('pkText').textContent=n?'On for '+n+' phone'+(n>1?'s':'')+'. Next time, one touch signs you in. Your PIN is still asked to create or stop a share.':'Off. Turn it on to sign in with one touch instead of typing a PIN. Your phone does the check; Abhilekh never sees a fingerprint or a face.';
+  $('pkText').textContent=n?'On for '+n+' phone'+(n>1?'s':'')+'. Next time, one touch signs you in. A touch also confirms creating or stopping a share; your PIN still works.':'Off. Turn it on to sign in with one touch instead of typing a PIN. Your phone does the check; Abhilekh never sees a fingerprint or a face.';
   $('pkAdd').style.display='';$('pkOn').textContent=n?'Add this phone':'Turn on for this phone';$('pkOff').style.display=n?'':'none';
 }
 $('passkeyBtn').onclick=async()=>{authErr();try{
@@ -82,7 +97,7 @@ async function setup(){
     const docs=REC.docs.filter(d=>$('d-'+d.id).checked).map(d=>d.id);
     if(!docs.length){$('makeErr').textContent='Choose at least one report to share.';return}
     $('makeErr').textContent='';
-    try{await post('/api/shares',{docs,who:$('who').value.trim(),minutes:+$('dur').value,pin:$('sharePin').value});$('who').value='';$('sharePin').value='';await load()}catch(e){$('makeErr').textContent=e.message}
+    try{await post('/api/shares',{docs,who:$('who').value.trim(),minutes:+$('dur').value,...await confirmAuth($('sharePin').value)});$('who').value='';$('sharePin').value='';await load()}catch(e){$('makeErr').textContent=e.message}
   };
   await load();setInterval(()=>{if($('app').style.display!=='none')load()},10000); // pick up opens made on the doctor's phone
 }
