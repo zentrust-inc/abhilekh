@@ -70,7 +70,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
       if (req.method === 'POST' && !String(req.headers['content-type'] || '').startsWith('application/json')) return send(res, 415, { error: 'Send JSON.' });
       if (req.method === 'GET' && path === '/healthz') return send(res, 200, { ok: true });
       if (req.method === 'GET' && path === '/') return file(res, 'patient.html');
-      if (req.method === 'GET' && (path === '/style.css' || path === '/qrcode.js' || path === '/doctor.js' || path === '/patient.js')) return file(res, path.slice(1));
+      if (req.method === 'GET' && (path === '/style.css' || path === '/qrcode.js' || path === '/doctor.js' || path === '/patient.js' || path === '/i18n.js')) return file(res, path.slice(1));
       if (req.method === 'GET' && /^\/s\/[a-z0-9]+$/.test(path)) return file(res, 'doctor.html'); // the shell shows nothing; data comes from /api/s/:id
 
       if (await auth.route(req, res, path, { ip, send, readJson })) return;
