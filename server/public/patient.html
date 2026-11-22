@@ -1,12 +1,13 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Abhilekh: share with a doctor (SAMPLE)</title><link rel="stylesheet" href="/style.css"></head><body><div class="wrap">
-<div class="banner"><b>SAMPLE · नमूना.</b> Prototype on invented pages, planning stage. Links and the access log are real and kept by the server; the records are fictional. Sign-in is by mobile number or email, and a PIN; every account sees the same invented sample record. English only so far.</div>
+<div class="banner"><b>SAMPLE · नमूना.</b> Prototype on invented pages, planning stage. Links and the access log are real and kept by the server; the records are fictional. Sign-in is by Google, mobile number or email, and a PIN, or by fingerprint or face on a phone you set up; every account sees the same invented sample record. English only so far.</div>
 <div id="auth" style="display:none">
 <h1>Sign in to Abhilekh</h1>
 <p class="sub">Continue with Google, or your mobile number gets one SMS code the first time, or your email address gets one code by mail. A PIN protects sharing; on a phone or email account you also use it to sign in on that device.</p>
 <div class="card" id="stepPhone">
   <a id="googleBtn" href="/api/auth/google/start" style="display:none;text-decoration:none"><button class="go" style="width:100%">Continue with Google</button></a>
+  <button class="go" id="passkeyBtn" style="display:none;width:100%;margin-top:8px">Sign in with fingerprint or face</button>
   <div class="mute" id="orLine" style="display:none;text-align:center;margin:10px 0">or use a mobile number or email</div>
   <label class="mute" for="phone" style="display:block">Mobile number (Nepal) or email</label>
   <input type="text" id="phone" inputmode="email" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="98XXXXXXXX or name@example.com">
@@ -37,6 +38,17 @@
 <div id="app" style="display:none">
 <p class="mute" style="text-align:right;margin:0"><span id="who-am-i"></span> · <button class="orig" id="logoutBtn">Sign out</button></p>
 <div class="banner" id="paused" style="display:none"></div>
+<div class="card" id="pkCard" style="display:none">
+  <b>Fingerprint or face sign-in</b>
+  <p class="mute" id="pkText" style="margin:4px 0 8px"></p>
+  <div id="pkAdd" style="display:none">
+    <label class="mute" for="pkPin" style="display:block">Your PIN, to confirm</label>
+    <input type="password" id="pkPin" inputmode="numeric" maxlength="6" autocomplete="current-password">
+    <button class="go" id="pkOn">Turn on for this phone</button>
+  </div>
+  <button class="sec" id="pkOff" style="display:none;width:100%">Turn off everywhere</button>
+  <div class="mute" id="pkErr" style="margin-top:6px;color:#a01212"></div>
+</div>
 <h1>Share with a doctor</h1>
 <p class="sub">You choose what a doctor can see and for how long. You can stop a share at any time, and you see every time it is opened.</p>
 <div class="card" id="make">

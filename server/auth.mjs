@@ -13,18 +13,22 @@
 //     device, and pauses NEW shares for 24 hours (PRD: "a 24-hour hold on sensitive actions after recovery").
 //     Stopping a share is never paused.
 //   - The PIN is asked again to create or stop a share.
-//   - Passkeys (rpId abhilekh.org) are a later step, not in this file.
+//   - Passkeys (fingerprint, face or screen lock; passkey.mjs): optional, next to the PIN, never instead of it. Signed in, the
+//     patient turns it on for a phone (the PIN is asked, so a stolen session cannot add a way in that outlives sign-out).
+//     After that one tap signs in, on any device the passkey reaches. The PIN is still asked to create or stop a share.
+//     Recovery (a code or Google after a lost phone or forgotten PIN) removes every passkey, like it ends every device.
 // Stored: phone number or email address, scrypt hash of the PIN, SHA-256 hashes of codes, sessions and device tokens. Never a plain
 // code, PIN or token.
 import { randomBytes, randomInt, scryptSync, createHash, timingSafeEqual } from 'node:crypto';
 import { noMail } from './mail.mjs';
+import { verifyRegistration, verifyAssertion, ALGS } from './passkey.mjs';
 
 const MIN = 60000, HOUR = 60 * MIN, DAY = 24 * HOUR;
 export const LIMITS = {
   codeMinutes: 10, codeTries: 5,
   phoneCooldownMs: MIN, phonePerHour: 3, phonePerDay: 5, ipPerHour: 10, dailyCap: 200, emailDailyCap: 1000,
   pinSoftLock: 5, pinSoftLockMs: 15 * MIN, pinHardLock: 10,
-  sessionMs: 30 * DAY, deviceMs: 400 * DAY, ticketMs: 10 * MIN, recoveryHoldMs: DAY,
+  sessionMs: 30 * DAY, challengeMs: 5 * MIN, passkeysPerAccount: 5, deviceMs: 400 * DAY, ticketMs: 10 * MIN, recoveryHoldMs: DAY,
 };
 
 const sha = s => createHash('sha256').update(s).digest('hex');
@@ -71,12 +75,14 @@ export function pinProblem(pin) {
 }
 const hashPin = (pin, salt = randomBytes(16).toString('hex')) => ({ salt, hash: scryptSync(pin, salt, 32).toString('hex') });
 
-export function createAuth({ store, save, now = () => Date.now(), sms, mail = noMail(), google = null, testMode = false, secureCookies = true, limits = {} }) {
+export function createAuth({ store, save, now = () => Date.now(), sms, mail = noMail(), google = null, rp = null, testMode = false, secureCookies = true, limits = {} }) {
   const L = { ...LIMITS, ...limits };
   for (const k of ['accounts', 'sessions', 'codes', 'smsLog']) if (!Array.isArray(store[k])) store[k] = [];
   // Accounts, codes and the send log made before email existed are keyed by phone: give them the new key.
   for (const a of store.accounts) if (!a.key) { a.key = 'phone:' + a.phone; a.kind = 'phone'; }
   for (const x of [...store.codes, ...store.smsLog]) if (!x.key && x.phone) { x.key = 'phone:' + x.phone; x.kind = 'phone'; }
+  const challenges = new Map(); // passkey one-time challenges, in memory
+  const pkStarts = new Map(); // ip -> start times
   const tickets = new Map(); // short-lived, in memory: a restart only means asking for a new code
 
   const prune = () => {
@@ -85,6 +91,7 @@ export function createAuth({ store, save, now = () => Date.now(), sms, mail = no
     store.codes = store.codes.filter(c => c.expires > t && !c.used);
     store.smsLog = store.smsLog.filter(x => t - x.at < DAY);
     for (const [k, v] of tickets) if (v.expires <= t) tickets.delete(k);
+    for (const [k, v] of challenges) if (v.expires <= t) challenges.delete(k);
   };
 
   const cookies = req => Object.fromEntries((req.headers.cookie || '').split(';').map(s => s.trim().split('=')).filter(a => a.length === 2));
@@ -103,7 +110,7 @@ export function createAuth({ store, save, now = () => Date.now(), sms, mail = no
   const label = a => (a.kind === 'phone' ? maskPhone(a.phone) : maskEmail(a.email));
   const recoverHow = a => (a.kind === 'email' ? 'get a code by email' : a.kind === 'google' ? 'sign in with Google again' : 'get a code by SMS');
   const Cap = x => x[0].toUpperCase() + x.slice(1);
-  const me = a => ({ ...(a.kind === 'phone' ? { phone: maskPhone(a.phone) } : { email: maskEmail(a.email) }), label: label(a), kind: a.kind, created: new Date(a.created).toISOString(), sharesPausedUntil: holdUntil(a) ? new Date(holdUntil(a)).toISOString() : null });
+  const me = a => ({ ...(a.kind === 'phone' ? { phone: maskPhone(a.phone) } : { email: maskEmail(a.email) }), label: label(a), kind: a.kind, passkeys: (a.passkeys || []).length, created: new Date(a.created).toISOString(), sharesPausedUntil: holdUntil(a) ? new Date(holdUntil(a)).toISOString() : null });
 
   // PIN check shared by sign-in and by re-entry before a share is created or stopped.
   function checkPin(a, pin) {
@@ -192,7 +199,7 @@ export function createAuth({ store, save, now = () => Date.now(), sms, mail = no
       const cur = current(req);
       return send(res, cur ? 200 : 401, cur ? me(cur.account) : { error: 'Not signed in.' }), true;
     }
-    if (req.method === 'GET' && path === '/api/auth/options') return send(res, 200, { sms: sms.name !== 'none', email: mail.name !== 'none', google: !!google }), true;
+    if (req.method === 'GET' && path === '/api/auth/options') return send(res, 200, { sms: sms.name !== 'none', email: mail.name !== 'none', google: !!google, passkey: !!rp }), true;
     if (req.method === 'GET' && path === '/api/auth/google/start') return googleStart(req, res, ip, send), true;
     if (req.method === 'GET' && path === '/api/auth/google/callback') return await googleCallback(req, res, ip), true;
     if (req.method !== 'POST') return send(res, 404, { error: 'not found' }), true;
@@ -252,9 +259,9 @@ export function createAuth({ store, save, now = () => Date.now(), sms, mail = no
       let a = store.accounts.find(x => x.key === tk.key);
       if (a) { // recovery: new phone, forgotten PIN or lockout
         store.sessions = store.sessions.filter(s => s.accountId !== a.id);
-        Object.assign(a, { pinSalt: salt, pinHash: hash, pinFails: 0, lockedUntil: null, hardLocked: false, recoveredAt: t, devices: [] });
+        Object.assign(a, { pinSalt: salt, pinHash: hash, pinFails: 0, lockedUntil: null, hardLocked: false, recoveredAt: t, devices: [], passkeys: [] });
       } else {
-        a = { id: tok(), key: tk.key, kind: tk.kind, [tk.kind === 'phone' ? 'phone' : 'email']: tk.value, created: t, pinSalt: salt, pinHash: hash, pinFails: 0, lockedUntil: null, hardLocked: false, recoveredAt: null, devices: [] };
+        a = { id: tok(), key: tk.key, kind: tk.kind, [tk.kind === 'phone' ? 'phone' : 'email']: tk.value, created: t, pinSalt: salt, pinHash: hash, pinFails: 0, lockedUntil: null, hardLocked: false, recoveredAt: null, devices: [], passkeys: [] };
         store.accounts.push(a);
       }
       const device = tok();
@@ -284,6 +291,74 @@ export function createAuth({ store, save, now = () => Date.now(), sms, mail = no
       res.setHeader('set-cookie', cookie('abh_gt', '', 0, 'Lax'));
       if (!tk || tk.expires <= t) return send(res, 400, { error: 'This step has timed out. Sign in with Google again.' }), true;
       return send(res, 200, { ticket: g, isNew: tk.isNew }), true;
+    }
+
+    // ---- Passkeys ----
+    if (path.startsWith('/api/auth/passkey/')) {
+      if (!rp) return send(res, 503, { error: 'Fingerprint or face sign-in is not switched on.' }), true;
+      const sorry = () => send(res, 401, { error: 'Fingerprint or face sign-in did not work. Use your PIN or a code.' });
+      const take = (c, purpose) => { // one use, unexpired, the right purpose
+        const k = sha(String(c || '')), rec = challenges.get(k);
+        challenges.delete(k);
+        return rec && rec.purpose === purpose && rec.expires > t ? rec : null;
+      };
+
+      if (path === '/api/auth/passkey/begin') {
+        const purpose = b.purpose === 'register' ? 'register' : 'login';
+        const cur = purpose === 'register' ? current(req) : null;
+        if (purpose === 'register') {
+          if (!cur) return send(res, 401, { error: 'Not signed in.' }), true;
+          const r = checkPin(cur.account, b.pin); // the PIN, so a stolen session cannot add a way back in
+          if (!r.ok) return send(res, r.status, r), true;
+          if ((cur.account.passkeys || []).length >= L.passkeysPerAccount) return send(res, 400, { error: 'This account already has ' + L.passkeysPerAccount + ' fingerprint or face sign-ins. Remove them first.' }), true;
+        } else {
+          const a = (pkStarts.get(ip) || []).filter(x => t - x < 10 * MIN); a.push(t); pkStarts.set(ip, a);
+          if (a.length > 60) return send(res, 429, { error: 'Too many tries. Wait a few minutes.' }), true;
+        }
+        if (challenges.size > 5000) return send(res, 503, { error: 'Busy. Try again in a few minutes.' }), true;
+        const challenge = tok();
+        challenges.set(sha(challenge), { purpose, accountId: cur ? cur.account.id : null, expires: t + L.challengeMs });
+        const out = { challenge, rpId: rp.id };
+        if (cur) Object.assign(out, { user: { id: Buffer.from(cur.account.id).toString('base64url'), name: label(cur.account) }, exclude: (cur.account.passkeys || []).map(k => k.id), algs: ALGS });
+        return send(res, 200, out), true;
+      }
+
+      if (path === '/api/auth/passkey/register') {
+        const cur = current(req);
+        const rec = take(b.challenge, 'register');
+        if (!cur || !rec || rec.accountId !== cur.account.id) return send(res, 400, { error: 'This step has timed out. Try again.' }), true;
+        let k;
+        try { k = verifyRegistration(b, { challenge: String(b.challenge), origin: rp.origin, rpId: rp.id }); } catch (e) { console.error('Passkey registration refused:', e.message); return send(res, 400, { error: 'This phone could not be set up for fingerprint or face sign-in.' }), true; }
+        if (store.accounts.some(x => (x.passkeys || []).some(p => p.id === k.id))) return send(res, 400, { error: 'This phone is already set up.' }), true;
+        const a = cur.account;
+        if (!Array.isArray(a.passkeys)) a.passkeys = [];
+        if (a.passkeys.length >= L.passkeysPerAccount) return send(res, 400, { error: 'This account already has ' + L.passkeysPerAccount + ' fingerprint or face sign-ins. Remove them first.' }), true;
+        a.passkeys.push({ id: k.id, publicKey: k.publicKey, alg: k.alg, signCount: k.signCount, created: t, lastUsed: null });
+        save();
+        return send(res, 200, me(a)), true;
+      }
+
+      if (path === '/api/auth/passkey/login') {
+        const rec = take(b.challenge, 'login');
+        const a = rec && store.accounts.find(x => (x.passkeys || []).some(p => p.id === String(b.id || '')));
+        const pk = a && a.passkeys.find(p => p.id === String(b.id));
+        if (!pk) return sorry(), true;
+        let r;
+        try { r = verifyAssertion(b, pk, { challenge: String(b.challenge), origin: rp.origin, rpId: rp.id }); } catch (e) { console.error('Passkey sign-in refused:', e.message); return sorry(), true; }
+        pk.signCount = r.signCount; pk.lastUsed = t;
+        startSession(res, a, null);
+        save();
+        return send(res, 200, me(a)), true;
+      }
+
+      if (path === '/api/auth/passkey/remove') { // signed in is enough: stopping access is never made harder
+        const cur = current(req);
+        if (!cur) return send(res, 401, { error: 'Not signed in.' }), true;
+        cur.account.passkeys = [];
+        save();
+        return send(res, 200, me(cur.account)), true;
+      }
+      return send(res, 404, { error: 'not found' }), true;
     }
 
     if (path === '/api/auth/logout') {
