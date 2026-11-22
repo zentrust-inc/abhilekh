@@ -17,13 +17,12 @@ function render(){
     if(live){const qb=el('div',{class:'qr'});qb.innerHTML=qrSvg(url);card.append(qb,el('div',{class:'url'},url));}
     const row=el('div',{class:'row'});
     if(live){row.append(el('a',{href:url,target:'_blank',rel:'noopener'},el('button',{class:'sec',style:'width:100%'},'Open the link')));
-      const pin=el('input',{type:'password',inputmode:'numeric',maxlength:'6',placeholder:'PIN',autocomplete:'current-password',style:'display:none;flex:1'}),err=el('div',{class:'mute',style:'color:#a01212;width:100%'});
-      const askPin=()=>{pin.style.display='';stop.textContent='Confirm stop';pin.focus()};
+      const err=el('div',{class:'mute',style:'color:#a01212;width:100%'});
+      let armed=false,t=null;
       const stop=el('button',{class:'danger',onclick:async()=>{
-        const bio=PK_ON&&PK_OK&&ME&&ME.passkeys>0;
-        if(pin.style.display==='none'&&!bio){askPin();return}
-        try{await post('/api/shares/'+s.id+'/stop',await confirmAuth(pin.value));await load()}catch(e){err.textContent=e.message;if(pin.style.display==='none')askPin()}}},'Stop sharing');
-      row.append(stop,pin,err)}
+        if(!armed){armed=true;stop.textContent='Yes, stop now';clearTimeout(t);t=setTimeout(()=>{armed=false;stop.textContent='Stop sharing'},5000);return}
+        try{await post('/api/shares/'+s.id+'/stop',{});await load()}catch(e){err.textContent=e.message;armed=false;stop.textContent='Stop sharing'}}},'Stop sharing');
+      row.append(stop,err)}
     card.append(row,el('div',{class:'mute',style:'margin-top:8px'},'Who looked, and when:'));
     const ul=el('ul',{class:'log'});s.log.forEach(e=>ul.append(el('li',{},fmt(e.at)+' · '+e.t)));card.append(ul);
     box.append(card);
@@ -31,10 +30,23 @@ function render(){
 }
 async function load(){try{SH=(await api('/api/shares')).shares;render();if(REC.docs)paint()}catch(e){if(e.status===401)return showAuth();throw e}}
 let PHONE='',TICKET='';
-const show=(...ids)=>['stepPhone','stepCode','stepPin'].forEach(i=>$(i).style.display=ids.includes(i)?'':'none');
+const show=(...ids)=>['stepWelcome','stepPhone','stepCode','stepPin'].forEach(i=>$(i).style.display=ids.includes(i)?'':'none');
 function showDown(){$('app').style.display='none';$('auth').style.display='none';$('down').style.display=''}
 $('downRetry').onclick=()=>enter();
-function showAuth(){$('down').style.display='none';$('app').style.display='none';$('auth').style.display='';show('stepPhone')}
+let OTHER=false;
+async function showAuth(){
+  $('down').style.display='none';$('app').style.display='none';$('auth').style.display='';show('stepPhone');head(true);
+  if(OTHER)return;
+  try{const h=await api('/api/auth/hello');
+    if(h.known&&$('stepPhone').style.display!=='none'){ // a returning browser: greet it, do not show the new-user form
+      $('welcomeWho').textContent=h.label;
+      const pk=PK_ON&&PK_OK&&h.passkeys>0;
+      $('welcomePasskey').style.display=pk?'':'none';$('welcomePinLbl').textContent=pk?'or your PIN (6 digits)':'Your PIN (6 digits)';
+      show('stepWelcome');head(false);if(!pk)$('welcomePin').focus()}}catch(e){}
+}
+const head=on=>{$('authHead').style.display=$('authSub').style.display=on?'':'none'};
+$('welcomeOther').onclick=()=>{OTHER=true;authErr();show('stepPhone');head(true)};
+$('welcomeBtn').onclick=async()=>{authErr();try{await post('/api/auth/login',{pin:$('welcomePin').value});$('welcomePin').value='';await enter()}catch(e){if(e.body&&e.body.needCode){OTHER=true;show('stepPhone');head(true)}authErr(e)}};
 const authErr=e=>{$('authErr').textContent=e?e.message:''};
 $('loginBtn').onclick=async()=>{authErr();try{await post('/api/auth/login',{id:$('phone').value,pin:$('loginPin').value});$('loginPin').value='';await enter()}catch(e){authErr(e)}};
 $('codeBtn').onclick=async()=>{authErr();PHONE=$('phone').value;try{const r=await post('/api/auth/code',{id:PHONE});$('testCode').textContent=r.testCode?'Test mode, nothing sent. Code: '+r.testCode:'';show('stepCode');$('code').focus()}catch(e){authErr(e)}};
@@ -42,7 +54,7 @@ $('verifyBtn').onclick=async()=>{authErr();try{const r=await post('/api/auth/ver
   $('pinIntro').textContent=r.isNew?'Welcome. Choose a 6-digit PIN. You will use it on this device instead of a code.':'Set a new PIN. Other devices are signed out, and new shares wait 24 hours. You can still stop shares at once.';show('stepPin');$('pin1').focus()}catch(e){authErr(e)}};
 $('pinBtn').onclick=async()=>{authErr();if($('pin1').value!==$('pin2').value)return authErr(new Error('The two PINs are not the same.'));
   try{await post('/api/auth/pin',{ticket:TICKET,pin:$('pin1').value});$('pin1').value=$('pin2').value='';await enter()}catch(e){authErr(e)}};
-$('logoutBtn').onclick=async()=>{await post('/api/auth/logout');showAuth()};
+$('logoutBtn').onclick=async()=>{await post('/api/auth/logout');OTHER=false;showAuth()};
 // Fingerprint or face (passkeys). The phone's own unlock does the check; Abhilekh never sees a fingerprint or a face.
 const b64u=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 const unb64u=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
@@ -60,9 +72,17 @@ async function confirmAuth(pin){
   }catch(e){throw e.name==='NotAllowedError'?new Error('Cancelled. Type your PIN instead.'):e}
 }
 const pkErr=e=>{$('pkErr').textContent=e?(e.name==='NotAllowedError'?'Cancelled. Nothing was changed.':e.message):''};
+let PINMODE=false;
+function shareMode(){ // fingerprint or face is the normal way to confirm a share; the PIN is the backup
+  const pk=!!(ME&&ME.passkeys>0&&PK_ON&&PK_OK);
+  $('sharePinBox').style.display=(!pk||PINMODE)?'':'none';
+  $('usePinInstead').style.display=(pk&&!PINMODE)?'':'none';
+  $('create').textContent=pk&&!PINMODE?'Create share link (fingerprint or face)':'Create share link';
+}
+$('usePinInstead').onclick=()=>{PINMODE=true;shareMode();$('sharePin').focus()};
 function pkShow(me){
   ME=me;
-  $('sharePinLbl').textContent=(me.passkeys&&PK_ON&&PK_OK)?'Your PIN, or leave empty to use fingerprint or face':'Your PIN, to confirm';
+  shareMode();
   $('pkCard').style.display=PK_ON&&PK_OK?'':'none';
   if(!PK_ON||!PK_OK)return;
   const n=me.passkeys||0;
@@ -75,6 +95,7 @@ $('passkeyBtn').onclick=async()=>{authErr();try{
   const r=c.response;
   await post('/api/auth/passkey/login',{challenge:o.challenge,id:c.id,clientDataJSON:b64u(r.clientDataJSON),authenticatorData:b64u(r.authenticatorData),signature:b64u(r.signature)});
   await enter()}catch(e){authErr(e.name==='NotAllowedError'?new Error('Cancelled. Use your PIN or a code.'):e)}};
+$('welcomePasskey').onclick=$('passkeyBtn').onclick;
 $('pkOn').onclick=async()=>{pkErr();try{
   const o=await post('/api/auth/passkey/begin',{purpose:'register',pin:$('pkPin').value});
   const c=await navigator.credentials.create({publicKey:{rp:{id:o.rpId,name:'Abhilekh'},user:{id:unb64u(o.user.id),name:o.user.name,displayName:o.user.name},challenge:unb64u(o.challenge),pubKeyCredParams:o.algs.map(alg=>({type:'public-key',alg})),authenticatorSelection:{residentKey:'required',userVerification:'required'},excludeCredentials:o.exclude.map(id=>({type:'public-key',id:unb64u(id)})),attestation:'none',timeout:60000}});
@@ -85,7 +106,7 @@ $('pkOff').onclick=async()=>{pkErr();try{pkShow(await post('/api/auth/passkey/re
 let started=false;
 async function enter(){
   let me;try{me=await api('/api/me')}catch(e){return e.status===401?showAuth():showDown()}
-  $('down').style.display='none';
+  $('down').style.display='none';$('acct').style.display='none';$('acctBtn').setAttribute('aria-expanded',false);tab('home');
   $('auth').style.display='none';$('app').style.display='';$('who-am-i').textContent='Signed in: '+(me.label||me.phone);pkShow(me);
   $('paused').style.display=me.sharesPausedUntil?'':'none';
   if(me.sharesPausedUntil)$('paused').textContent='Your PIN was reset with a new code, so new shares are paused until '+fmt(me.sharesPausedUntil)+'. You can still stop shares.';
@@ -149,7 +170,7 @@ async function setup(){
     const docs=REC.docs.filter(d=>$('d-'+d.id)&&$('d-'+d.id).checked).map(d=>d.id);
     if(!docs.length){$('makeErr').textContent='Choose at least one report to share.';return}
     $('makeErr').textContent='';
-    try{await post('/api/shares',{docs,who:$('who').value.trim(),minutes:+$('dur').value,...await confirmAuth($('sharePin').value)});$('who').value='';$('sharePin').value='';await load()}catch(e){$('makeErr').textContent=e.message}
+    try{await post('/api/shares',{docs,who:$('who').value.trim(),minutes:+$('dur').value,...await confirmAuth($('sharePin').value)});$('who').value='';$('sharePin').value='';await load()}catch(e){$('makeErr').textContent=e.message;if(/Cancelled|PIN/.test(e.message)){PINMODE=true;shareMode()}}
   };
   paint();paintForm();
   await load();setInterval(()=>{if($('app').style.display!=='none')load()},10000); // pick up opens made on the doctor's phone

@@ -4,8 +4,17 @@
 <div class="banner"><b>SAMPLE · नमूना.</b> Prototype on invented pages, planning stage. Links and the access log are real and kept by the server; the records are fictional. Sign-in is by Google, mobile number or email, and a PIN, or by fingerprint or face on a phone you set up. English only so far.</div>
 <div id="down" style="display:none"><p>Can't reach Abhilekh right now. You are still signed in.</p><button id="downRetry" type="button">Try again</button></div>
 <div id="auth" style="display:none">
-<h1>Sign in to Abhilekh</h1>
-<p class="sub">Continue with Google, or your mobile number gets one SMS code the first time, or your email address gets one code by mail. A PIN protects sharing; on a phone or email account you also use it to sign in on that device.</p>
+<h1 id="authHead">Sign in to Abhilekh</h1>
+<p class="sub" id="authSub">Continue with Google, or your mobile number gets one SMS code the first time, or your email address gets one code by mail. A PIN protects sharing; on a phone or email account you also use it to sign in on that device.</p>
+<div class="card" id="stepWelcome" style="display:none">
+  <h1 style="margin:0 0 4px">Welcome back</h1>
+  <p class="sub" id="welcomeWho" style="margin-bottom:12px"></p>
+  <button class="go" id="welcomePasskey" type="button" style="display:none;margin-top:0">Sign in with fingerprint or face</button>
+  <label class="mute" for="welcomePin" id="welcomePinLbl" style="display:block;margin-top:12px">Your PIN (6 digits)</label>
+  <input type="password" id="welcomePin" inputmode="numeric" maxlength="6" autocomplete="current-password">
+  <button class="go" id="welcomeBtn" type="button">Sign in</button>
+  <button class="sec" id="welcomeOther" type="button" style="width:100%;margin-top:10px">Not you, or a new phone? Use another account</button>
+</div>
 <div class="card" id="stepPhone">
   <a id="googleBtn" href="/api/auth/google/start" style="display:none;text-decoration:none"><button class="go" style="width:100%">Continue with Google</button></a>
   <button class="go" id="passkeyBtn" style="display:none;width:100%;margin-top:8px">Sign in with fingerprint or face</button>
@@ -86,8 +95,9 @@
   <input type="text" id="who" maxlength="80" placeholder="e.g. Dr. Namuna, Example Clinic">
   <label class="mute" for="dur" style="display:block;margin-top:8px">How long can they see it?</label>
   <select id="dur"></select>
-  <label class="mute" for="sharePin" id="sharePinLbl" style="display:block;margin-top:8px">Your PIN, to confirm</label>
-  <input type="password" id="sharePin" inputmode="numeric" maxlength="6" autocomplete="current-password">
+  <div id="sharePinBox"><label class="mute" for="sharePin" id="sharePinLbl" style="display:block;margin-top:8px">Your PIN, to confirm</label>
+  <input type="password" id="sharePin" inputmode="numeric" maxlength="6" autocomplete="current-password"></div>
+  <button class="orig" id="usePinInstead" type="button" style="display:none;margin-top:6px">Use my PIN instead</button>
   <button class="go" id="create">Create share link</button>
   <div class="mute" id="makeErr" style="margin-top:6px;color:#a01212"></div>
 </div>

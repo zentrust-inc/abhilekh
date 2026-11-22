@@ -218,6 +218,11 @@ export function createAuth({ store, save, now = () => Date.now(), sms, mail = no
       const cur = current(req);
       return send(res, cur ? 200 : 401, cur ? me(cur.account) : { error: 'Not signed in.' }), true;
     }
+    if (req.method === 'GET' && path === '/api/auth/hello') { // a returning browser is greeted; only a masked label is ever returned
+      const dev = cookies(req).abh_d;
+      const a = dev && store.accounts.find(x => (x.devices || []).some(d => d.hash === sha(dev)));
+      return send(res, 200, a && a.pinHash ? { known: true, label: label(a), kind: a.kind, passkeys: (a.passkeys || []).length } : { known: false }), true;
+    }
     if (req.method === 'GET' && path === '/api/auth/options') return send(res, 200, { sms: sms.name !== 'none', email: mail.name !== 'none', google: !!google, passkey: !!rp }), true;
     if (req.method === 'GET' && path === '/api/auth/google/start') return googleStart(req, res, ip, send), true;
     if (req.method === 'GET' && path === '/api/auth/google/callback') return await googleCallback(req, res, ip), true;
@@ -291,9 +296,10 @@ export function createAuth({ store, save, now = () => Date.now(), sms, mail = no
     }
 
     if (path === '/api/auth/login') {
-      const who = identify(b);
       const dev = cookies(req).abh_d;
-      const a = !who.error && store.accounts.find(x => x.key === who.key);
+      const byDevice = !b.id && dev ? store.accounts.find(x => (x.devices || []).some(d => d.hash === sha(dev))) : null; // returning phone: no need to type the number again
+      const who = byDevice ? { kind: byDevice.kind, key: byDevice.key } : identify(b);
+      const a = byDevice || (!who.error && store.accounts.find(x => x.key === who.key));
       // Same answer for an unknown number or address and an unknown phone, so their existence is not revealed.
       if (!a || !dev || !a.devices.some(d => d.hash === sha(dev))) return send(res, 403, { error: 'This device is new for this ' + (who.kind === 'email' ? 'address. Get a code by email' : 'number. Get a code by SMS') + ' to continue.', needCode: true }), true;
       const r = checkPin(a, b.pin);
