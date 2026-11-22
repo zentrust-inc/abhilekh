@@ -3,7 +3,7 @@
 //
 // What it does: stores shares of confirmed SAMPLE records, serves the doctor's view only while a share is live,
 // logs every open and every refused open, lets the patient stop a share.
-// Sign-in (auth.mjs): Nepal mobile number (one SMS code) or email address (one code by email), then a 6-digit PIN; the PIN is asked again to create or stop a
+// Sign-in (auth.mjs): Nepal mobile number (one SMS code), email address (one code by email) or Google, then a 6-digit PIN; the PIN is asked again to create or stop a
 // share. Every share belongs to the account that made it. Every account sees the same invented SAMPLE record.
 import http from 'node:http';
 import { readFileSync, writeFileSync, renameSync, existsSync, mkdirSync } from 'node:fs';
@@ -20,7 +20,7 @@ const ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789'; // 31 letters/digits, no loo
 const ALLOWED_MINUTES = [60, 1440, 10080]; // 1 hour, 24 hours, 7 days. Never "forever".
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
 
-export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-record.json'), testMode = false, now = () => Date.now(), sms = memorySender(), mail = memoryMail(), secureCookies = true, authLimits } = {}) {
+export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-record.json'), testMode = false, now = () => Date.now(), sms = memorySender(), mail = memoryMail(), google = null, secureCookies = true, authLimits } = {}) {
   const record = JSON.parse(readFileSync(recordPath, 'utf8'));
   let store = { shares: [] };
   if (storePath) {
@@ -33,7 +33,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
     writeFileSync(tmp, JSON.stringify(store));
     renameSync(tmp, storePath); // atomic: never a half-written file
   };
-  const auth = createAuth({ store, save, now, sms, mail, testMode, secureCookies, limits: authLimits });
+  const auth = createAuth({ store, save, now, sms, mail, google, testMode, secureCookies, limits: authLimits });
   const token = () => Array.from(randomBytes(14), b => ALPHABET[b % 31]).join('');
   const stateOf = s => (s.revokedAt ? 'revoked' : now() >= Date.parse(s.expires) ? 'expired' : 'live');
   const log = (s, t) => { s.log.push({ at: new Date(now()).toISOString(), t }); };
@@ -136,8 +136,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const sms = process.env.AKASH_SMS_TOKEN ? akashSender({ token: process.env.AKASH_SMS_TOKEN }) : testMode ? memorySender() : noSender();
   // Same for email: real mail only when the connection string is set (Azure app settings).
   const mail = process.env.ACS_EMAIL_CONNECTION_STRING ? acsMailSender({ connectionString: process.env.ACS_EMAIL_CONNECTION_STRING, from: process.env.MAIL_FROM || 'DoNotReply@abhilekh.org' }) : testMode ? memoryMail() : noMail();
-  console.log('SMS sender: ' + sms.name + '; mail sender: ' + mail.name);
-  const app = createApp({ storePath: join(dataDir, 'store.json'), testMode, sms, mail, secureCookies: process.env.INSECURE_COOKIES !== '1' });
+  // Google sign-in only when both settings exist (Azure app settings). The client secret never goes in the repository.
+  const publicUrl = (process.env.PUBLIC_URL || 'https://app.abhilekh.org').replace(/\/$/, '');
+  const google = process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? { clientId: process.env.GOOGLE_CLIENT_ID, clientSecret: process.env.GOOGLE_CLIENT_SECRET, redirectUri: publicUrl + '/api/auth/google/callback', fetchImpl: fetch } : null;
+  console.log('SMS sender: ' + sms.name + '; mail sender: ' + mail.name + '; Google sign-in: ' + (google ? 'on' : 'off'));
+  const app = createApp({ storePath: join(dataDir, 'store.json'), testMode, sms, mail, google, secureCookies: process.env.INSECURE_COOKIES !== '1' });
   const port = Number(process.env.PORT || 8080);
   http.createServer(app.handler).listen(port, () => console.log('Abhilekh share server (SAMPLE data) on port ' + port));
 }

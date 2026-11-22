@@ -60,4 +60,15 @@ async function setup(){
   };
   await load();setInterval(()=>{if($('app').style.display!=='none')load()},10000); // pick up opens made on the doctor's phone
 }
-enter();
+const GERR={expired:'That sign-in took too long or came from another browser. Try again.',cancelled:'Google sign-in was cancelled.',failed:'Google sign-in did not work. Try again in a few minutes.',unverified:'This Google account has no verified email, so it cannot be used.',noaccount:'No Abhilekh account uses this Google account yet. Choose Continue with Google to create one.'};
+(async()=>{
+  const q=new URLSearchParams(location.search);
+  try{const o=await api('/api/auth/options');for(const i of ['googleBtn','orLine','googleReset'])$(i).style.display=o.google?'':'none'}catch(e){}
+  if(q.get('gerr')){history.replaceState(null,'','/');showAuth();authErr(new Error(GERR[q.get('gerr')]||'Google sign-in did not work. Try again.'));return}
+  if(q.get('g')==='1'){history.replaceState(null,'','/');
+    try{const r=await post('/api/auth/google/ticket');TICKET=r.ticket;showAuth();
+      $('pinIntro').textContent=r.isNew?'Welcome. Choose a 6-digit PIN. Google signs you in on any device; the PIN protects sharing.':'Set a new PIN. Other devices are signed out, and new shares wait 24 hours. You can still stop shares at once.';
+      show('stepPin');$('pin1').focus()}catch(e){showAuth();authErr(e)}
+    return}
+  enter();
+})();
