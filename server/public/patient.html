@@ -54,35 +54,6 @@
     <button class="acct" id="acctBtn" type="button" aria-label="Account" aria-expanded="false">&#9776;</button></div>
   <div id="labelBox" style="display:none" class="card"><label class="mute" for="labelIn" style="display:block">A name for this record (only you and the doctors you share with see it)</label>
     <input type="text" id="labelIn" maxlength="40" placeholder="e.g. Papers of Aama"><div class="row"><button class="go" id="labelSave" type="button" style="margin-top:0">Save</button><button class="sec" id="labelCancel" type="button">Cancel</button></div></div>
-  <div class="card" id="acct" style="display:none">
-    <p class="mute" style="margin:0 0 8px"><span id="who-am-i"></span></p>
-    <button class="menurow" id="secBtn" type="button" aria-expanded="false">Sign-in and security <span>&#8250;</span></button>
-    <div id="secBox" style="display:none">
-      <div class="card" id="pkCard" style="display:none">
-        <b>Fingerprint or face sign-in</b>
-        <p class="mute" id="pkText" style="margin:4px 0 8px"></p>
-        <div id="pkAdd" style="display:none">
-          <label class="mute" for="pkPin" style="display:block">Your PIN, to confirm</label>
-          <input type="password" id="pkPin" inputmode="numeric" maxlength="6" autocomplete="current-password">
-          <button class="go" id="pkOn">Turn on for this device</button>
-        </div>
-        <button class="sec" id="pkOff" style="display:none;width:100%;margin-top:8px">Turn off everywhere</button>
-        <div class="mute" id="pkErr" style="margin-top:6px;color:#a01212"></div>
-      </div>
-      <div class="card" id="pinCard">
-        <b>Change PIN</b>
-        <label class="mute" for="oldPin" style="display:block;margin-top:6px">Current PIN</label>
-        <input type="password" id="oldPin" inputmode="numeric" maxlength="6" autocomplete="current-password">
-        <label class="mute" for="newPin1" style="display:block;margin-top:8px">New PIN (6 digits)</label>
-        <input type="password" id="newPin1" inputmode="numeric" maxlength="6" autocomplete="new-password">
-        <label class="mute" for="newPin2" style="display:block;margin-top:8px">The new PIN again</label>
-        <input type="password" id="newPin2" inputmode="numeric" maxlength="6" autocomplete="new-password">
-        <button class="go" id="pinChange" type="button">Change PIN</button>
-        <div class="mute" id="pinMsg" style="margin-top:6px"></div>
-      </div>
-    </div>
-    <button class="sec" id="logoutBtn" type="button" style="width:100%;margin-top:8px">Sign out</button>
-  </div>
   <div class="card" id="pkNudge" style="display:none"><b>Next time, one touch</b>
     <p class="mute" style="margin:4px 0 8px">Sign in and share with your fingerprint or face instead of typing a PIN. Your device does the check; Abhilekh never sees it.</p>
     <button class="go" id="pkNudgeBtn" type="button" style="margin-top:0">Turn on fingerprint or face</button></div>
@@ -124,7 +95,46 @@
 <div id="shares"></div>
 <p class="mute">The doctor sees only what the paper says: value, unit, printed range and any flag the lab printed. Abhilekh gives no advice.</p>
 </section>
-<nav class="nav" id="nav"><button type="button" data-tab="home" class="on">Home<span>मुख्य</span></button><button type="button" data-tab="papers">My papers<span>कागज</span></button><button type="button" data-tab="share">Sharing<span>साझा</span></button></nav>
+<div id="ov" style="display:none" role="dialog" aria-modal="true" aria-label="Menu">
+  <div class="sheet">
+    <div class="sheethead"><b id="sheetTitle">Menu</b><button class="orig" id="sheetClose" type="button">Close</button></div>
+    <div id="vList">
+      <p class="mute" style="margin:0 0 10px"><span id="who-am-i"></span></p>
+      <button class="menurow" id="rowPk" type="button" style="display:none">Fingerprint or face <span>&#8250;</span></button>
+      <button class="menurow" id="rowPin" type="button">Change PIN <span>&#8250;</span></button>
+      <button class="sec" id="logoutBtn" type="button" style="width:100%;margin-top:4px">Sign out</button>
+    </div>
+    <div id="vPk" style="display:none">
+      <button class="orig" type="button" data-back style="margin-bottom:6px">&#8249; Back</button>
+      <div id="pkCard">
+        <b>Fingerprint or face sign-in</b>
+        <p class="mute" id="pkText" style="margin:4px 0 8px"></p>
+        <div id="pkAdd" style="display:none">
+          <label class="mute" for="pkPin" style="display:block">Your PIN, to confirm</label>
+          <input type="password" id="pkPin" inputmode="numeric" maxlength="6" autocomplete="current-password">
+          <button class="go" id="pkOn">Turn on for this device</button>
+        </div>
+        <button class="sec" id="pkOff" style="display:none;width:100%;margin-top:8px">Turn off everywhere</button>
+        <div class="mute" id="pkErr" style="margin-top:6px;color:#a01212"></div>
+      </div>
+    </div>
+    <div id="vPin" style="display:none">
+      <button class="orig" type="button" data-back style="margin-bottom:6px">&#8249; Back</button>
+      <div id="pinCard">
+        <b>Change PIN</b>
+        <label class="mute" for="oldPin" style="display:block;margin-top:6px">Current PIN</label>
+        <input type="password" id="oldPin" inputmode="numeric" maxlength="6" autocomplete="current-password">
+        <label class="mute" for="newPin1" style="display:block;margin-top:8px">New PIN (6 digits)</label>
+        <input type="password" id="newPin1" inputmode="numeric" maxlength="6" autocomplete="new-password">
+        <label class="mute" for="newPin2" style="display:block;margin-top:8px">The new PIN again</label>
+        <input type="password" id="newPin2" inputmode="numeric" maxlength="6" autocomplete="new-password">
+        <button class="go" id="pinChange" type="button">Change PIN</button>
+        <div class="mute" id="pinMsg" style="margin-top:6px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+  <nav class="nav" id="nav"><button type="button" data-tab="home" class="on">Home<span>मुख्य</span></button><button type="button" data-tab="papers">My papers<span>कागज</span></button><button type="button" data-tab="share">Sharing<span>साझा</span></button></nav>
 </div>
 </div>
 <script src="/qrcode.js"></script><script src="/patient.js"></script></body></html>

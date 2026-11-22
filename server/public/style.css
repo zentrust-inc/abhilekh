@@ -43,3 +43,6 @@ button{font:inherit;font-weight:600;border-radius:8px;padding:10px 14px;border:0
 input,select,textarea{font-size:16px;font-family:inherit}
 input[type=password],input[type=text]{width:100%;padding:9px;border:1.5px solid var(--line);border-radius:8px}
 .menurow{display:flex;justify-content:space-between;width:100%;background:#fff;color:var(--ink);border:1.5px solid var(--line);font-weight:600;padding:12px;margin-bottom:8px;text-align:left}
+#ov{position:fixed;inset:0;background:rgba(29,36,51,.45);z-index:30;overflow-y:auto}
+.sheet{background:#fff;max-width:430px;margin:56px auto 0;border-radius:0 0 16px 16px;padding:14px 14px 18px;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.sheethead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}

@@ -91,7 +91,7 @@ function pkShow(me){
   shareMode();
   const n=me.passkeys||0;
   if(!n)pkMark(false); // turned off elsewhere: this device forgets too
-  $('pkCard').style.display=PK_ON&&PK_OK?'':'none';
+  $('rowPk').style.display=PK_ON&&PK_OK?'':'none';
   if(!PK_ON||!PK_OK)return;
   const here=pkHere();
   $('pkText').textContent=here?'On for this device'+(n>1?' and '+(n-1)+' more':'')+'. One touch signs you in, and a touch confirms creating a share; your PIN still works.'
@@ -117,7 +117,7 @@ $('pkOff').onclick=async()=>{pkErr();try{const me=await post('/api/auth/passkey/
 let started=false;
 async function enter(){
   let me;try{me=await api('/api/me')}catch(e){return e.status===401?showAuth():showDown()}
-  $('down').style.display='none';$('acct').style.display='none';$('acctBtn').setAttribute('aria-expanded',false);openSec(false);tab('home');
+  $('down').style.display='none';closeMenu();tab('home');
   $('auth').style.display='none';$('app').style.display='';$('who-am-i').textContent='Signed in: '+(me.label||me.phone);pkShow(me);
   $('paused').style.display=me.sharesPausedUntil?'':'none';
   if(me.sharesPausedUntil)$('paused').textContent='Your PIN was reset with a new code, so new shares are paused until '+fmt(me.sharesPausedUntil)+'. You can still stop shares.';
@@ -130,13 +130,18 @@ function tab(name){
 }
 document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
 $('tileShow').onclick=()=>tab('share');
-$('pkNudgeBtn').onclick=()=>{$('acct').style.display='';$('acctBtn').setAttribute('aria-expanded',true);openSec(true);$('pkCard').scrollIntoView({behavior:'smooth'});if($('pkAdd').style.display!=='none')$('pkPin').focus()};
-const openSec=o=>{$('secBox').style.display=o?'':'none';$('secBtn').setAttribute('aria-expanded',o)};
-$('secBtn').onclick=()=>openSec($('secBox').style.display==='none');
+const VIEWS={list:['vList','Menu'],pk:['vPk','Fingerprint or face'],pin:['vPin','Change PIN']};
+function openMenu(v){$('ov').style.display='';for(const k in VIEWS)$(VIEWS[k][0]).style.display=k===v?'':'none';$('sheetTitle').textContent=VIEWS[v][1];$('acctBtn').setAttribute('aria-expanded',true);pkErr();$('pinMsg').textContent='';if(v==='pk'&&$('pkAdd').style.display!=='none')$('pkPin').focus()}
+function closeMenu(){$('ov').style.display='none';$('acctBtn').setAttribute('aria-expanded',false)}
+$('acctBtn').onclick=()=>openMenu('list');
+$('sheetClose').onclick=closeMenu;
+$('ov').onclick=e=>{if(e.target===$('ov'))closeMenu()};
+document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>openMenu('list'));
+$('rowPk').onclick=()=>openMenu('pk');$('rowPin').onclick=()=>openMenu('pin');
+$('pkNudgeBtn').onclick=()=>openMenu('pk');
 $('pinChange').onclick=async()=>{const m=$('pinMsg');m.style.color='#a01212';m.textContent='';
   if($('newPin1').value!==$('newPin2').value){m.textContent='The two new PINs are not the same.';return}
   try{await post('/api/auth/pin/change',{pin:$('oldPin').value,newPin:$('newPin1').value});$('oldPin').value=$('newPin1').value=$('newPin2').value='';m.style.color='#1d6b4a';m.textContent='PIN changed. Your other devices stay signed in.'}catch(e){m.textContent=e.message}};
-$('acctBtn').onclick=()=>{const o=$('acct').style.display==='none';$('acct').style.display=o?'':'none';$('acctBtn').setAttribute('aria-expanded',o)};
 $('labelBtn').onclick=()=>{$('labelIn').value=REC.label||'';$('labelBox').style.display='';$('labelIn').focus()};
 $('labelCancel').onclick=()=>{$('labelBox').style.display='none'};
 $('labelSave').onclick=async()=>{try{REC=await post('/api/record/label',{label:$('labelIn').value});$('labelBox').style.display='none';paint();paintForm()}catch(e){alert(e.message)}};
