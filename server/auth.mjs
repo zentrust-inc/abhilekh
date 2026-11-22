@@ -357,8 +357,8 @@ export function createAuth({ store, save, now = () => Date.now(), sms, mail = no
         const rec = take(b.challenge, 'register');
         if (!cur || !rec || rec.accountId !== cur.account.id) return send(res, 400, { error: 'This step has timed out. Try again.' }), true;
         let k;
-        try { k = verifyRegistration(b, { challenge: String(b.challenge), origin: rp.origin, rpId: rp.id }); } catch (e) { console.error('Passkey registration refused:', e.message); return send(res, 400, { error: 'This phone could not be set up for fingerprint or face sign-in.' }), true; }
-        if (store.accounts.some(x => (x.passkeys || []).some(p => p.id === k.id))) return send(res, 400, { error: 'This phone is already set up.' }), true;
+        try { k = verifyRegistration(b, { challenge: String(b.challenge), origin: rp.origin, rpId: rp.id }); } catch (e) { console.error('Passkey registration refused:', e.message); return send(res, 400, { error: 'This device could not be set up for fingerprint or face sign-in.' }), true; }
+        if (store.accounts.some(x => (x.passkeys || []).some(p => p.id === k.id))) return send(res, 400, { error: 'This device is already set up.' }), true;
         const a = cur.account;
         if (!Array.isArray(a.passkeys)) a.passkeys = [];
         if (a.passkeys.length >= L.passkeysPerAccount) return send(res, 400, { error: 'This account already has ' + L.passkeysPerAccount + ' fingerprint or face sign-ins. Remove them first.' }), true;

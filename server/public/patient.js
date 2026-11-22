@@ -89,8 +89,8 @@ function pkShow(me){
   $('pkCard').style.display=PK_ON&&PK_OK?'':'none';
   if(!PK_ON||!PK_OK)return;
   const n=me.passkeys||0;
-  $('pkText').textContent=n?'On for '+n+' phone'+(n>1?'s':'')+'. Next time, one touch signs you in. A touch also confirms creating or stopping a share; your PIN still works.':'Off. Turn it on to sign in with one touch instead of typing a PIN. Your phone does the check; Abhilekh never sees a fingerprint or a face.';
-  $('pkAdd').style.display='';$('pkOn').textContent=n?'Add this phone':'Turn on for this phone';$('pkOff').style.display=n?'':'none';
+  $('pkText').textContent=n?'On for '+n+' device'+(n>1?'s':'')+'. Next time, one touch signs you in. A touch also confirms creating or stopping a share; your PIN still works.':'Off. Turn it on to sign in with one touch instead of typing a PIN. Your device does the check; Abhilekh never sees a fingerprint or a face.';
+  $('pkAdd').style.display='';$('pkOn').textContent=n?'Add this device':'Turn on for this device';$('pkOff').style.display=n?'':'none';
 }
 $('passkeyBtn').onclick=async()=>{authErr();try{
   const o=await post('/api/auth/passkey/begin',{purpose:'login'});
