@@ -642,3 +642,25 @@ test('Google start is slowed down for one connection', async () => {
   for (let i = 0; i < 20; i++) assert.equal((await br.call('/api/auth/google/start')).status, 302);
   assert.equal((await br.call('/api/auth/google/start')).status, 429);
 });
+
+test('change PIN while signed in: needs the current PIN, keeps other devices signed in, does not pause sharing', async () => {
+  const s = await start();
+  const me = s.phone();
+  await s.signUp(me, '9841000001');
+  const second = s.phone();
+  assert.equal((await me.call('/api/auth/pin/change', 'POST', { pin: PIN, newPin: '590284' })).status, 200); // sanity: a good change works
+  // old PIN no longer works, new PIN does (shares ask for it)
+  assert.equal((await me.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, pin: PIN })).status, 401);
+  assert.equal((await me.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, pin: '590284' })).status, 201);
+  // wrong current PIN is refused and counted; a run or a repeat is refused; no session means no change
+  assert.equal((await me.call('/api/auth/pin/change', 'POST', { pin: '000001', newPin: '735128' })).status, 401);
+  assert.equal((await me.call('/api/auth/pin/change', 'POST', { pin: '590284', newPin: '123456' })).status, 400);
+  assert.equal((await me.call('/api/auth/pin/change', 'POST', { pin: '590284', newPin: '590284' })).status, 400);
+  assert.equal((await second.call('/api/auth/pin/change', 'POST', { pin: '590284', newPin: '735128' })).status, 401);
+  // the phone stays signed in and is still recognised by PIN alone
+  assert.equal((await me.call('/api/me')).status, 200);
+  await me.call('/api/auth/logout', 'POST', {});
+  assert.equal((await me.call('/api/auth/login', 'POST', { pin: '590284' })).status, 200);
+  assert.ok(!(await me.call('/api/me')).json.sharesPausedUntil); // no 24-hour pause after a normal change
+  s.close();
+});

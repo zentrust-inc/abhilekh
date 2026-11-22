@@ -62,6 +62,9 @@ const b64u=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-')
 const unb64u=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
 const PK_OK=!!(window.PublicKeyCredential&&navigator.credentials&&window.AuthenticatorAttestationResponse&&'getPublicKey' in AuthenticatorAttestationResponse.prototype);
 let PK_ON=false,ME=null;
+// This device remembers that fingerprint or face is already on for it (the server only knows the account has some). Light use of browser storage.
+const pkHere=()=>{try{return localStorage.getItem('abhPk')==='1'}catch(e){return false}};
+const pkMark=on=>{try{on?localStorage.setItem('abhPk','1'):localStorage.removeItem('abhPk')}catch(e){}};
 // Proof for creating or stopping a share: the PIN if typed, otherwise fingerprint or face on a phone set up for this account.
 async function confirmAuth(pin){
   if(pin)return{pin};
@@ -86,17 +89,22 @@ function pkShow(me){
   ME=me;
   $('pkNudge').style.display=(PK_ON&&PK_OK&&!(me.passkeys>0))?'':'none';
   shareMode();
-  $('pkCard').style.display=PK_ON&&PK_OK?'':'none';
-  if(!PK_ON||!PK_OK)return;
   const n=me.passkeys||0;
-  $('pkText').textContent=n?'On for '+n+' device'+(n>1?'s':'')+'. Next time, one touch signs you in. A touch also confirms creating or stopping a share; your PIN still works.':'Off. Turn it on to sign in with one touch instead of typing a PIN. Your device does the check; Abhilekh never sees a fingerprint or a face.';
-  $('pkAdd').style.display='';$('pkOn').textContent=n?'Add this device':'Turn on for this device';$('pkOff').style.display=n?'':'none';
+  if(!n)pkMark(false); // turned off elsewhere: this device forgets too
+  $('rowPk').style.display=PK_ON&&PK_OK?'':'none';
+  if(!PK_ON||!PK_OK)return;
+  const here=pkHere();
+  $('pkText').textContent=here?'On for this device'+(n>1?' and '+(n-1)+' more':'')+'. One touch signs you in, and a touch confirms creating a share; your PIN still works.'
+    :n?'On for '+n+' device'+(n>1?'s':'')+', not yet for this one. Add it to sign in with one touch here too.'
+    :'Off. Turn it on to sign in with one touch instead of typing a PIN. Your device does the check; Abhilekh never sees a fingerprint or a face.';
+  $('pkAdd').style.display=here?'none':'';$('pkOn').textContent=n?'Add this device':'Turn on for this device';$('pkOff').style.display=n?'':'none';
 }
 $('passkeyBtn').onclick=async()=>{authErr();try{
   const o=await post('/api/auth/passkey/begin',{purpose:'login'});
   const c=await navigator.credentials.get({publicKey:{challenge:unb64u(o.challenge),rpId:o.rpId,userVerification:'required',timeout:60000}});
   const r=c.response;
   await post('/api/auth/passkey/login',{challenge:o.challenge,id:c.id,clientDataJSON:b64u(r.clientDataJSON),authenticatorData:b64u(r.authenticatorData),signature:b64u(r.signature)});
+  pkMark(true);
   await enter()}catch(e){authErr(e.name==='NotAllowedError'?new Error('Cancelled. Use your PIN or a code.'):e)}};
 $('welcomePasskey').onclick=$('passkeyBtn').onclick;
 $('pkOn').onclick=async()=>{pkErr();try{
@@ -104,12 +112,12 @@ $('pkOn').onclick=async()=>{pkErr();try{
   const c=await navigator.credentials.create({publicKey:{rp:{id:o.rpId,name:'Abhilekh'},user:{id:unb64u(o.user.id),name:o.user.name,displayName:o.user.name},challenge:unb64u(o.challenge),pubKeyCredParams:o.algs.map(alg=>({type:'public-key',alg})),authenticatorSelection:{residentKey:'required',userVerification:'required'},excludeCredentials:o.exclude.map(id=>({type:'public-key',id:unb64u(id)})),attestation:'none',timeout:60000}});
   const r=c.response;
   const me=await post('/api/auth/passkey/register',{challenge:o.challenge,id:c.id,clientDataJSON:b64u(r.clientDataJSON),authenticatorData:b64u(r.getAuthenticatorData()),publicKey:b64u(r.getPublicKey()),publicKeyAlgorithm:r.getPublicKeyAlgorithm()});
-  $('pkPin').value='';pkShow(me)}catch(e){pkErr(e)}};
-$('pkOff').onclick=async()=>{pkErr();try{pkShow(await post('/api/auth/passkey/remove'))}catch(e){pkErr(e)}};
+  $('pkPin').value='';pkMark(true);pkShow(me)}catch(e){pkErr(e)}};
+$('pkOff').onclick=async()=>{pkErr();try{const me=await post('/api/auth/passkey/remove');pkMark(false);pkShow(me)}catch(e){pkErr(e)}};
 let started=false;
 async function enter(){
   let me;try{me=await api('/api/me')}catch(e){return e.status===401?showAuth():showDown()}
-  $('down').style.display='none';$('acct').style.display='none';$('acctBtn').setAttribute('aria-expanded',false);tab('home');
+  $('down').style.display='none';closeMenu();tab('home');
   $('auth').style.display='none';$('app').style.display='';$('who-am-i').textContent='Signed in: '+(me.label||me.phone);pkShow(me);
   $('paused').style.display=me.sharesPausedUntil?'':'none';
   if(me.sharesPausedUntil)$('paused').textContent='Your PIN was reset with a new code, so new shares are paused until '+fmt(me.sharesPausedUntil)+'. You can still stop shares.';
@@ -122,8 +130,18 @@ function tab(name){
 }
 document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
 $('tileShow').onclick=()=>tab('share');
-$('pkNudgeBtn').onclick=()=>{$('acct').style.display='';$('acctBtn').setAttribute('aria-expanded',true);$('pkCard').scrollIntoView({behavior:'smooth'});$('pkPin').focus()};
-$('acctBtn').onclick=()=>{const o=$('acct').style.display==='none';$('acct').style.display=o?'':'none';$('acctBtn').setAttribute('aria-expanded',o)};
+const VIEWS={list:['vList','Menu'],pk:['vPk','Fingerprint or face'],pin:['vPin','Change PIN']};
+function openMenu(v){$('ov').style.display='';for(const k in VIEWS)$(VIEWS[k][0]).style.display=k===v?'':'none';$('sheetTitle').textContent=VIEWS[v][1];$('acctBtn').setAttribute('aria-expanded',true);pkErr();$('pinMsg').textContent='';if(v==='pk'&&$('pkAdd').style.display!=='none')$('pkPin').focus()}
+function closeMenu(){$('ov').style.display='none';$('acctBtn').setAttribute('aria-expanded',false)}
+$('acctBtn').onclick=()=>openMenu('list');
+$('sheetClose').onclick=closeMenu;
+$('ov').onclick=e=>{if(e.target===$('ov'))closeMenu()};
+document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>openMenu('list'));
+$('rowPk').onclick=()=>openMenu('pk');$('rowPin').onclick=()=>openMenu('pin');
+$('pkNudgeBtn').onclick=()=>openMenu('pk');
+$('pinChange').onclick=async()=>{const m=$('pinMsg');m.style.color='#a01212';m.textContent='';
+  if($('newPin1').value!==$('newPin2').value){m.textContent='The two new PINs are not the same.';return}
+  try{await post('/api/auth/pin/change',{pin:$('oldPin').value,newPin:$('newPin1').value});$('oldPin').value=$('newPin1').value=$('newPin2').value='';m.style.color='#1d6b4a';m.textContent='PIN changed. Your other devices stay signed in.'}catch(e){m.textContent=e.message}};
 $('labelBtn').onclick=()=>{$('labelIn').value=REC.label||'';$('labelBox').style.display='';$('labelIn').focus()};
 $('labelCancel').onclick=()=>{$('labelBox').style.display='none'};
 $('labelSave').onclick=async()=>{try{REC=await post('/api/record/label',{label:$('labelIn').value});$('labelBox').style.display='none';paint();paintForm()}catch(e){alert(e.message)}};
@@ -191,3 +209,47 @@ const GERR={expired:'That sign-in took too long or came from another browser. Tr
     return}
   enter();
 })();
+
+// ---- PIN keypad: big number buttons, dots that fill, and the next step happens by itself at six digits ----
+// The original <input> stays (hidden) so the rest of the page reads and writes its value as before.
+const PADS={};
+function pinpad(key,ids,labels,onDone,opts={}){
+  const ins=ids.map($);
+  const vd=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value');
+  let idx=0;
+  const host=el('div',{class:'pad',tabindex:'0',role:'group','aria-label':'PIN entry'});
+  const lab=el('div',{class:'plabel'}),dots=el('div',{class:'dots','aria-live':'polite'}),err=el('div',{class:'perr'});
+  let show=false;
+  const dot=[...Array(6)].map(()=>el('i'));dot.forEach(d=>dots.append(d));
+  const eye=el('button',{type:'button',class:'eye','aria-label':'Show digits','aria-pressed':'false',onclick:()=>{show=!show;eye.setAttribute('aria-pressed',show);eye.setAttribute('aria-label',show?'Hide digits':'Show digits');eye.textContent=show?'\u{1F648}':'\u{1F441}';paint()}},'\u{1F441}');
+  const row=el('div',{class:'boxrow'});row.append(dots,eye);
+  const cur=()=>vd.get.call(ins[idx]);
+  const paint=()=>{const v=cur(),n=v.length;px.value=v;dot.forEach((d,i)=>{d.classList.toggle('on',i<n);d.classList.toggle('now',i===n);d.textContent=i<n?(show?v[i]:'\u25CF'):''});lab.textContent=labels[idx];dots.setAttribute('aria-label',n+' of 6 digits')};
+  ins.forEach(i=>{Object.defineProperty(i,'value',{get(){return vd.get.call(i)},set(v){vd.set.call(i,v);if(!String(v)&&ins.every(x=>!vd.get.call(x)))idx=0;paint()}});
+    i.style.display='none';const l=document.querySelector('label[for="'+i.id+'"]');if(l)l.style.display='none'});
+  const press=d=>{if(!/^\d$/.test(d)||cur().length>=6)return;vd.set.call(ins[idx],cur()+d);err.textContent='';paint();
+    if(cur().length===6){if(idx<ins.length-1)setTimeout(()=>{idx++;paint()},180);else setTimeout(()=>onDone(api),180)}};
+  const back=()=>{if(!cur()&&idx>0){idx--}vd.set.call(ins[idx],cur().slice(0,-1));err.textContent='';paint()};
+  const px=el('input',{class:'pxin',type:'tel',inputmode:'numeric',pattern:'[0-9]*',autocomplete:'off',maxlength:'6','aria-label':'PIN, six digits'});
+  dots.append(px);
+  px.addEventListener('input',()=>{const v=px.value.replace(/\D/g,'').slice(0,6),c=cur();
+    if(v.length>c.length)for(const d of v.slice(c.length))press(d);else if(v.length<c.length)back();px.value=cur()});
+  px.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!cur()&&idx>0){e.preventDefault();back()}});
+  host.append(lab,row,err);
+  ins[0].parentNode.insertBefore(host,(document.querySelector('label[for="'+ids[0]+'"]')||ins[0]));
+  const api={goto(i){idx=i;paint();px.focus()},reset(msg){ins.forEach(i=>vd.set.call(i,''));idx=0;err.textContent=msg||'';paint();px.focus()},error(m){err.textContent=m||''},host};
+  paint();PADS[key]=api;
+  if(opts.hide)opts.hide.forEach(i=>{$(i).style.display='none'});
+  return api;
+}
+const autoReset=(p,ms)=>setTimeout(()=>p.reset(),ms||900); // after an attempt: empty keypad again (a wrong PIN, or the screen has changed)
+pinpad('welcome',['welcomePin'],['Your PIN'],p=>{$('welcomeBtn').click();autoReset(p)},{hide:['welcomeBtn']});
+pinpad('login',['loginPin'],['Your PIN'],p=>{if(!$('phone').value.trim()){p.reset('Type your number or email first.');$('phone').focus();return}$('loginBtn').click();autoReset(p)},{hide:['loginBtn']});
+pinpad('setpin',['pin1','pin2'],['Choose a 6-digit PIN','Type the same PIN again'],p=>{
+  if($('pin1').value!==$('pin2').value){p.reset('The two PINs are not the same. Start again.');return}
+  $('pinBtn').click();autoReset(p,1200)},{hide:['pinBtn']});
+pinpad('pk',['pkPin'],['Your PIN, to turn it on'],p=>{$('pkOn').click();autoReset(p)},{hide:['pkOn']});
+pinpad('share',['sharePin'],['Your PIN, to confirm'],()=>{});
+pinpad('change',['oldPin','newPin1','newPin2'],['Your current PIN','Choose a new 6-digit PIN','Type the new PIN again'],p=>{
+  if($('newPin1').value!==$('newPin2').value){$('newPin1').value=$('newPin2').value='';p.goto(1);p.error('The two new PINs are not the same. Type the new PIN again.');return}
+  $('pinChange').click();autoReset(p,1200)},{hide:['pinChange']});

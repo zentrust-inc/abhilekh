@@ -42,3 +42,17 @@ button{font:inherit;font-weight:600;border-radius:8px;padding:10px 14px;border:0
 /* 16px or more: phone browsers zoom the page in when a smaller box is tapped */
 input,select,textarea{font-size:16px;font-family:inherit}
 input[type=password],input[type=text]{width:100%;padding:9px;border:1.5px solid var(--line);border-radius:8px}
+.menurow{display:flex;justify-content:space-between;width:100%;background:#fff;color:var(--ink);border:1.5px solid var(--line);font-weight:600;padding:12px;margin-bottom:8px;text-align:left}
+#ov{position:fixed;inset:0;background:rgba(29,36,51,.45);z-index:30;overflow-y:auto}
+.sheet{background:#fff;max-width:430px;margin:56px auto 0;border-radius:0 0 16px 16px;padding:14px 14px 18px;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.sheethead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+
+.pad{max-width:340px;margin:8px auto 4px;outline:none}
+.pad .plabel{text-align:left;color:var(--ink);font-size:18px;font-weight:700;line-height:1.3;margin-bottom:12px}
+.pad .boxrow{display:flex;align-items:center;gap:8px;margin:0 0 16px}
+.pad .dots{display:flex;flex:1;gap:8px;position:relative}
+.pad .pxin{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;border:0;padding:0;margin:0;background:none;caret-color:transparent;cursor:pointer}
+.pad .dots i{flex:1;height:52px;border-radius:10px;border:1.5px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:20px;font-weight:600;color:var(--ink)}
+.pad .dots i.now{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.pad .eye{width:40px;height:44px;flex:none;background:none;border:0;font-size:22px;padding:0;color:var(--mute)}
+.pad .perr{text-align:center;color:#a01212;font-size:13px;min-height:18px;margin-top:8px}

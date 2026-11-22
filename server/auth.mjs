@@ -309,6 +309,23 @@ export function createAuth({ store, save, now = () => Date.now(), sms, mail = no
       return send(res, 200, me(a)), true;
     }
 
+    if (path === '/api/auth/pin/change' && req.method === 'POST') {
+      // Change the PIN while signed in: the current PIN is required (and counted like any wrong try). Other devices stay signed in and
+      // sharing is not paused: that is for recovery with a code, which is a different situation.
+      const cur = current(req);
+      if (!cur) return send(res, 401, { error: 'Sign in first.' }), true;
+      const a = cur.account;
+      const r = checkPin(a, b.pin);
+      if (!r.ok) return send(res, r.status, r), true;
+      const problem = pinProblem(String(b.newPin || ''));
+      if (problem) return send(res, 400, { error: problem }), true;
+      if (String(b.newPin) === String(b.pin)) return send(res, 400, { error: 'Choose a PIN different from the current one.' }), true;
+      const { salt, hash } = hashPin(String(b.newPin));
+      Object.assign(a, { pinSalt: salt, pinHash: hash, pinFails: 0, lockedUntil: null });
+      save();
+      return send(res, 200, { ok: true }), true;
+    }
+
     if (path === '/api/auth/google/ticket') {
       // The browser comes back from Google with the ticket in an HttpOnly cookie; the page trades it for the PIN step.
       const g = cookies(req).abh_gt;
