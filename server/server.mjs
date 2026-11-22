@@ -3,7 +3,7 @@
 //
 // What it does: stores shares of confirmed SAMPLE records, serves the doctor's view only while a share is live,
 // logs every open and every refused open, lets the patient stop a share.
-// Sign-in (auth.mjs): phone number, one SMS code at signup, 6-digit PIN; the PIN is asked again to create or stop a
+// Sign-in (auth.mjs): Nepal mobile number (one SMS code) or email address (one code by email), then a 6-digit PIN; the PIN is asked again to create or stop a
 // share. Every share belongs to the account that made it. Every account sees the same invented SAMPLE record.
 import http from 'node:http';
 import { readFileSync, writeFileSync, renameSync, existsSync, mkdirSync } from 'node:fs';
@@ -12,6 +12,7 @@ import { dirname, join, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createAuth } from './auth.mjs';
 import { akashSender, memorySender, noSender } from './sms.mjs';
+import { acsMailSender, memoryMail, noMail } from './mail.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PUBLIC = join(HERE, 'public');
@@ -19,7 +20,7 @@ const ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789'; // 31 letters/digits, no loo
 const ALLOWED_MINUTES = [60, 1440, 10080]; // 1 hour, 24 hours, 7 days. Never "forever".
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
 
-export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-record.json'), testMode = false, now = () => Date.now(), sms = memorySender(), secureCookies = true, authLimits } = {}) {
+export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-record.json'), testMode = false, now = () => Date.now(), sms = memorySender(), mail = memoryMail(), secureCookies = true, authLimits } = {}) {
   const record = JSON.parse(readFileSync(recordPath, 'utf8'));
   let store = { shares: [] };
   if (storePath) {
@@ -32,7 +33,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
     writeFileSync(tmp, JSON.stringify(store));
     renameSync(tmp, storePath); // atomic: never a half-written file
   };
-  const auth = createAuth({ store, save, now, sms, testMode, secureCookies, limits: authLimits });
+  const auth = createAuth({ store, save, now, sms, mail, testMode, secureCookies, limits: authLimits });
   const token = () => Array.from(randomBytes(14), b => ALPHABET[b % 31]).join('');
   const stateOf = s => (s.revokedAt ? 'revoked' : now() >= Date.parse(s.expires) ? 'expired' : 'live');
   const log = (s, t) => { s.log.push({ at: new Date(now()).toISOString(), t }); };
@@ -84,7 +85,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
         const pin = auth.checkPin(cur.account, b.pin);
         if (!pin.ok) return send(res, pin.status, pin);
         const hold = auth.holdUntil(cur.account);
-        if (hold) return send(res, 403, { error: 'New shares are paused until ' + new Date(hold).toISOString() + ', 24 hours after your PIN was reset by SMS. You can still stop shares.', sharesPausedUntil: new Date(hold).toISOString() });
+        if (hold) return send(res, 403, { error: 'New shares are paused until ' + new Date(hold).toISOString() + ', 24 hours after your PIN was reset with a new code. You can still stop shares.', sharesPausedUntil: new Date(hold).toISOString() });
         const docs = Array.isArray(b.docs) ? [...new Set(b.docs)].filter(id => record.docs.some(d => d.id === id)) : [];
         if (!docs.length) return send(res, 400, { error: 'Choose at least one report to share.' });
         const minutes = Number(b.minutes);
@@ -133,8 +134,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   // Real SMS only when the Akash token is set (Azure app settings). Without it: in TEST_MODE the code is shown on
   // screen; otherwise the server says plainly that codes are not switched on (never "sent" when nothing was sent).
   const sms = process.env.AKASH_SMS_TOKEN ? akashSender({ token: process.env.AKASH_SMS_TOKEN }) : testMode ? memorySender() : noSender();
-  console.log('SMS sender: ' + sms.name);
-  const app = createApp({ storePath: join(dataDir, 'store.json'), testMode, sms, secureCookies: process.env.INSECURE_COOKIES !== '1' });
+  // Same for email: real mail only when the connection string is set (Azure app settings).
+  const mail = process.env.ACS_EMAIL_CONNECTION_STRING ? acsMailSender({ connectionString: process.env.ACS_EMAIL_CONNECTION_STRING, from: process.env.MAIL_FROM || 'DoNotReply@abhilekh.org' }) : testMode ? memoryMail() : noMail();
+  console.log('SMS sender: ' + sms.name + '; mail sender: ' + mail.name);
+  const app = createApp({ storePath: join(dataDir, 'store.json'), testMode, sms, mail, secureCookies: process.env.INSECURE_COOKIES !== '1' });
   const port = Number(process.env.PORT || 8080);
   http.createServer(app.handler).listen(port, () => console.log('Abhilekh share server (SAMPLE data) on port ' + port));
 }

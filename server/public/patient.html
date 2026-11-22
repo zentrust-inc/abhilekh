@@ -1,22 +1,22 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Abhilekh: share with a doctor (SAMPLE)</title><link rel="stylesheet" href="/style.css"></head><body><div class="wrap">
-<div class="banner"><b>SAMPLE · नमूना.</b> Prototype on invented pages, planning stage. Links and the access log are real and kept by the server; the records are fictional. Sign-in is by mobile number and PIN; every account sees the same invented sample record. English only so far.</div>
+<div class="banner"><b>SAMPLE · नमूना.</b> Prototype on invented pages, planning stage. Links and the access log are real and kept by the server; the records are fictional. Sign-in is by mobile number or email, and a PIN; every account sees the same invented sample record. English only so far.</div>
 <div id="auth" style="display:none">
 <h1>Sign in to Abhilekh</h1>
-<p class="sub">Your mobile number gets one SMS code the first time. After that you use your 6-digit PIN on this phone.</p>
+<p class="sub">Your mobile number gets one SMS code the first time, or your email address gets one code by mail. After that you use your 6-digit PIN on this device.</p>
 <div class="card" id="stepPhone">
-  <label class="mute" for="phone" style="display:block">Mobile number</label>
-  <input type="text" id="phone" inputmode="tel" autocomplete="tel" placeholder="98XXXXXXXX">
+  <label class="mute" for="phone" style="display:block">Mobile number (Nepal) or email</label>
+  <input type="text" id="phone" inputmode="email" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="98XXXXXXXX or name@example.com">
   <div id="pinLogin">
     <label class="mute" for="loginPin" style="display:block;margin-top:8px">PIN (6 digits)</label>
     <input type="password" id="loginPin" inputmode="numeric" maxlength="6" autocomplete="current-password">
     <button class="go" id="loginBtn">Sign in</button>
   </div>
-  <button class="sec" id="codeBtn" style="width:100%;margin-top:10px">New here, new phone or forgot PIN? Get a code by SMS</button>
+  <button class="sec" id="codeBtn" style="width:100%;margin-top:10px">New here, new device or forgot PIN? Get a code (SMS for a number, mail for an email)</button>
 </div>
 <div class="card" id="stepCode" style="display:none">
-  <label class="mute" for="code" style="display:block">Code from the SMS</label>
+  <label class="mute" for="code" style="display:block">Code from the SMS or email</label>
   <input type="text" id="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
   <div class="mute" id="testCode"></div>
   <button class="go" id="verifyBtn">Continue</button>

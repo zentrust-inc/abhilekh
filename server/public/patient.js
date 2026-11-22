@@ -32,19 +32,19 @@ let PHONE='',TICKET='';
 const show=(...ids)=>['stepPhone','stepCode','stepPin'].forEach(i=>$(i).style.display=ids.includes(i)?'':'none');
 function showAuth(){$('app').style.display='none';$('auth').style.display='';show('stepPhone')}
 const authErr=e=>{$('authErr').textContent=e?e.message:''};
-$('loginBtn').onclick=async()=>{authErr();try{await post('/api/auth/login',{phone:$('phone').value,pin:$('loginPin').value});$('loginPin').value='';await enter()}catch(e){authErr(e)}};
-$('codeBtn').onclick=async()=>{authErr();PHONE=$('phone').value;try{const r=await post('/api/auth/code',{phone:PHONE});$('testCode').textContent=r.testCode?'Test mode, no SMS sent. Code: '+r.testCode:'';show('stepCode');$('code').focus()}catch(e){authErr(e)}};
-$('verifyBtn').onclick=async()=>{authErr();try{const r=await post('/api/auth/verify',{phone:PHONE,code:$('code').value});TICKET=r.ticket;$('code').value='';
-  $('pinIntro').textContent=r.isNew?'Welcome. Choose a 6-digit PIN. You will use it on this phone instead of an SMS.':'Set a new PIN. Other phones are signed out, and new shares wait 24 hours. You can still stop shares at once.';show('stepPin');$('pin1').focus()}catch(e){authErr(e)}};
+$('loginBtn').onclick=async()=>{authErr();try{await post('/api/auth/login',{id:$('phone').value,pin:$('loginPin').value});$('loginPin').value='';await enter()}catch(e){authErr(e)}};
+$('codeBtn').onclick=async()=>{authErr();PHONE=$('phone').value;try{const r=await post('/api/auth/code',{id:PHONE});$('testCode').textContent=r.testCode?'Test mode, nothing sent. Code: '+r.testCode:'';show('stepCode');$('code').focus()}catch(e){authErr(e)}};
+$('verifyBtn').onclick=async()=>{authErr();try{const r=await post('/api/auth/verify',{id:PHONE,code:$('code').value});TICKET=r.ticket;$('code').value='';
+  $('pinIntro').textContent=r.isNew?'Welcome. Choose a 6-digit PIN. You will use it on this device instead of a code.':'Set a new PIN. Other devices are signed out, and new shares wait 24 hours. You can still stop shares at once.';show('stepPin');$('pin1').focus()}catch(e){authErr(e)}};
 $('pinBtn').onclick=async()=>{authErr();if($('pin1').value!==$('pin2').value)return authErr(new Error('The two PINs are not the same.'));
   try{await post('/api/auth/pin',{ticket:TICKET,pin:$('pin1').value});$('pin1').value=$('pin2').value='';await enter()}catch(e){authErr(e)}};
 $('logoutBtn').onclick=async()=>{await post('/api/auth/logout');showAuth()};
 let started=false;
 async function enter(){
   let me;try{me=await api('/api/me')}catch(e){return showAuth()}
-  $('auth').style.display='none';$('app').style.display='';$('who-am-i').textContent='Signed in: '+me.phone;
+  $('auth').style.display='none';$('app').style.display='';$('who-am-i').textContent='Signed in: '+(me.label||me.phone);
   $('paused').style.display=me.sharesPausedUntil?'':'none';
-  if(me.sharesPausedUntil)$('paused').textContent='Your PIN was reset by SMS, so new shares are paused until '+fmt(me.sharesPausedUntil)+'. You can still stop shares.';
+  if(me.sharesPausedUntil)$('paused').textContent='Your PIN was reset with a new code, so new shares are paused until '+fmt(me.sharesPausedUntil)+'. You can still stop shares.';
   if(!started){started=true;await setup()}else await load();
 }
 async function setup(){
