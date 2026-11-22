@@ -17,7 +17,7 @@ function render(){
     if(live){const qb=el('div',{class:'qr'});qb.innerHTML=qrSvg(url);card.append(qb,el('div',{class:'url'},url));}
     const row=el('div',{class:'row'});
     if(live){const ne=window.i18n&&window.i18n.lang()==='ne';
-      const msg=ne?'अभिलेख: मेरा चिकित्सा कागजहरू तपाईंसँग साझा गरिएको छ। यो लिङ्क खोल्नुहोस्: '+url+' (यो '+fmt(s.expires)+' सम्म चल्छ, र म जुनसुकै बेला रोक्न सक्छु)।':'Abhilekh: my medical papers, shared with you. Open this link: '+url+' (it works until '+fmt(s.expires)+', and I can stop it any time).';
+      const msg=ne?'अभिलेख: मेरा चिकित्सा कागजातहरू तपाईंसँग साझा गरिएको छ। यो लिङ्क खोल्नुहोस्: '+url+' (यो '+fmt(s.expires)+' सम्म चल्छ, र म जुनसुकै बेला रोक्न सक्छु)।':'Abhilekh: my medical papers, shared with you. Open this link: '+url+' (it works until '+fmt(s.expires)+', and I can stop it any time).';
       row.append(el('a',{href:'https://wa.me/?text='+encodeURIComponent(msg),target:'_blank',rel:'noopener',style:'width:100%'},el('button',{class:'go',style:'width:100%;margin-top:0'},'Send by WhatsApp')),
         el('a',{href:url,target:'_blank',rel:'noopener'},el('button',{class:'sec',style:'width:100%'},'Open the link')));
       const err=el('div',{class:'mute',style:'color:#a01212;width:100%'});
