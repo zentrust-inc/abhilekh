@@ -34,6 +34,11 @@ Plan agreed 21 Nov 2026 (status log; PRD rev. 3.3, Security and consent):
   `PUBLIC_URL` (default `https://app.abhilekh.org`; the redirect URI is `PUBLIC_URL/api/auth/google/callback`). Without
   both, the Google button is hidden and `/api/auth/google/start` says it is not switched on. Not yet run against the real
   Google: that is the first check after the OAuth client exists.
+- **Fingerprint or face (passkeys, `passkey.mjs`)**: optional, next to the PIN, never instead of it. Signed in, the patient turns it on
+  for a phone (the PIN is asked, so a stolen session cannot add a way in that outlives sign-out). After that one touch signs in. The phone's
+  own unlock does the check; Abhilekh stores only a public key, never a fingerprint or a face. Shares still ask for the PIN. A recovery with a
+  code removes every passkey. At most 5 per account. The site name (rpId) is the host of `PUBLIC_URL`. Checked with a software authenticator in
+  the tests; **not yet tried on a real phone**.
 - One field on the sign-in page: an "@" means email, anything else is read as a Nepal mobile number. The email is lower-cased; dots and +tags are kept.
 - After that: PIN on the same phone. The phone is remembered by a device cookie, so the PIN alone does not work
   from another phone; a new phone gets an SMS code.
