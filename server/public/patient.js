@@ -16,7 +16,9 @@ function render(){
     card.append(el('div',{class:'t',style:'margin-top:6px'},s.who||'Doctor (no name given)'),el('div',{class:'mute'},s.docs.map(id=>(REC.docs.find(d=>d.id===id)||{title:id}).title).join(', ')));
     if(live){const qb=el('div',{class:'qr'});qb.innerHTML=qrSvg(url);card.append(qb,el('div',{class:'url'},url));}
     const row=el('div',{class:'row'});
-    if(live){row.append(el('a',{href:url,target:'_blank',rel:'noopener'},el('button',{class:'sec',style:'width:100%'},'Open the link')));
+    if(live){const msg='Abhilekh: my medical papers, shared with you. Open this link: '+url+' (it works until '+fmt(s.expires)+', and I can stop it any time).';
+      row.append(el('a',{href:'https://wa.me/?text='+encodeURIComponent(msg),target:'_blank',rel:'noopener',style:'width:100%'},el('button',{class:'go',style:'width:100%;margin-top:0'},'Send by WhatsApp')),
+        el('a',{href:url,target:'_blank',rel:'noopener'},el('button',{class:'sec',style:'width:100%'},'Open the link')));
       const err=el('div',{class:'mute',style:'color:#a01212;width:100%'});
       let armed=false,t=null;
       const stop=el('button',{class:'danger',onclick:async()=>{
