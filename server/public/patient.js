@@ -217,27 +217,27 @@ function pinpad(key,ids,labels,onDone,opts={}){
   const ins=ids.map($);
   const vd=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value');
   let idx=0;
-  const host=el('div',{class:'pad',tabindex:'0',role:'group','aria-label':'PIN keypad'});
-  const lab=el('div',{class:'plabel'}),dots=el('div',{class:'dots','aria-live':'polite'}),err=el('div',{class:'perr'}),keys=el('div',{class:'keys'});
+  const host=el('div',{class:'pad',tabindex:'0',role:'group','aria-label':'PIN entry'});
+  const lab=el('div',{class:'plabel'}),dots=el('div',{class:'dots','aria-live':'polite'}),err=el('div',{class:'perr'});
   let show=false;
   const dot=[...Array(6)].map(()=>el('i'));dot.forEach(d=>dots.append(d));
   const eye=el('button',{type:'button',class:'eye','aria-label':'Show digits','aria-pressed':'false',onclick:()=>{show=!show;eye.setAttribute('aria-pressed',show);eye.setAttribute('aria-label',show?'Hide digits':'Show digits');eye.textContent=show?'\u{1F648}':'\u{1F441}';paint()}},'\u{1F441}');
   const row=el('div',{class:'boxrow'});row.append(dots,eye);
   const cur=()=>vd.get.call(ins[idx]);
-  const paint=()=>{const v=cur(),n=v.length;dot.forEach((d,i)=>{d.classList.toggle('on',i<n);d.classList.toggle('now',i===n);d.textContent=i<n?(show?v[i]:'\u25CF'):''});lab.textContent=labels[idx];dots.setAttribute('aria-label',n+' of 6 digits')};
+  const paint=()=>{const v=cur(),n=v.length;px.value=v;dot.forEach((d,i)=>{d.classList.toggle('on',i<n);d.classList.toggle('now',i===n);d.textContent=i<n?(show?v[i]:'\u25CF'):''});lab.textContent=labels[idx];dots.setAttribute('aria-label',n+' of 6 digits')};
   ins.forEach(i=>{Object.defineProperty(i,'value',{get(){return vd.get.call(i)},set(v){vd.set.call(i,v);if(!String(v)&&ins.every(x=>!vd.get.call(x)))idx=0;paint()}});
     i.style.display='none';const l=document.querySelector('label[for="'+i.id+'"]');if(l)l.style.display='none'});
-  const press=d=>{if(cur().length>=6)return;vd.set.call(ins[idx],cur()+d);err.textContent='';paint();
+  const press=d=>{if(!/^\d$/.test(d)||cur().length>=6)return;vd.set.call(ins[idx],cur()+d);err.textContent='';paint();
     if(cur().length===6){if(idx<ins.length-1)setTimeout(()=>{idx++;paint()},180);else setTimeout(()=>onDone(api),180)}};
   const back=()=>{if(!cur()&&idx>0){idx--}vd.set.call(ins[idx],cur().slice(0,-1));err.textContent='';paint()};
-  for(const d of ['1','2','3','4','5','6','7','8','9','','0','<']){
-    if(d==='')keys.append(el('button',{class:'blank',tabindex:'-1','aria-hidden':'true',type:'button'}));
-    else keys.append(el('button',{type:'button','aria-label':d==='<'?'Delete':d,onclick:()=>d==='<'?back():press(d)},d==='<'?'\u232B':d));
-  }
-  host.addEventListener('keydown',e=>{if(/^\d$/.test(e.key))press(e.key);else if(e.key==='Backspace')back()});
-  host.append(lab,row,keys,err);
+  const px=el('input',{class:'pxin',type:'tel',inputmode:'numeric',pattern:'[0-9]*',autocomplete:'off',maxlength:'6','aria-label':'PIN, six digits'});
+  dots.append(px);
+  px.addEventListener('input',()=>{const v=px.value.replace(/\D/g,'').slice(0,6),c=cur();
+    if(v.length>c.length)for(const d of v.slice(c.length))press(d);else if(v.length<c.length)back();px.value=cur()});
+  px.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!cur()&&idx>0){e.preventDefault();back()}});
+  host.append(lab,row,err);
   ins[0].parentNode.insertBefore(host,(document.querySelector('label[for="'+ids[0]+'"]')||ins[0]));
-  const api={goto(i){idx=i;paint()},reset(msg){ins.forEach(i=>vd.set.call(i,''));idx=0;err.textContent=msg||'';paint()},error(m){err.textContent=m||''},host};
+  const api={goto(i){idx=i;paint();px.focus()},reset(msg){ins.forEach(i=>vd.set.call(i,''));idx=0;err.textContent=msg||'';paint();px.focus()},error(m){err.textContent=m||''},host};
   paint();PADS[key]=api;
   if(opts.hide)opts.hide.forEach(i=>{$(i).style.display='none'});
   return api;
