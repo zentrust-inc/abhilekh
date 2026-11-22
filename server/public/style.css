@@ -46,3 +46,14 @@ input[type=password],input[type=text]{width:100%;padding:9px;border:1.5px solid 
 #ov{position:fixed;inset:0;background:rgba(29,36,51,.45);z-index:30;overflow-y:auto}
 .sheet{background:#fff;max-width:430px;margin:56px auto 0;border-radius:0 0 16px 16px;padding:14px 14px 18px;box-shadow:0 8px 24px rgba(0,0,0,.2)}
 .sheethead{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+
+.pad{max-width:320px;margin:8px auto 4px;outline:none}
+.pad .plabel{text-align:center;color:var(--mute);font-size:14px;margin-bottom:8px}
+.pad .dots{display:flex;justify-content:center;gap:14px;margin:6px 0 14px}
+.pad .dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--accent);display:block}
+.pad .dots i.on{background:var(--accent)}
+.pad .keys{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pad .keys button{height:64px;font-size:26px;font-weight:600;background:#fff;color:var(--ink);border:1.5px solid var(--line);border-radius:14px;padding:0}
+.pad .keys button:active{background:#f0e6e9;border-color:var(--accent)}
+.pad .keys .blank{visibility:hidden}
+.pad .perr{text-align:center;color:#a01212;font-size:13px;min-height:18px;margin-top:8px}

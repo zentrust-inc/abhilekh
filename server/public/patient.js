@@ -209,3 +209,44 @@ const GERR={expired:'That sign-in took too long or came from another browser. Tr
     return}
   enter();
 })();
+
+// ---- PIN keypad: big number buttons, dots that fill, and the next step happens by itself at six digits ----
+// The original <input> stays (hidden) so the rest of the page reads and writes its value as before.
+const PADS={};
+function pinpad(key,ids,labels,onDone,opts={}){
+  const ins=ids.map($);
+  const vd=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value');
+  let idx=0;
+  const host=el('div',{class:'pad',tabindex:'0',role:'group','aria-label':'PIN keypad'});
+  const lab=el('div',{class:'plabel'}),dots=el('div',{class:'dots','aria-live':'polite'}),err=el('div',{class:'perr'}),keys=el('div',{class:'keys'});
+  const dot=[...Array(6)].map(()=>el('i'));dot.forEach(d=>dots.append(d));
+  const cur=()=>vd.get.call(ins[idx]);
+  const paint=()=>{const n=cur().length;dot.forEach((d,i)=>d.classList.toggle('on',i<n));lab.textContent=labels[idx];dots.setAttribute('aria-label',n+' of 6 digits')};
+  ins.forEach(i=>{Object.defineProperty(i,'value',{get(){return vd.get.call(i)},set(v){vd.set.call(i,v);if(!String(v)&&ins.every(x=>!vd.get.call(x)))idx=0;paint()}});
+    i.style.display='none';const l=document.querySelector('label[for="'+i.id+'"]');if(l)l.style.display='none'});
+  const press=d=>{if(cur().length>=6)return;vd.set.call(ins[idx],cur()+d);err.textContent='';paint();
+    if(cur().length===6){if(idx<ins.length-1)setTimeout(()=>{idx++;paint()},180);else setTimeout(()=>onDone(api),180)}};
+  const back=()=>{if(!cur()&&idx>0){idx--}vd.set.call(ins[idx],cur().slice(0,-1));err.textContent='';paint()};
+  for(const d of ['1','2','3','4','5','6','7','8','9','','0','<']){
+    if(d==='')keys.append(el('button',{class:'blank',tabindex:'-1','aria-hidden':'true',type:'button'}));
+    else keys.append(el('button',{type:'button','aria-label':d==='<'?'Delete':d,onclick:()=>d==='<'?back():press(d)},d==='<'?'\u232B':d));
+  }
+  host.addEventListener('keydown',e=>{if(/^\d$/.test(e.key))press(e.key);else if(e.key==='Backspace')back()});
+  host.append(lab,dots,keys,err);
+  ins[0].parentNode.insertBefore(host,(document.querySelector('label[for="'+ids[0]+'"]')||ins[0]));
+  const api={goto(i){idx=i;paint()},reset(msg){ins.forEach(i=>vd.set.call(i,''));idx=0;err.textContent=msg||'';paint()},error(m){err.textContent=m||''},host};
+  paint();PADS[key]=api;
+  if(opts.hide)opts.hide.forEach(i=>{$(i).style.display='none'});
+  return api;
+}
+const autoReset=(p,ms)=>setTimeout(()=>p.reset(),ms||900); // after an attempt: empty keypad again (a wrong PIN, or the screen has changed)
+pinpad('welcome',['welcomePin'],['Your PIN'],p=>{$('welcomeBtn').click();autoReset(p)},{hide:['welcomeBtn']});
+pinpad('login',['loginPin'],['Your PIN'],p=>{if(!$('phone').value.trim()){p.reset('Type your number or email first.');$('phone').focus();return}$('loginBtn').click();autoReset(p)},{hide:['loginBtn']});
+pinpad('setpin',['pin1','pin2'],['Choose a 6-digit PIN','Type the same PIN again'],p=>{
+  if($('pin1').value!==$('pin2').value){p.reset('The two PINs are not the same. Start again.');return}
+  $('pinBtn').click();autoReset(p,1200)},{hide:['pinBtn']});
+pinpad('pk',['pkPin'],['Your PIN, to turn it on'],p=>{$('pkOn').click();autoReset(p)},{hide:['pkOn']});
+pinpad('share',['sharePin'],['Your PIN, to confirm'],()=>{});
+pinpad('change',['oldPin','newPin1','newPin2'],['Your current PIN','Choose a new 6-digit PIN','Type the new PIN again'],p=>{
+  if($('newPin1').value!==$('newPin2').value){$('newPin1').value=$('newPin2').value='';p.goto(1);p.error('The two new PINs are not the same. Type the new PIN again.');return}
+  $('pinChange').click();autoReset(p,1200)},{hide:['pinChange']});
