@@ -42,3 +42,4 @@ button{font:inherit;font-weight:600;border-radius:8px;padding:10px 14px;border:0
 /* 16px or more: phone browsers zoom the page in when a smaller box is tapped */
 input,select,textarea{font-size:16px;font-family:inherit}
 input[type=password],input[type=text]{width:100%;padding:9px;border:1.5px solid var(--line);border-radius:8px}
+.menurow{display:flex;justify-content:space-between;width:100%;background:#fff;color:var(--ink);border:1.5px solid var(--line);font-weight:600;padding:12px;margin-bottom:8px;text-align:left}
