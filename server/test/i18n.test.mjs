@@ -48,3 +48,21 @@ test('every fixed error message the server can send to the patient has Nepali te
   }
   assert.deepEqual(missing, []);
 });
+
+test('Nepali text has no stray joiners and no split words', () => {
+  const src = readFileSync(new URL('../public/i18n.js', import.meta.url), 'utf8');
+  assert.ok(!/[‌‍]/.test(src), 'zero-width joiner or non-joiner found');
+  // a space right before a vowel sign or virama means a word was split, like "फे रि" or "के ही"
+  assert.ok(!/[ऀ-ॿ] [ा-्]/.test(src), 'a Devanagari word is split by a space');
+});
+
+test('agreed terms are used', () => {
+  assert.equal(i18n.tr('Active'), 'सक्रिय');
+  assert.equal(i18n.tr('Time ran out'), 'म्याद सकियो');
+  assert.equal(i18n.tr('Stopped by you'), 'तपाईंले रोक्नुभएको');
+  assert.equal(i18n.tr('Try again'), 'पुनः प्रयास गर्नुहोस्');
+  assert.equal(i18n.tr('My papers'), 'मेरा कागजात');
+  assert.equal(i18n.tr('Photograph a paper'), 'कागजको फोटो खिच्नुहोस्');
+  assert.ok(i18n.tr('3 papers').startsWith('3 कागजात'));
+  assert.ok(!i18n.tr('Sign in and share with your fingerprint or face instead of typing a PIN. Your device does the check; Abhilekh never sees it.').includes('कागज'));
+});
