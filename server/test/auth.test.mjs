@@ -167,7 +167,7 @@ test('wrong PINs: 5 means a 15-minute wait, 10 means a code by SMS', async () =>
   s.close();
 });
 
-test('PIN is asked again to create and to stop a share', async () => {
+test('PIN is asked again to create a share; stopping needs none', async () => {
   const s = await start();
   const me = s.phone();
   await s.signUp(me, '9841000001');
@@ -175,9 +175,26 @@ test('PIN is asked again to create and to stop a share', async () => {
   assert.equal((await me.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, pin: '000001' })).status, 401);
   const c = await me.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, pin: PIN });
   assert.equal(c.status, 201);
-  assert.equal((await me.call('/api/shares/' + c.json.id + '/stop', 'POST', {})).status, 400);
-  assert.equal((await me.call('/api/shares/' + c.json.id + '/stop', 'POST', { pin: '000001' })).status, 401);
-  assert.equal((await me.call('/api/shares/' + c.json.id + '/stop', 'POST', { pin: PIN })).json.state, 'revoked');
+  assert.equal((await me.call('/api/shares/' + c.json.id + '/stop', 'POST', {})).json.state, 'revoked'); // stopping only removes access: no PIN
+  assert.equal((await s.phone().call('/api/shares/' + c.json.id + '/stop', 'POST', {})).status, 401); // but still only for a signed-in account
+  s.close();
+});
+
+test('a returning phone is greeted (masked), signs in with the PIN alone; a new phone is not greeted', async () => {
+  const s = await start();
+  const me = s.phone();
+  await s.signUp(me, '9841000001');
+  const h = await me.call('/api/auth/hello');
+  assert.deepEqual(h.json, { known: true, label: '984****001', kind: 'phone', passkeys: 0 });
+  await me.call('/api/auth/logout', 'POST', {});
+  assert.equal((await me.call('/api/me')).status, 401);
+  assert.equal((await me.call('/api/auth/hello')).json.known, true); // signed out, but the phone is still recognised
+  assert.equal((await me.call('/api/auth/login', 'POST', { pin: '000001' })).status, 401); // wrong PIN, no number needed
+  assert.equal((await me.call('/api/auth/login', 'POST', { pin: PIN })).status, 200);
+  assert.equal((await me.call('/api/me')).status, 200);
+  const stranger = s.phone();
+  assert.deepEqual((await stranger.call('/api/auth/hello')).json, { known: false });
+  assert.equal((await stranger.call('/api/auth/login', 'POST', { pin: PIN })).status, 403); // no device, no PIN-only login
   s.close();
 });
 
