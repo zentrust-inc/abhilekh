@@ -455,10 +455,10 @@ async function googleRound(s, g, br, claims = {}, { intent, code = 'abc', mutate
 test('Google off: the options say so, and start answers plainly', async () => {
   const s = await start(); after(s);
   const br = s.phone();
-  assert.deepEqual((await br.call('/api/auth/options')).json, { sms: true, email: true, google: false });
+  assert.deepEqual((await br.call('/api/auth/options')).json, { sms: true, email: true, google: false, passkey: false });
   assert.equal((await br.call('/api/auth/google/start')).status, 503);
   const n = await start({ sms: noSender(), mail: noMail() }); after(n);
-  assert.deepEqual((await n.phone().call('/api/auth/options')).json, { sms: false, email: false, google: false });
+  assert.deepEqual((await n.phone().call('/api/auth/options')).json, { sms: false, email: false, google: false, passkey: false });
 });
 
 test('Google start: redirects to Google with only openid email, a state and a nonce, and binds the state to this browser', async () => {

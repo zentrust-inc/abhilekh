@@ -39,10 +39,36 @@ $('verifyBtn').onclick=async()=>{authErr();try{const r=await post('/api/auth/ver
 $('pinBtn').onclick=async()=>{authErr();if($('pin1').value!==$('pin2').value)return authErr(new Error('The two PINs are not the same.'));
   try{await post('/api/auth/pin',{ticket:TICKET,pin:$('pin1').value});$('pin1').value=$('pin2').value='';await enter()}catch(e){authErr(e)}};
 $('logoutBtn').onclick=async()=>{await post('/api/auth/logout');showAuth()};
+// Fingerprint or face (passkeys). The phone's own unlock does the check; Abhilekh never sees a fingerprint or a face.
+const b64u=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const unb64u=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+const PK_OK=!!(window.PublicKeyCredential&&navigator.credentials&&window.AuthenticatorAttestationResponse&&'getPublicKey' in AuthenticatorAttestationResponse.prototype);
+let PK_ON=false;
+const pkErr=e=>{$('pkErr').textContent=e?(e.name==='NotAllowedError'?'Cancelled. Nothing was changed.':e.message):''};
+function pkShow(me){
+  $('pkCard').style.display=PK_ON&&PK_OK?'':'none';
+  if(!PK_ON||!PK_OK)return;
+  const n=me.passkeys||0;
+  $('pkText').textContent=n?'On for '+n+' phone'+(n>1?'s':'')+'. Next time, one touch signs you in. Your PIN is still asked to create or stop a share.':'Off. Turn it on to sign in with one touch instead of typing a PIN. Your phone does the check; Abhilekh never sees a fingerprint or a face.';
+  $('pkAdd').style.display='';$('pkOn').textContent=n?'Add this phone':'Turn on for this phone';$('pkOff').style.display=n?'':'none';
+}
+$('passkeyBtn').onclick=async()=>{authErr();try{
+  const o=await post('/api/auth/passkey/begin',{purpose:'login'});
+  const c=await navigator.credentials.get({publicKey:{challenge:unb64u(o.challenge),rpId:o.rpId,userVerification:'required',timeout:60000}});
+  const r=c.response;
+  await post('/api/auth/passkey/login',{challenge:o.challenge,id:c.id,clientDataJSON:b64u(r.clientDataJSON),authenticatorData:b64u(r.authenticatorData),signature:b64u(r.signature)});
+  await enter()}catch(e){authErr(e.name==='NotAllowedError'?new Error('Cancelled. Use your PIN or a code.'):e)}};
+$('pkOn').onclick=async()=>{pkErr();try{
+  const o=await post('/api/auth/passkey/begin',{purpose:'register',pin:$('pkPin').value});
+  const c=await navigator.credentials.create({publicKey:{rp:{id:o.rpId,name:'Abhilekh'},user:{id:unb64u(o.user.id),name:o.user.name,displayName:o.user.name},challenge:unb64u(o.challenge),pubKeyCredParams:o.algs.map(alg=>({type:'public-key',alg})),authenticatorSelection:{residentKey:'required',userVerification:'required'},excludeCredentials:o.exclude.map(id=>({type:'public-key',id:unb64u(id)})),attestation:'none',timeout:60000}});
+  const r=c.response;
+  const me=await post('/api/auth/passkey/register',{challenge:o.challenge,id:c.id,clientDataJSON:b64u(r.clientDataJSON),authenticatorData:b64u(r.getAuthenticatorData()),publicKey:b64u(r.getPublicKey()),publicKeyAlgorithm:r.getPublicKeyAlgorithm()});
+  $('pkPin').value='';pkShow(me)}catch(e){pkErr(e)}};
+$('pkOff').onclick=async()=>{pkErr();try{pkShow(await post('/api/auth/passkey/remove'))}catch(e){pkErr(e)}};
 let started=false;
 async function enter(){
   let me;try{me=await api('/api/me')}catch(e){return showAuth()}
-  $('auth').style.display='none';$('app').style.display='';$('who-am-i').textContent='Signed in: '+(me.label||me.phone);
+  $('auth').style.display='none';$('app').style.display='';$('who-am-i').textContent='Signed in: '+(me.label||me.phone);pkShow(me);
   $('paused').style.display=me.sharesPausedUntil?'':'none';
   if(me.sharesPausedUntil)$('paused').textContent='Your PIN was reset with a new code, so new shares are paused until '+fmt(me.sharesPausedUntil)+'. You can still stop shares.';
   if(!started){started=true;await setup()}else await load();
@@ -63,7 +89,7 @@ async function setup(){
 const GERR={expired:'That sign-in took too long or came from another browser. Try again.',cancelled:'Google sign-in was cancelled.',failed:'Google sign-in did not work. Try again in a few minutes.',unverified:'This Google account has no verified email, so it cannot be used.',noaccount:'No Abhilekh account uses this Google account yet. Choose Continue with Google to create one.'};
 (async()=>{
   const q=new URLSearchParams(location.search);
-  try{const o=await api('/api/auth/options');for(const i of ['googleBtn','orLine','googleReset'])$(i).style.display=o.google?'':'none'}catch(e){}
+  try{const o=await api('/api/auth/options');for(const i of ['googleBtn','orLine','googleReset'])$(i).style.display=o.google?'':'none';PK_ON=!!o.passkey;$('passkeyBtn').style.display=PK_ON&&PK_OK?'':'none'}catch(e){}
   if(q.get('gerr')){history.replaceState(null,'','/');showAuth();authErr(new Error(GERR[q.get('gerr')]||'Google sign-in did not work. Try again.'));return}
   if(q.get('g')==='1'){history.replaceState(null,'','/');
     try{const r=await post('/api/auth/google/ticket');TICKET=r.ticket;showAuth();
