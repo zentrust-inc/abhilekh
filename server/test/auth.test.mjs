@@ -1,4 +1,4 @@
-import { test } from 'node:test';
+import { test, after as afterAll } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import { mkdtempSync, readFileSync } from 'node:fs';
@@ -6,7 +6,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createApp } from '../server.mjs';
 import { memorySender, akashSender, noSender } from '../sms.mjs';
-import { normalisePhone, pinProblem } from '../auth.mjs';
+import { memoryMail, noMail } from '../mail.mjs';
+import { normalisePhone, normaliseEmail, maskEmail, identify, pinProblem } from '../auth.mjs';
 
 const PIN = '482915';
 async function start(opts = {}) {
@@ -271,4 +272,161 @@ test('a failed SMS is a plain error, not a crash', async () => {
   const r = await s.phone().call('/api/auth/code', 'POST', { phone: '9841000001' });
   assert.equal(r.status, 502);
   s.close();
+});
+
+const toClose = [];
+const after = s => toClose.push(s);
+afterAll(() => toClose.forEach(s => s.close()));
+
+// ---------- email sign-in (one account per sign-in method) ----------
+const mailCode = (mail, addr) => mail.sent.filter(m => m.to === addr).at(-1).text.match(/\d{6}/)[0];
+async function emailSignUp(t, mail, ph, addr, pin = PIN) {
+  const c = await ph.call('/api/auth/code', 'POST', { id: addr });
+  assert.equal(c.status, 200, JSON.stringify(c.json));
+  const v = await ph.call('/api/auth/verify', 'POST', { id: addr, code: mailCode(mail, addr.trim().toLowerCase()) });
+  assert.equal(v.status, 200, JSON.stringify(v.json));
+  const p = await ph.call('/api/auth/pin', 'POST', { ticket: v.json.ticket, pin });
+  assert.equal(p.status, 200, JSON.stringify(p.json));
+  return { verify: v.json, me: p.json };
+}
+
+test('email addresses: lower-cased, one @, a dot in the domain; dots and +tags are kept; masked for display', () => {
+  assert.equal(normaliseEmail('  Asha.K+abh@Example.COM '), 'asha.k+abh@example.com');
+  for (const bad of ['', 'asha', 'asha@', '@example.com', 'a b@example.com', 'a@b', 'a@@b.com', 'a@b..com', 'a@.com', 'x'.repeat(65) + '@example.com']) assert.equal(normaliseEmail(bad), null, bad);
+  assert.equal(maskEmail('asha@example.com'), 'a***@example.com');
+  assert.deepEqual(identify({ id: 'Asha@Example.com' }), { key: 'email:asha@example.com', kind: 'email', value: 'asha@example.com' });
+  assert.deepEqual(identify({ id: '+977 984-1000001' }), { key: 'phone:9841000001', kind: 'phone', value: '9841000001' });
+  assert.deepEqual(identify({ phone: '9841000001' }), { key: 'phone:9841000001', kind: 'phone', value: '9841000001' }); // older callers
+  assert.ok(identify({ id: '12345' }).error);
+  assert.ok(identify({ id: 'asha@' }).error);
+});
+
+test('email sign-up: one code by mail, then a PIN; no SMS is sent; the mail has no health content', async () => {
+  const mail = memoryMail(), s = await start({ mail }); after(s);
+  const me = s.phone();
+  const r = await emailSignUp(s, mail, me, 'Asha@Example.com');
+  assert.equal(r.verify.isNew, true);
+  assert.equal(r.me.email, 'a***@example.com');
+  assert.equal(r.me.label, 'a***@example.com');
+  assert.equal(r.me.kind, 'email');
+  assert.equal(r.me.phone, undefined);
+  assert.equal(mail.sent.length, 1);
+  assert.equal(s.sms.sent.length, 0);
+  assert.equal(mail.sent[0].subject, 'Your Abhilekh sign-in code');
+  assert.doesNotMatch(mail.sent[0].text + mail.sent[0].subject, /result|report|test|blood|sugar|patient|record/i);
+  assert.equal((await me.call('/api/me')).json.email, 'a***@example.com');
+  // the code works once
+  const again = await me.call('/api/auth/verify', 'POST', { id: 'asha@example.com', code: mailCode(mail, 'asha@example.com') });
+  assert.equal(again.status, 400);
+});
+
+test('email accounts: PIN on the same device, not on another; an unknown address looks the same as a new device', async () => {
+  const mail = memoryMail(), s = await start({ mail }); after(s);
+  const me = s.phone();
+  await emailSignUp(s, mail, me, 'asha@example.com');
+  assert.equal((await me.call('/api/auth/login', 'POST', { id: 'ASHA@example.com', pin: PIN })).status, 200);
+  const other = s.phone();
+  const r = await other.call('/api/auth/login', 'POST', { id: 'asha@example.com', pin: PIN });
+  assert.equal(r.status, 403); assert.equal(r.json.needCode, true); assert.match(r.json.error, /email/);
+  const unknown = await other.call('/api/auth/login', 'POST', { id: 'nobody@example.com', pin: PIN });
+  assert.equal(unknown.status, 403); assert.equal(unknown.json.error, r.json.error);
+  assert.equal(mail.sent.length, 1); // no mail for ordinary sign-in
+});
+
+test('one account per sign-in method: a phone account and an email account do not share shares or PINs', async () => {
+  const mail = memoryMail(), s = await start({ mail }); after(s);
+  const a = s.phone(), b = s.phone();
+  await s.signUp(a, '9841000001');
+  await emailSignUp(s, mail, b, 'asha@example.com', '590284');
+  const made = await a.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, who: '', pin: PIN });
+  assert.equal(made.status, 201);
+  assert.equal((await b.call('/api/shares')).json.shares.length, 0); // the email account cannot see the phone account's share
+  assert.equal((await b.call('/api/shares/' + made.json.id + '/stop', 'POST', { pin: '590284' })).status, 404);
+  assert.equal((await a.call('/api/shares')).json.shares.length, 1);
+});
+
+test('email recovery: new device signs the old one out and pauses new shares 24 hours; the message says email, not SMS', async () => {
+  const mail = memoryMail(), s = await start({ mail }); after(s);
+  const oldDev = s.phone(), newDev = s.phone();
+  await emailSignUp(s, mail, oldDev, 'asha@example.com');
+  s.clock.advance(2);
+  const r = await emailSignUp(s, mail, newDev, 'asha@example.com', '590284');
+  assert.equal(r.verify.isNew, false);
+  assert.notEqual(r.me.sharesPausedUntil, null);
+  assert.equal((await oldDev.call('/api/me')).status, 401);
+  assert.equal((await oldDev.call('/api/auth/login', 'POST', { id: 'asha@example.com', pin: '590284' })).status, 403);
+  // wrong PINs point to email for recovery
+  let last;
+  for (let i = 0; i < 10; i++) { if (i === 5) s.clock.advance(16); last = await newDev.call('/api/auth/login', 'POST', { id: 'asha@example.com', pin: '111112' }); }
+  assert.equal(last.status, 423); assert.match(last.json.error, /by email/);
+});
+
+test('email limits: one a minute, 3 an hour, 5 a day per address; the connection limit is shared with SMS; a separate daily cap', async () => {
+  const mail = memoryMail(), s = await start({ mail }); after(s);
+  const ph = s.phone();
+  const ask = id => ph.call('/api/auth/code', 'POST', { id });
+  assert.equal((await ask('a@example.com')).status, 200);
+  assert.equal((await ask('A@example.com')).status, 429); // same address, any capitals
+  s.clock.advance(1.1); assert.equal((await ask('a@example.com')).status, 200);
+  s.clock.advance(1.1); assert.equal((await ask('a@example.com')).status, 200);
+  s.clock.advance(1.1); assert.equal((await ask('a@example.com')).status, 429); // 3 an hour
+  assert.equal(mail.sent.length, 3);
+  const t = await start({ mail: memoryMail(), authLimits: { emailDailyCap: 2 } }); after(t);
+  const p2 = t.phone();
+  for (const n of ['x1', 'x2']) assert.equal((await p2.call('/api/auth/code', 'POST', { id: n + '@example.com' })).status, 200);
+  assert.equal((await p2.call('/api/auth/code', 'POST', { id: 'x3@example.com' })).status, 503);
+  // SMS still works when the email cap is used up
+  assert.equal((await p2.call('/api/auth/code', 'POST', { id: '9841000001' })).status, 200);
+});
+
+test('wrong email codes: 5 tries then the code is dead', async () => {
+  const mail = memoryMail(), s = await start({ mail }); after(s);
+  const me = s.phone();
+  await me.call('/api/auth/code', 'POST', { id: 'asha@example.com' });
+  const real = mailCode(mail, 'asha@example.com'); const wrong = real === '000000' ? '000001' : '000000';
+  for (let i = 0; i < 5; i++) assert.equal((await me.call('/api/auth/verify', 'POST', { id: 'asha@example.com', code: wrong })).status, 400);
+  assert.equal((await me.call('/api/auth/verify', 'POST', { id: 'asha@example.com', code: real })).status, 400);
+});
+
+test('with no email service set up, asking for a code by email says so and nothing is counted; SMS is unaffected', async () => {
+  const s = await start({ mail: noMail() }); after(s);
+  const r = await s.phone().call('/api/auth/code', 'POST', { id: 'asha@example.com' });
+  assert.equal(r.status, 503); assert.match(r.json.error, /email/);
+  assert.equal(s.sms.sent.length, 0);
+  assert.equal((await s.phone().call('/api/auth/code', 'POST', { id: '9841000001' })).status, 200);
+});
+
+test('a failed email is a plain error, not a crash', async () => {
+  const bad = { name: 'acs', async send() { return { ok: false, reason: 'acs: HTTP 429' }; } };
+  const s = await start({ mail: bad }); after(s);
+  const r = await s.phone().call('/api/auth/code', 'POST', { id: 'asha@example.com' });
+  assert.equal(r.status, 502); assert.match(r.json.error, /email could not be sent/);
+});
+
+test('the code is shown on screen only in test mode with the in-memory mail sender', async () => {
+  const a = await start({ testMode: true, mail: memoryMail() }); after(a);
+  assert.match((await a.phone().call('/api/auth/code', 'POST', { id: 'asha@example.com' })).json.testCode, /^\d{6}$/);
+  const fake = { name: 'acs', async send() { return { ok: true }; } };
+  const b = await start({ testMode: true, mail: fake }); after(b);
+  assert.equal((await b.phone().call('/api/auth/code', 'POST', { id: 'asha@example.com' })).json.testCode, undefined);
+  const c = await start({ mail: memoryMail() }); after(c);
+  assert.equal((await c.phone().call('/api/auth/code', 'POST', { id: 'asha@example.com' })).json.testCode, undefined);
+});
+
+test('a store written before email existed (keyed by phone) still signs in', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'abh-'));
+  const storePath = join(dir, 'store.json');
+  const s1 = await start({ storePath }); 
+  const me = s1.phone();
+  await s1.signUp(me, '9841000001');
+  const saved = JSON.parse(readFileSync(storePath, 'utf8'));
+  s1.close();
+  // rewrite the file the old way: no key, no kind
+  for (const a of saved.accounts) { delete a.key; delete a.kind; }
+  for (const x of saved.smsLog) { x.phone = x.key.slice(6); delete x.key; delete x.kind; }
+  (await import('node:fs')).writeFileSync(storePath, JSON.stringify(saved));
+  const s2 = await start({ storePath }); after(s2);
+  const again = s2.phone(); again.jar.abh_d = me.jar.abh_d;
+  assert.equal((await again.call('/api/auth/login', 'POST', { phone: '9841000001', pin: PIN })).status, 200);
+  assert.equal((await again.call('/api/me')).json.phone, '984****001');
 });
