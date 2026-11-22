@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Abhilekh: share with a doctor (SAMPLE)</title><link rel="stylesheet" href="/style.css"></head><body><div class="wrap">
-<div class="banner"><b>SAMPLE · नमूना.</b> Prototype on invented pages, planning stage. Links and the access log are real and kept by the server; the records are fictional. Sign-in is by Google, mobile number or email, and a PIN, or by fingerprint or face on a phone you set up; every account sees the same invented sample record. English only so far.</div>
+<div class="banner"><b>SAMPLE · नमूना.</b> Prototype on invented pages, planning stage. Links and the access log are real and kept by the server; the records are fictional. Sign-in is by Google, mobile number or email, and a PIN, or by fingerprint or face on a phone you set up. English only so far.</div>
 <div id="down" style="display:none"><p>Can't reach Abhilekh right now. You are still signed in.</p><button id="downRetry" type="button">Try again</button></div>
 <div id="auth" style="display:none">
 <h1>Sign in to Abhilekh</h1>
@@ -37,23 +37,50 @@
 <div class="mute" id="authErr" style="color:#a01212"></div>
 </div>
 <div id="app" style="display:none">
-<p class="mute" style="text-align:right;margin:0"><span id="who-am-i"></span> · <button class="orig" id="logoutBtn">Sign out</button></p>
 <div class="banner" id="paused" style="display:none"></div>
-<div class="card" id="pkCard" style="display:none">
-  <b>Fingerprint or face sign-in</b>
-  <p class="mute" id="pkText" style="margin:4px 0 8px"></p>
-  <div id="pkAdd" style="display:none">
-    <label class="mute" for="pkPin" style="display:block">Your PIN, to confirm</label>
-    <input type="password" id="pkPin" inputmode="numeric" maxlength="6" autocomplete="current-password">
-    <button class="go" id="pkOn">Turn on for this phone</button>
+<section id="tab-home" class="tab">
+  <div class="top"><div><h1 id="homeTitle">Hello</h1><button class="orig" id="labelBtn" type="button">Add a name for this record</button></div>
+    <button class="acct" id="acctBtn" type="button" aria-label="Account" aria-expanded="false">&#9776;</button></div>
+  <div id="labelBox" style="display:none" class="card"><label class="mute" for="labelIn" style="display:block">A name for this record (only you and the doctors you share with see it)</label>
+    <input type="text" id="labelIn" maxlength="40" placeholder="e.g. Papers of Aama"><div class="row"><button class="go" id="labelSave" type="button" style="margin-top:0">Save</button><button class="sec" id="labelCancel" type="button">Cancel</button></div></div>
+  <div class="card" id="acct" style="display:none">
+    <p class="mute" style="margin:0 0 8px"><span id="who-am-i"></span></p>
+    <div class="card" id="pkCard" style="display:none">
+      <b>Fingerprint or face sign-in</b>
+      <p class="mute" id="pkText" style="margin:4px 0 8px"></p>
+      <div id="pkAdd" style="display:none">
+        <label class="mute" for="pkPin" style="display:block">Your PIN, to confirm</label>
+        <input type="password" id="pkPin" inputmode="numeric" maxlength="6" autocomplete="current-password">
+        <button class="go" id="pkOn">Turn on for this phone</button>
+      </div>
+      <button class="sec" id="pkOff" style="display:none;width:100%">Turn off everywhere</button>
+      <div class="mute" id="pkErr" style="margin-top:6px;color:#a01212"></div>
+    </div>
+    <button class="sec" id="logoutBtn" type="button" style="width:100%">Sign out</button>
   </div>
-  <button class="sec" id="pkOff" style="display:none;width:100%">Turn off everywhere</button>
-  <div class="mute" id="pkErr" style="margin-top:6px;color:#a01212"></div>
-</div>
+  <div class="tiles">
+    <div class="tile off" aria-disabled="true"><div class="big">&#128247;</div><b>Photograph a paper</b><span class="mute">Coming in the next step</span></div>
+    <button class="tile" id="tileShow" type="button"><div class="big">&#128241;</div><b>Show a doctor</b><span class="mute" id="tileShowSub"></span></button>
+  </div>
+  <div id="firstUse" class="card" style="display:none">
+    <b>How it will work</b>
+    <ol class="steps"><li>Photograph a paper</li><li>Check that Abhilekh read it right</li><li>Show a doctor with a code, for as long as you choose</li></ol>
+    <button class="go" id="trySample" type="button">Try it with a SAMPLE paper</button>
+    <p class="mute" style="margin:8px 0 0">SAMPLE papers are invented. They go into your record only, so you can see how Abhilekh works.</p>
+  </div>
+  <div id="homeCards"></div>
+</section>
+<section id="tab-papers" class="tab" style="display:none">
+  <h1>My papers</h1>
+  <p class="sub">Each paper is shown the way it is printed. Dates keep the calendar printed on the paper; nothing is converted.</p>
+  <div id="papers"></div>
+</section>
+<section id="tab-share" class="tab" style="display:none">
 <h1>Share with a doctor</h1>
 <p class="sub">You choose what a doctor can see and for how long. You can stop a share at any time, and you see every time it is opened.</p>
 <div class="card" id="make">
   <h2>New share</h2>
+  <div id="noPapers" class="mute" style="display:none">Add a paper first. There is nothing to share yet.</div>
   <div id="docs"></div>
   <label class="mute" for="who" style="display:block;margin-top:8px">Who is it for? (only for your own list, optional)</label>
   <input type="text" id="who" maxlength="80" placeholder="e.g. Dr. Namuna, Example Clinic">
@@ -67,6 +94,8 @@
 <h2 id="shHead" style="display:none">Your shares</h2>
 <div id="shares"></div>
 <p class="mute">The doctor sees only what the paper says: value, unit, printed range and any flag the lab printed. Abhilekh gives no advice.</p>
+</section>
+<nav class="nav" id="nav"><button type="button" data-tab="home" class="on">Home<span>मुख्य</span></button><button type="button" data-tab="papers">My papers<span>कागज</span></button><button type="button" data-tab="share">Sharing<span>साझा</span></button></nav>
 </div>
 </div>
 <script src="/qrcode.js"></script><script src="/patient.js"></script></body></html>

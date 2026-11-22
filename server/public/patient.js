@@ -29,7 +29,7 @@ function render(){
     box.append(card);
   }
 }
-async function load(){try{SH=(await api('/api/shares')).shares;render()}catch(e){if(e.status===401)return showAuth();throw e}}
+async function load(){try{SH=(await api('/api/shares')).shares;render();if(REC.docs)paint()}catch(e){if(e.status===401)return showAuth();throw e}}
 let PHONE='',TICKET='';
 const show=(...ids)=>['stepPhone','stepCode','stepPin'].forEach(i=>$(i).style.display=ids.includes(i)?'':'none');
 function showDown(){$('app').style.display='none';$('auth').style.display='none';$('down').style.display=''}
@@ -91,17 +91,67 @@ async function enter(){
   if(me.sharesPausedUntil)$('paused').textContent='Your PIN was reset with a new code, so new shares are paused until '+fmt(me.sharesPausedUntil)+'. You can still stop shares.';
   if(!started){started=true;await setup()}else await load();
 }
+function tab(name){
+  for(const t of ['home','papers','share'])$('tab-'+t).style.display=t===name?'':'none';
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===name));
+  scrollTo(0,0);
+}
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
+$('tileShow').onclick=()=>tab('share');
+$('acctBtn').onclick=()=>{const o=$('acct').style.display==='none';$('acct').style.display=o?'':'none';$('acctBtn').setAttribute('aria-expanded',o)};
+$('labelBtn').onclick=()=>{$('labelIn').value=REC.label||'';$('labelBox').style.display='';$('labelIn').focus()};
+$('labelCancel').onclick=()=>{$('labelBox').style.display='none'};
+$('labelSave').onclick=async()=>{try{REC=await post('/api/record/label',{label:$('labelIn').value});$('labelBox').style.display='none';paint();paintForm()}catch(e){alert(e.message)}};
+$('trySample').onclick=async()=>{try{REC=await post('/api/record/sample');paint();paintForm()}catch(e){alert(e.message)}};
+function resultRows(d){
+  const box=el('div',{class:'res-list'});
+  for(const r of d.results){
+    const row=el('div',{class:'res'});
+    row.append(el('div',{class:'t'},r.test),el('div',{class:'v'},r.value+' ',el('span',{class:'u'},r.unit||''),r.flag?el('span',{class:'flag',title:'printed on the paper'},r.flag):''));
+    row.append(el('div',{class:'mute'},'Printed range: '+(r.range||'—')+(r.flag?' · flag printed on the paper: '+r.flag:'')));
+    box.append(row);
+  }
+  return box;
+}
+function paint(){
+  const n=REC.docs.length;
+  $('homeTitle').textContent=REC.label?'Papers of '+REC.label.replace(/^papers of\s+/i,''):'Hello';
+  $('labelBtn').textContent=REC.label?'Change name':'Add a name for this record';
+  $('firstUse').style.display=n?'none':'';
+  $('tileShow').disabled=!n;$('tileShowSub').textContent=n?'Choose papers, set the time':'Add a paper first';
+  const hc=$('homeCards');hc.replaceChildren();
+  if(n){
+    const live=SH.filter(s=>s.state==='live').length;
+    hc.append(el('button',{class:'card',style:'width:100%;text-align:left;font-weight:400;color:var(--ink)',onclick:()=>tab('papers')},el('b',{},n+' paper'+(n>1?'s':'')),el('div',{class:'mute'},'Tap to see them')));
+    hc.append(el('button',{class:'card',style:'width:100%;text-align:left;font-weight:400;color:var(--ink)',onclick:()=>tab('share')},el('b',{},live?live+' active share'+(live>1?'s':''):'Nothing is being shared'),el('div',{class:'mute'},live?'Tap to see who looked':'Only you can see your papers')));
+  }
+  const pl=$('papers');pl.replaceChildren();
+  if(!n)pl.append(el('div',{class:'card mute'},'No papers yet. Add a SAMPLE paper from Home.'));
+  for(const d of REC.docs){
+    const card=el('div',{class:'card'});
+    const body=el('div',{style:'display:none'},resultRows(d));
+    card.append(el('div',{},el('span',{class:'chip'},'SAMPLE')),el('div',{class:'t',style:'margin-top:6px'},d.title),el('div',{class:'mute'},d.facility+' · '+d.date),
+      el('button',{class:'orig',type:'button',onclick:e=>{const o=body.style.display==='none';body.style.display=o?'':'none';e.target.textContent=o?'Hide what it says':'See what it says'}},'See what it says'),body);
+    pl.append(card);
+  }
+}
+function paintForm(){
+  const n=REC.docs.length;
+  $('docs').replaceChildren();
+  $('noPapers').style.display=n?'none':'';$('create').disabled=!n;
+  REC.docs.forEach(d=>{const cb=el('input',{type:'checkbox',id:'d-'+d.id,checked:''});$('docs').append(el('label',{class:'opt',for:'d-'+d.id},cb,el('span',{},d.title,el('br'),el('span',{class:'mute'},d.facility+' · '+d.date))))});
+}
 async function setup(){
   REC=await api('/api/record');
-  REC.docs.forEach(d=>{const cb=el('input',{type:'checkbox',id:'d-'+d.id,checked:''});$('docs').append(el('label',{class:'opt',for:'d-'+d.id},cb,el('span',{},d.title,el('br'),el('span',{class:'mute'},d.facility+' · '+d.date))))});
   const mins=REC.testMode?[1,...REC.minutes]:REC.minutes;
   mins.forEach(m=>{const o=el('option',{value:m},LABEL[m]);if(m===1440)o.selected=true;$('dur').append(o)});
   $('create').onclick=async()=>{
-    const docs=REC.docs.filter(d=>$('d-'+d.id).checked).map(d=>d.id);
+    const docs=REC.docs.filter(d=>$('d-'+d.id)&&$('d-'+d.id).checked).map(d=>d.id);
     if(!docs.length){$('makeErr').textContent='Choose at least one report to share.';return}
     $('makeErr').textContent='';
     try{await post('/api/shares',{docs,who:$('who').value.trim(),minutes:+$('dur').value,...await confirmAuth($('sharePin').value)});$('who').value='';$('sharePin').value='';await load()}catch(e){$('makeErr').textContent=e.message}
   };
+  paint();paintForm();
   await load();setInterval(()=>{if($('app').style.display!=='none')load()},10000); // pick up opens made on the doctor's phone
 }
 const GERR={expired:'That sign-in took too long or came from another browser. Try again.',cancelled:'Google sign-in was cancelled.',failed:'Google sign-in did not work. Try again in a few minutes.',unverified:'This Google account has no verified email, so it cannot be used.',noaccount:'No Abhilekh account uses this Google account yet. Choose Continue with Google to create one.'};

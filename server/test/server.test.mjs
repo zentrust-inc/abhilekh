@@ -13,7 +13,7 @@ async function start(opts = {}) {
   let t = Date.parse('2026-11-21T10:00:00Z');
   const clock = { now: () => t, advance: min => { t += min * 60000; } };
   const sms = memorySender();
-  const { num = '9841000001', ...rest } = opts;
+  const { num = '9841000001', empty = false, ...rest } = opts;
   const app = createApp({ now: clock.now, sms, secureCookies: false, ...rest });
   const srv = http.createServer(app.handler);
   await new Promise(r => srv.listen(0, '127.0.0.1', r));
@@ -44,6 +44,7 @@ async function start(opts = {}) {
   };
   const me = phone();
   await signUp(me, num);
+  if (!empty) assert.equal((await me.call('/api/record/sample', 'POST', {})).status, 200); // most tests want the SAMPLE papers in this account's record
   // the old tests' call(): signed in, PIN added to every share action
   const call = (p, method = 'GET', body) => me.call(p, method, method === 'POST' && p.startsWith('/api/shares') ? { pin: PIN, ...(body || {}) } : body);
   const anon = async (p, method = 'GET', body) => { const r = await fetch(base + p, { method }); return { status: r.status, json: await r.json().catch(() => null) }; };
@@ -143,5 +144,36 @@ test('the doctor response carries only printed values (no advice fields)', async
   const r = await s.anon('/api/s/' + c.json.id);
   const keys = new Set(r.json.docs.flatMap(d => d.results.flatMap(x => Object.keys(x))));
   assert.deepEqual([...keys].sort(), ['flag', 'img', 'range', 'test', 'unit', 'value']);
+  s.close();
+});
+
+test('records are per account: new accounts start empty, SAMPLE papers go only to the account that asks, and shares only use the owner\'s papers', async () => {
+  const s = await start({ empty: true });
+  const empty = await s.call('/api/record');
+  assert.deepEqual(empty.json.docs, []);
+  // sharing with nothing in the record is refused
+  assert.equal((await s.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60 })).status, 400);
+  const a = await s.call('/api/record/sample', 'POST', {});
+  assert.equal(a.status, 200);
+  const n = a.json.docs.length;
+  assert.ok(n > 0 && a.json.docs.every(d => d.origin === 'sample'));
+  assert.equal((await s.call('/api/record/sample', 'POST', {})).json.docs.length, n); // asking twice adds nothing
+  // a second person
+  const other = s.phone();
+  await s.signUp(other, '9841000002');
+  assert.deepEqual((await other.call('/api/record')).json.docs, []); // sees none of the first account's papers
+  assert.equal((await other.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, pin: PIN })).status, 400); // cannot share what is not in own record
+  // label: trimmed, capped at 40, only for its owner
+  const l = await s.call('/api/record/label', 'POST', { label: '  Aama   Maya  ' + 'x'.repeat(60) });
+  assert.equal(l.json.label.length, 40);
+  assert.equal(l.json.label.startsWith('Aama Maya x'), true);
+  assert.equal((await other.call('/api/record')).json.label, '');
+  // the owner's share opens and shows only the owner's chosen paper
+  const c = await s.call('/api/shares', 'POST', { docs: [a.json.docs[0].id], minutes: 60 });
+  assert.equal(c.status, 201);
+  const r = await s.anon('/api/s/' + c.json.id);
+  assert.deepEqual(r.json.docs.map(d => d.id), [a.json.docs[0].id]);
+  // signed out: no record
+  assert.equal((await s.anon('/api/record')).status, 401);
   s.close();
 });

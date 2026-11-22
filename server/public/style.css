@@ -27,15 +27,14 @@ button{font:inherit;font-weight:600;border-radius:8px;padding:10px 14px;border:0
 .orig{background:none;color:var(--accent);padding:2px 0;font-weight:500;font-size:13px}
 .crop{display:block;width:100%;border:1px solid var(--line);border-radius:6px;margin-top:4px;background:#fff}
 .gone{text-align:center;padding:24px 8px;font-weight:600}
-</style></head><body><div class="wrap">
-<div class="banner"><b>SAMPLE · नमूना.</b> Prototype on invented pages, planning stage. Nothing is stored or sent anywhere: the link below goes nowhere and the log lives only in this page. English only so far.</div>
-<h1>Share with a doctor</h1>
-<p class="sub">You choose what a doctor can see and for how long. You can stop a share at any time, and you see every time it is opened.</p>
-
-<div class="card" id="make">
-  <h2>New share</h2>
-  <div id="docs"></div>
-  <label class="mute" for="who" style="display:block;margin-top:8px">Who is it for? (only for your own list, optional)</label>
-  <input type="text" id="who" placeholder="e.g. Dr. Namuna, Example Clinic">
-  <label class="mute" for="dur" style="display:block;margin-top:8px">How long can they see it?</label>
-  <select id="dur"><option value="60">1 hour</option><option value="1440" selected>24 hours</option><option value="10080">7 days</option></select>
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:12px}
+.acct{background:#fff;border:1.5px solid var(--line);color:var(--ink);width:44px;height:44px;font-size:20px;padding:0}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.tile{display:flex;flex-direction:column;gap:2px;align-items:flex-start;text-align:left;background:#fff;border:1.5px solid var(--accent);border-radius:14px;padding:14px;min-height:120px;color:var(--ink);font-weight:400}
+.tile b{font-size:17px}.tile .big{font-size:28px}
+.tile.off,.tile:disabled{border-color:var(--line);background:#f1f1f1;color:#777;cursor:not-allowed}
+.steps{margin:8px 0 0;padding-left:20px}.steps li{margin:4px 0}
+.nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:#fff;border-top:1px solid var(--line);max-width:430px;margin:0 auto}
+.nav button{flex:1;background:none;color:var(--mute);padding:10px 4px;border-radius:0;font-size:15px;display:flex;flex-direction:column;align-items:center;min-height:56px}
+.nav button span{font-size:12px;font-weight:400}.nav button.on{color:var(--accent);box-shadow:inset 0 3px 0 var(--accent)}
+.chip{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:10px;background:#fff3cd;color:#6b5200}
