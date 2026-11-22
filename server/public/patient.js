@@ -219,9 +219,12 @@ function pinpad(key,ids,labels,onDone,opts={}){
   let idx=0;
   const host=el('div',{class:'pad',tabindex:'0',role:'group','aria-label':'PIN keypad'});
   const lab=el('div',{class:'plabel'}),dots=el('div',{class:'dots','aria-live':'polite'}),err=el('div',{class:'perr'}),keys=el('div',{class:'keys'});
+  let show=false;
   const dot=[...Array(6)].map(()=>el('i'));dot.forEach(d=>dots.append(d));
+  const eye=el('button',{type:'button',class:'eye','aria-label':'Show digits','aria-pressed':'false',onclick:()=>{show=!show;eye.setAttribute('aria-pressed',show);eye.setAttribute('aria-label',show?'Hide digits':'Show digits');eye.textContent=show?'\u{1F648}':'\u{1F441}';paint()}},'\u{1F441}');
+  const row=el('div',{class:'boxrow'});row.append(dots,eye);
   const cur=()=>vd.get.call(ins[idx]);
-  const paint=()=>{const n=cur().length;dot.forEach((d,i)=>d.classList.toggle('on',i<n));lab.textContent=labels[idx];dots.setAttribute('aria-label',n+' of 6 digits')};
+  const paint=()=>{const v=cur(),n=v.length;dot.forEach((d,i)=>{d.classList.toggle('on',i<n);d.classList.toggle('now',i===n);d.textContent=i<n?(show?v[i]:'\u25CF'):''});lab.textContent=labels[idx];dots.setAttribute('aria-label',n+' of 6 digits')};
   ins.forEach(i=>{Object.defineProperty(i,'value',{get(){return vd.get.call(i)},set(v){vd.set.call(i,v);if(!String(v)&&ins.every(x=>!vd.get.call(x)))idx=0;paint()}});
     i.style.display='none';const l=document.querySelector('label[for="'+i.id+'"]');if(l)l.style.display='none'});
   const press=d=>{if(cur().length>=6)return;vd.set.call(ins[idx],cur()+d);err.textContent='';paint();
@@ -232,7 +235,7 @@ function pinpad(key,ids,labels,onDone,opts={}){
     else keys.append(el('button',{type:'button','aria-label':d==='<'?'Delete':d,onclick:()=>d==='<'?back():press(d)},d==='<'?'\u232B':d));
   }
   host.addEventListener('keydown',e=>{if(/^\d$/.test(e.key))press(e.key);else if(e.key==='Backspace')back()});
-  host.append(lab,dots,keys,err);
+  host.append(lab,row,keys,err);
   ins[0].parentNode.insertBefore(host,(document.querySelector('label[for="'+ids[0]+'"]')||ins[0]));
   const api={goto(i){idx=i;paint()},reset(msg){ins.forEach(i=>vd.set.call(i,''));idx=0;err.textContent=msg||'';paint()},error(m){err.textContent=m||''},host};
   paint();PADS[key]=api;
