@@ -56,3 +56,8 @@ input[type=password],input[type=text]{width:100%;padding:9px;border:1.5px solid 
 .pad .dots i.now{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
 .pad .eye{width:40px;height:44px;flex:none;background:none;border:0;font-size:22px;padding:0;color:var(--mute)}
 .pad .perr{text-align:center;color:#a01212;font-size:13px;min-height:18px;margin-top:8px}
+
+.lang{display:flex;gap:6px;justify-content:flex-end;margin:0 0 10px}
+.lang button{background:#fff;color:var(--mute);border:1.5px solid var(--line);border-radius:999px;padding:4px 12px;font-size:14px;font-weight:500;min-height:0}
+.lang button.on{color:var(--accent);border-color:var(--accent);font-weight:700}
+html[lang=ne] .nav button span{display:none}

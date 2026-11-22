@@ -3,6 +3,7 @@
 <title>Abhilekh: share with a doctor (SAMPLE)</title><link rel="stylesheet" href="/style.css"></head><body><div class="wrap">
 <div id="down" style="display:none"><p>Can't reach Abhilekh right now. You are still signed in.</p><button id="downRetry" type="button">Try again</button></div>
 <div id="auth" style="display:none">
+<div class="lang" role="group" aria-label="Language"><button type="button" data-lang="en" class="on">English</button><button type="button" data-lang="ne">नेपाली</button></div>
 <h1 id="authHead">Sign in to Abhilekh</h1>
 <p class="sub" id="authSub">Continue with Google, or your mobile number gets one SMS code the first time, or your email address gets one code by mail. A PIN protects sharing; with a mobile number or email you also use it to sign in on that device.</p>
 <div class="card" id="stepWelcome" style="display:none">
@@ -98,6 +99,7 @@
   <div class="sheet">
     <div class="sheethead"><b id="sheetTitle">Menu</b><button class="orig" id="sheetClose" type="button">Close</button></div>
     <div id="vList">
+      <div class="lang" role="group" aria-label="Language"><button type="button" data-lang="en" class="on">English</button><button type="button" data-lang="ne">नेपाली</button></div>
       <p class="mute" style="margin:0 0 10px"><span id="who-am-i"></span></p>
       <button class="menurow" id="rowPk" type="button" style="display:none">Fingerprint or face <span>&#8250;</span></button>
       <button class="menurow" id="rowPin" type="button">Change PIN <span>&#8250;</span></button>
@@ -136,4 +138,4 @@
   <nav class="nav" id="nav"><button type="button" data-tab="home" class="on">Home<span>मुख्य</span></button><button type="button" data-tab="papers">My papers<span>कागज</span></button><button type="button" data-tab="share">Sharing<span>साझा</span></button></nav>
 </div>
 </div>
-<script src="/qrcode.js"></script><script src="/patient.js"></script></body></html>
+<script src="/qrcode.js"></script><script src="/i18n.js"></script><script src="/patient.js"></script></body></html>
