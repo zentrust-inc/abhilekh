@@ -32,7 +32,9 @@ function render(){
 async function load(){try{SH=(await api('/api/shares')).shares;render()}catch(e){if(e.status===401)return showAuth();throw e}}
 let PHONE='',TICKET='';
 const show=(...ids)=>['stepPhone','stepCode','stepPin'].forEach(i=>$(i).style.display=ids.includes(i)?'':'none');
-function showAuth(){$('app').style.display='none';$('auth').style.display='';show('stepPhone')}
+function showDown(){$('app').style.display='none';$('auth').style.display='none';$('down').style.display=''}
+$('downRetry').onclick=()=>enter();
+function showAuth(){$('down').style.display='none';$('app').style.display='none';$('auth').style.display='';show('stepPhone')}
 const authErr=e=>{$('authErr').textContent=e?e.message:''};
 $('loginBtn').onclick=async()=>{authErr();try{await post('/api/auth/login',{id:$('phone').value,pin:$('loginPin').value});$('loginPin').value='';await enter()}catch(e){authErr(e)}};
 $('codeBtn').onclick=async()=>{authErr();PHONE=$('phone').value;try{const r=await post('/api/auth/code',{id:PHONE});$('testCode').textContent=r.testCode?'Test mode, nothing sent. Code: '+r.testCode:'';show('stepCode');$('code').focus()}catch(e){authErr(e)}};
@@ -82,7 +84,8 @@ $('pkOn').onclick=async()=>{pkErr();try{
 $('pkOff').onclick=async()=>{pkErr();try{pkShow(await post('/api/auth/passkey/remove'))}catch(e){pkErr(e)}};
 let started=false;
 async function enter(){
-  let me;try{me=await api('/api/me')}catch(e){return showAuth()}
+  let me;try{me=await api('/api/me')}catch(e){return e.status===401?showAuth():showDown()}
+  $('down').style.display='none';
   $('auth').style.display='none';$('app').style.display='';$('who-am-i').textContent='Signed in: '+(me.label||me.phone);pkShow(me);
   $('paused').style.display=me.sharesPausedUntil?'':'none';
   if(me.sharesPausedUntil)$('paused').textContent='Your PIN was reset with a new code, so new shares are paused until '+fmt(me.sharesPausedUntil)+'. You can still stop shares.';
