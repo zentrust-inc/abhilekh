@@ -40,8 +40,10 @@ async function showAuth(){
   try{const h=await api('/api/auth/hello');
     if(h.known&&$('stepPhone').style.display!=='none'){ // a returning browser: greet it, do not show the new-user form
       $('welcomeWho').textContent=h.label;
-      const pk=PK_ON&&PK_OK&&h.passkeys>0;
-      $('welcomePasskey').style.display=pk?'':'none';$('welcomePinLbl').textContent=pk?'or your PIN (6 digits)':'Your PIN (6 digits)';
+      const can=PK_ON&&PK_OK,pk=can&&h.passkeys>0; // both ways in are always shown when this phone can do fingerprint or face
+      $('welcomePasskey').style.display=can?'':'none';$('welcomePasskey').disabled=!pk;
+      $('welcomeNote').style.display=can&&!pk?'':'none';$('welcomeNote').textContent='Not turned on yet. Sign in with your PIN, then turn it on from the home screen.';
+      $('welcomeOr').style.display=can?'':'none';$('welcomePinLbl').textContent='Your PIN (6 digits)';
       show('stepWelcome');head(false);if(!pk)$('welcomePin').focus()}}catch(e){}
 }
 const head=on=>{$('authHead').style.display=$('authSub').style.display=on?'':'none'};
@@ -82,6 +84,7 @@ function shareMode(){ // fingerprint or face is the normal way to confirm a shar
 $('usePinInstead').onclick=()=>{PINMODE=true;shareMode();$('sharePin').focus()};
 function pkShow(me){
   ME=me;
+  $('pkNudge').style.display=(PK_ON&&PK_OK&&!(me.passkeys>0))?'':'none';
   shareMode();
   $('pkCard').style.display=PK_ON&&PK_OK?'':'none';
   if(!PK_ON||!PK_OK)return;
@@ -119,6 +122,7 @@ function tab(name){
 }
 document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
 $('tileShow').onclick=()=>tab('share');
+$('pkNudgeBtn').onclick=()=>{$('acct').style.display='';$('acctBtn').setAttribute('aria-expanded',true);$('pkCard').scrollIntoView({behavior:'smooth'});$('pkPin').focus()};
 $('acctBtn').onclick=()=>{const o=$('acct').style.display==='none';$('acct').style.display=o?'':'none';$('acctBtn').setAttribute('aria-expanded',o)};
 $('labelBtn').onclick=()=>{$('labelIn').value=REC.label||'';$('labelBox').style.display='';$('labelIn').focus()};
 $('labelCancel').onclick=()=>{$('labelBox').style.display='none'};

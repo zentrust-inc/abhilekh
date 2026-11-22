@@ -10,7 +10,9 @@
   <h1 style="margin:0 0 4px">Welcome back</h1>
   <p class="sub" id="welcomeWho" style="margin-bottom:12px"></p>
   <button class="go" id="welcomePasskey" type="button" style="display:none;margin-top:0">Sign in with fingerprint or face</button>
-  <label class="mute" for="welcomePin" id="welcomePinLbl" style="display:block;margin-top:12px">Your PIN (6 digits)</label>
+  <div class="mute" id="welcomeNote" style="display:none;margin-top:6px"></div>
+  <div class="mute" id="welcomeOr" style="display:none;text-align:center;margin:12px 0 0">or</div>
+  <label class="mute" for="welcomePin" id="welcomePinLbl" style="display:block;margin-top:8px">Your PIN (6 digits)</label>
   <input type="password" id="welcomePin" inputmode="numeric" maxlength="6" autocomplete="current-password">
   <button class="go" id="welcomeBtn" type="button">Sign in</button>
   <button class="sec" id="welcomeOther" type="button" style="width:100%;margin-top:10px">Not you, or a new phone? Use another account</button>
@@ -67,6 +69,9 @@
     </div>
     <button class="sec" id="logoutBtn" type="button" style="width:100%">Sign out</button>
   </div>
+  <div class="card" id="pkNudge" style="display:none"><b>Next time, one touch</b>
+    <p class="mute" style="margin:4px 0 8px">Sign in and share with your fingerprint or face instead of typing a PIN. Your phone does the check; Abhilekh never sees it.</p>
+    <button class="go" id="pkNudgeBtn" type="button" style="margin-top:0">Turn on fingerprint or face</button></div>
   <div class="tiles">
     <div class="tile off" aria-disabled="true"><div class="big">&#128247;</div><b>Photograph a paper</b><span class="mute">Coming in the next step</span></div>
     <button class="tile" id="tileShow" type="button"><div class="big">&#128241;</div><b>Show a doctor</b><span class="mute" id="tileShowSub"></span></button>
