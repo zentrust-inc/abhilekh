@@ -90,6 +90,15 @@ html,body{margin:0;background:#0b1530}
 .evening .lg b{width:96px;color:#aab3c8;font-weight:500}
 .frost{position:absolute;inset:0;border-radius:44px;backdrop-filter:blur(14px);background:rgba(234,238,247,.55);opacity:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--navy)}
 #endcard{background:var(--ivory)}
+/* overlay mode: only screens, labels and stamps, on transparency */
+body.ov,body.ov #film{background:transparent!important}
+body.ov .sc .L.far,body.ov .sc .L.mid,body.ov .sc .air,body.ov #s1a,body.ov #whip,body.ov #endcard,body.ov #papers{display:none!important}
+body.ov #s1bdim,body.ov #flashall{display:block!important}
+body.ov #s6 .L,body.ov #s6 .air{display:none!important}
+html.ov{background:transparent!important}
+body.ov .kin span{color:#fffdf8!important;text-shadow:0 2px 6px rgba(0,0,0,.55),0 6px 30px rgba(0,0,0,.5)}
+body.ov .kin span[style*="terra"]{color:#ffb08f!important}
+
 </style></head>
 <body>
 <div id="film">
@@ -461,6 +470,7 @@ html,body{margin:0;background:#0b1530}
 const $ = (s, r) => (r || document).querySelector(s);
 const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const SPRING = 'expo.out';
+if (/[?&]overlay/.test(location.search)) { document.body.classList.add('ov'); document.documentElement.classList.add('ov'); }
 
 /* ---------- the invented sample report ---------- */
 function report(scale){
