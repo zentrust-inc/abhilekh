@@ -713,3 +713,5 @@ html[data-lang=en] [data-l=ne],html[data-lang=ne] [data-l=en]{display:none}
   .rhead{display:none}
   .pblock .tl{grid-template-columns:1fr}
 }
+
+.film-yt{margin:10px 0 0;font-size:13px;font-weight:500}.film-yt a{color:var(--on-dark);text-underline-offset:3px}

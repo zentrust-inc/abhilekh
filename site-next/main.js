@@ -133,9 +133,9 @@
     var conn = navigator.connection || {};
     var small = window.innerWidth < 900 || conn.saveData;
     var root = doc.getAttribute('data-root') || '';
-    var src = root + (small ? 'media/hero-480-v4.mp4' : 'media/hero-720-v3.mp4');
+    var src = root + (small ? 'media/story-480-v2.mp4' : 'media/story-720-v2.mp4');
     var sizeEl = filmBtn.querySelector('.js-film-size');
-    if (sizeEl) sizeEl.textContent = '14 s · ' + (small ? '288 KB' : '1.2 MB');
+    if (sizeEl) sizeEl.textContent = '79 s · ' + (small ? '2.7 MB' : '5.4 MB');
     var lastFocus = null;
     function closeFilm() {
       var v = layer.querySelector('video'); if (v) { v.pause(); v.remove(); }
@@ -144,8 +144,16 @@
     filmBtn.addEventListener('click', function () {
       lastFocus = document.activeElement;
       var v = document.createElement('video');
-      v.src = src; v.controls = true; v.playsInline = true; v.muted = true; v.autoplay = !reduce;
-      v.setAttribute('poster', root + 'media/poster-v3.jpg');
+      v.src = src; v.controls = true; v.playsInline = true; v.autoplay = !reduce;
+      v.setAttribute('poster', root + 'media/story-poster-v2.jpg');
+      var ne = (doc.getAttribute('lang') || '').indexOf('ne') === 0;
+      [['ne', 'नेपाली'], ['en', 'English']].forEach(function (c) {
+        var t = document.createElement('track');
+        t.kind = 'subtitles'; t.srclang = c[0]; t.label = c[1];
+        t.src = root + 'media/story-' + c[0] + '.vtt';
+        if ((c[0] === 'en') !== ne) t.default = true;
+        v.appendChild(t);
+      });
       layer.querySelector('.film-slot').appendChild(v);
       layer.hidden = false;
       layer.querySelector('[data-film-close]').focus();
