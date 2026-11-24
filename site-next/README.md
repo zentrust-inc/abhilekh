@@ -1,17 +1,22 @@
-# site-next (recovered build output)
+# site-next · website v3 (PRD v3.0, 24 Nov 2026)
 
-These are the built pages of the 2026 website redesign, copied byte for byte from
-the shared preview artifact (version 1795422529-1793) on 23 Nov 2026. The original
-`redesign-2026` branch was never pushed. It lived only on the machine of an earlier
-chat session, which this session could not reach.
+Rebuild of abhilekh.org on the recovered redesign-2026 pages, per the Website PRD v3.0
+(https://claude.ai/artifact/46XjXEeDf6sZifWhh1qbkG).
 
-What is here: the eight built pages (home, how-it-works, families, doctors, trust,
-about, updates, privacy), `site.css`, `main.js` and the preview media
-(`hero-480-v4.mp4`, `hero-720-v3.mp4`, `poster-v3.jpg`, `qr.svg`).
+Changes in v3:
+- Nepali first (`data-lang="ne"`), English switch remembered on the device; `#en` opens English.
+- Film v4 "Aama's story" (YouTube mw13BK-zZ8M) in the hero, behind our own poster
+  `media/film-v4-poster.jpg` (export of the Canva thumbnail; until it is added, the bag illustration shows).
+  Nothing loads from YouTube until play is tapped; the player is youtube-nocookie.com.
+- `_headers`: CSP adds only `frame-src https://www.youtube-nocookie.com`; Referrer-Policy is
+  strict-origin-when-cross-origin because the YouTube player refuses to play with no referrer.
+- Content brought in line with PRD v2.1: 15-minute shares, watermark, no download;
+  "Unresolved. Original document available."; read-aloud, show-the-doctor and printed QR summary (planned);
+  offline photos; SHA-256 export; homepage story follows film script v4 (Aama and Sita).
+- Old films and hero clips removed; fonts moved out of the stylesheet into `fonts/`.
+- Film transcript (18 lines, NE/EN) as a fold-out under the hero.
 
-What is NOT here, and was not recoverable from the preview:
-- the source: `build.py`, `src/partials`, `src/pages`, `art/scenes.py`
-- film draft 1, "The story in 75 seconds": `film/story-75`, the story75 encodes,
-  poster and EN/NE `.vtt` captions, and `YOUTUBE.md`
+Still to do: poster file, Nepali review by a native speaker, For Families sharing-defaults card,
+real-phone test on 3G.
 
 Planning stage: every paper shown is a fictional SAMPLE.

@@ -1,0 +1,5 @@
+stills/
+ov/
+shots/
+*.mp4
+!/site-next/media/*.mp4

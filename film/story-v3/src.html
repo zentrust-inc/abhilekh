@@ -1,0 +1,820 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Abhilekh · Aama's story (film v3)</title>
+<meta name="viewport" content="width=1920">
+<style>
+{{FONTS}}
+:root{--ivory:#f6f1e7;--paper:#fffdf8;--navy:#0b1530;--ink:#111726;--terra:#c2512f;--teal:#13857a;--teal-soft:#dcefeb;--cobalt:#2d5bff;--sand:#ece4d4;--hill:#c4ccd9;--mute:#6c6f79;--amber:#b7791f;
+  --spring:cubic-bezier(0.16,1,0.3,1)}
+*{box-sizing:border-box}
+html,body{margin:0;background:#0b1530}
+#film{position:relative;width:1920px;height:1080px;overflow:hidden;background:var(--ivory);font-family:Inter,system-ui,sans-serif;color:var(--navy)}
+.sc{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;visibility:hidden}
+.L{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}
+.L>svg{position:absolute;left:0;top:0;overflow:visible}
+.near{perspective:1700px;perspective-origin:50% 45%}
+.air{position:absolute;inset:0;pointer-events:none}
+.fill{position:absolute;inset:0}
+.vig{background:radial-gradient(ellipse 70% 62% at 50% 52%,rgba(11,21,48,0) 0%,rgba(11,21,48,0) 45%,rgba(11,21,48,.78) 100%)}
+.mote{position:absolute;width:5px;height:5px;border-radius:50%;background:#fffaf0;box-shadow:0 0 6px 2px rgba(255,246,222,.55)}
+.shaft{position:absolute;transform-origin:0 50%;background:linear-gradient(90deg,rgba(255,248,226,.75),rgba(255,248,226,.18) 70%,rgba(255,248,226,0));filter:blur(22px);mix-blend-mode:screen}
+.chip{position:absolute;font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-size:21px;color:#4a4d57;background:rgba(246,241,231,.9);padding:11px 22px;border-radius:999px;box-shadow:0 6px 18px -8px rgba(11,21,48,.25)}
+#chipStory{left:46px;bottom:42px;z-index:50}
+#chipPlanned{left:46px;top:42px;z-index:50;color:var(--terra);border:2px solid var(--terra);letter-spacing:.03em;text-transform:none;font-size:25px;opacity:0}
+#chipPlanned span{font-family:"Noto Serif Devanagari",serif;margin-left:14px;color:#9b3f24}
+.deva{font-family:"Noto Serif Devanagari",serif}
+.serif{font-family:Fraunces,Georgia,serif}
+
+/* paper report */
+.rep{position:absolute;width:520px;background:var(--paper);color:var(--navy);font-family:"DejaVu Sans Mono",ui-monospace,Menlo,monospace;padding:26px 30px 40px;box-shadow:0 2px 0 rgba(11,21,48,.06),0 24px 50px -20px rgba(11,21,48,.35)}
+.rep-h{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2.5px solid var(--navy);padding-bottom:9px;font-family:Inter;font-weight:800;letter-spacing:.06em;font-size:17px}
+.rep-h span{font-family:"Noto Serif Devanagari",serif;font-weight:600;font-size:16px;letter-spacing:0}
+.rep-m{font-size:13px;margin:12px 0 16px;line-height:1.65}
+.rep-t{font-weight:700;text-align:center;font-size:14px;letter-spacing:.1em;margin-bottom:10px}
+.rep table{width:100%;border-collapse:collapse;font-size:15px}
+.rep td{padding:9px 2px;border-bottom:1px dashed rgba(11,21,48,.22)}
+.rep td.v{font-weight:700;text-align:right;padding-right:12px;width:70px}
+.rep td.u{color:#3b4460;font-size:13px}
+.rep td.r{color:#3b4460;font-size:13px;text-align:right}
+.rep td.f{width:24px;text-align:right;font-weight:700}
+.rep .smudge{position:relative;filter:blur(1.4px);color:#2d3550}
+.rep .smudge:after{content:"";position:absolute;left:-14px;top:-6px;width:58px;height:30px;border-radius:50%;background:radial-gradient(ellipse,rgba(80,86,104,.28),rgba(80,86,104,0) 70%)}
+.rep .stamp{position:absolute;right:26px;bottom:14px;transform:rotate(-8deg);border:2.5px solid var(--terra);color:var(--terra);font-family:Fraunces,serif;font-weight:700;font-size:16px;padding:3px 10px;border-radius:4px;letter-spacing:.04em}
+.rep .stamp span{font-family:"Noto Serif Devanagari",serif}
+.rep .sig{margin-top:18px;font-size:12px;color:#3b4460}
+
+/* small papers in the clinic */
+.pp{position:absolute;width:200px;height:250px;background:var(--paper);border-radius:4px;padding:16px 16px;box-shadow:0 20px 40px -18px rgba(11,21,48,.45),0 1px 0 rgba(11,21,48,.08);font-size:11px;color:var(--navy);transform-style:preserve-3d}
+.pp b{display:block;font-weight:800;letter-spacing:.08em;font-size:11px;border-bottom:2px solid var(--navy);padding-bottom:5px;margin-bottom:9px}
+.pp i{display:block;height:6px;border-radius:3px;background:rgba(11,21,48,.16);margin:9px 0}
+.pp em{font-style:normal;font-family:"DejaVu Sans Mono",monospace;font-size:11px;display:block;margin-top:8px}
+.stampcall{position:absolute;left:600px;top:150px;width:560px;padding:26px 34px 28px;border:4px dashed var(--terra);border-radius:20px;background:rgba(255,253,248,.94);color:var(--terra);text-align:center;box-shadow:0 30px 60px -20px rgba(11,21,48,.5)}
+.stampcall .a{font-family:Fraunces,serif;font-weight:700;font-size:64px;line-height:1}
+.stampcall .b{font-weight:600;font-size:28px;margin-top:10px;color:#9b3f24}
+.stampcall .c{font-family:"Noto Serif Devanagari",serif;font-weight:600;font-size:28px;color:#9b3f24}
+
+/* glass + phones */
+.glass{position:absolute;background:rgba(255,253,248,.74);backdrop-filter:blur(16px) saturate(1.15);border:1px solid rgba(255,255,255,.75);border-radius:26px;box-shadow:0 36px 70px -24px rgba(11,21,48,.42),inset 0 1px 0 rgba(255,255,255,.9)}
+.phone{position:absolute;border-radius:58px;background:linear-gradient(160deg,#1b2747,#0b1530 40%,#141d36);padding:15px;box-shadow:0 50px 90px -30px rgba(11,21,48,.6),inset 0 0 0 1.5px rgba(255,255,255,.12)}
+.phone:before{content:"";position:absolute;left:50%;top:26px;width:96px;height:26px;margin-left:-48px;border-radius:14px;background:#0b1530;z-index:5}
+.screen{position:relative;width:100%;height:100%;border-radius:44px;background:var(--paper);overflow:hidden}
+.ui{position:absolute;inset:0;padding:70px 30px 30px;font-family:Inter}
+.ui h3{font-family:Fraunces,serif;font-weight:600;font-size:34px;margin:0 0 4px;letter-spacing:-.01em}
+.ui .sub{font-size:16px;color:var(--mute)}
+.ui .card{margin-top:22px;background:#fff;border:1px solid rgba(11,21,48,.1);border-radius:18px;padding:18px 18px;position:relative}
+.ui .lab{font-weight:800;font-size:13px;letter-spacing:.08em;border-bottom:2px solid var(--navy);padding-bottom:6px}
+.ui .tft{font-family:"DejaVu Sans Mono",monospace;font-weight:700;font-size:13px;margin:10px 0 6px}
+.row{position:relative;display:flex;align-items:center;height:58px;margin:10px 0;padding:0 14px;border-radius:12px;border:2px solid rgba(11,21,48,.08);font-family:"DejaVu Sans Mono",monospace;font-size:19px;background:#fbfaf6}
+.row .n{width:104px}.row .v{width:66px;text-align:right;font-weight:700;font-size:22px;position:relative}.row .u{width:76px;padding-left:10px;color:var(--mute);font-size:13px}
+.pill{position:absolute;right:10px;top:14px;height:28px;padding:0 9px;border-radius:14px;background:var(--teal);color:#fff;font-family:Inter;font-weight:700;font-size:13px;line-height:28px;opacity:0}
+.badge{display:inline-block;width:34px;height:34px;border-radius:50%;color:#fff;font-weight:800;font-size:17px;line-height:34px;text-align:center;margin-left:6px}
+.bA{background:var(--navy)}.bB{background:#5f7192}
+.bar{position:absolute;left:8px;right:8px;top:0;height:4px;border-radius:2px;opacity:0}
+.bar.a{background:var(--navy);box-shadow:0 0 14px 3px rgba(11,21,48,.35)}
+.bar.b{background:#5f7192;box-shadow:0 0 14px 3px rgba(95,113,146,.45)}
+.bar i{position:absolute;top:-15px;width:30px;height:30px;border-radius:50%;color:#fff;font-style:normal;font-weight:800;font-size:15px;line-height:30px;text-align:center}
+.bar.a i{left:-24px;background:var(--navy)}.bar.b i{right:-24px;background:#5f7192}
+.sumline{font-size:17px;margin:8px 0;opacity:0;font-weight:600}
+.kin{position:absolute;left:150px;width:820px;font-family:Fraunces,serif;color:var(--navy)}
+.mask{overflow:hidden;display:block;padding:70px 0 24px;margin:-70px 0 -24px}
+.mask>span{display:inline-block}
+.btn{display:block;text-align:center;border-radius:14px;font-weight:700;font-size:19px;padding:15px 0;position:relative;overflow:hidden}
+.ripple{position:absolute;width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;background:rgba(255,255,255,.55);transform:scale(0)}
+.field{border:2px dashed rgba(11,21,48,.3);border-radius:12px;padding:12px 14px;font-family:"DejaVu Sans Mono",monospace;font-size:19px;color:#9aa0ad;margin-top:8px;position:relative;height:52px}
+.cbox{position:absolute;border:3px solid var(--cobalt);border-radius:6px;box-shadow:0 0 0 6px rgba(45,91,255,.14);opacity:0}
+.motes{position:absolute;inset:0;overflow:hidden}
+.ring{position:absolute;border:3px solid var(--teal);border-radius:50%;opacity:0}
+.evening{position:absolute;width:660px;background:rgba(11,21,48,.92);backdrop-filter:blur(18px);color:#eef1f8;border-radius:30px;padding:30px 36px 34px;box-shadow:0 50px 90px -30px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.1)}
+.evening .hd{display:flex;justify-content:space-between;align-items:center;letter-spacing:.14em;font-weight:700;font-size:17px;color:#aab3c8}
+.evening .lg{display:flex;font-size:23px;margin:16px 0;opacity:0}
+.evening .lg b{width:96px;color:#aab3c8;font-weight:500}
+.frost{position:absolute;inset:0;border-radius:44px;backdrop-filter:blur(14px);background:rgba(234,238,247,.55);opacity:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--navy)}
+#endcard{background:var(--ivory)}
+/* overlay mode: only screens, labels and stamps, on transparency */
+body.ov,body.ov #film{background:transparent!important}
+body.ov .sc .L.far,body.ov .sc .L.mid,body.ov .sc .air,body.ov #s1a,body.ov #whip,body.ov #endcard,body.ov #papers{display:none!important}
+body.ov #s1bdim,body.ov #flashall{display:block!important}
+body.ov #s6 .L,body.ov #s6 .air{display:none!important}
+html.ov{background:transparent!important}
+body.ov .kin span{color:#fffdf8!important;text-shadow:0 2px 6px rgba(0,0,0,.55),0 6px 30px rgba(0,0,0,.5)}
+body.ov .kin span[style*="terra"]{color:#ffb08f!important}
+
+</style></head>
+<body>
+<div id="film">
+
+<!-- ===================== 1a · under the bed ===================== -->
+<section class="sc" id="s1a">
+  <div class="L mid" data-d="1">
+    {{SCENE1}}
+    <div class="fill" id="s1dim" style="top:-200px;height:1500px;background:rgba(20,28,58,.36);mix-blend-mode:multiply"></div>
+    <div class="shaft" style="left:390px;top:120px;width:1250px;height:300px;transform:rotate(36deg)"></div>
+    <div class="shaft" style="left:420px;top:190px;width:1100px;height:120px;transform:rotate(41deg);opacity:.6"></div>
+    <div class="motes" data-n="46" data-box="380,80,1300,900" data-c="1"></div>
+  </div>
+  <div class="air vig" id="s1vig"></div>
+</section>
+
+<!-- ===================== 1b · the clinic ===================== -->
+<section class="sc" id="s1b">
+  <div class="L far" data-d=".55">
+    <svg width="2400" height="1100" viewBox="-240 0 2400 1100">
+      <g fill="none" stroke="#0b1530" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="-240" y="0" width="2400" height="1100" fill="#f3ede1" stroke="none"/>
+        <rect x="250" y="150" width="250" height="320" rx="6" fill="#fffdf8"/>
+        <text x="375" y="200" text-anchor="middle" font-family="Inter" font-weight="800" font-size="22" fill="#1f3a8a" stroke="none">OPD</text>
+        <path d="M290 240h170M290 280h170M290 320h170M290 360h170M290 400h120" stroke="#b9bcc6" stroke-width="3"/>
+        <circle cx="1240" cy="200" r="60" fill="#fffdf8"/><path d="M1240 200v-36M1240 200l26 14"/>
+        <rect x="1520" y="120" width="190" height="250" rx="6" fill="#fffdf8"/>
+        <path d="M1550 170h130M1550 210h130M1550 250h100" stroke="#b9bcc6"/>
+        <rect x="1520" y="120" width="190" height="40" fill="#c2512f" stroke="none" opacity=".85"/>
+      </g>
+    </svg>
+  </div>
+  <div class="L mid" data-d="1">
+    <svg width="1920" height="1080" viewBox="0 0 1920 1080">
+      {{BAGDEFS}}
+      <g fill="none" stroke="#0b1530" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M-400 880 C400 872 1200 888 2400 880 L2400 1300 L-400 1300Z" fill="#ece4d4" stroke="none"/>
+        <path d="M-400 880 C400 872 1200 888 2400 880"/>
+        {{DOC_CLINIC}}
+        <rect x="1000" y="640" width="760" height="26" rx="4" fill="#9a6644"/>
+        <path d="M1030 666 h700 v214 h-700Z" fill="#8a5a3c"/>
+        <path d="M1060 720 h300 M1400 720 h300" stroke="#b98a68" stroke-width="2"/>
+        {{AAMA_CLINIC}}
+        <g class="bagdrop"><g transform="translate(1290 645) scale(1.25) translate(-720 -646)">{{BAG}}</g></g>
+      </g>
+    </svg>
+  </div>
+  <div class="L near" data-d="1.25" id="papers"></div>
+  <div class="air" id="s1bdim" style="opacity:0;background:radial-gradient(ellipse 34% 30% at 46% 25%,rgba(11,21,48,0),rgba(11,21,48,.62) 100%)"></div>
+  <div class="L near" data-d="1.25"><div class="stampcall" id="stampcall"><div class="a">Thyroid · 2082</div><div class="b">not in the bag</div><div class="c">झोलामा छैन</div></div></div>
+  <div class="air vig" id="s1bvig" style="opacity:.55"></div>
+</section>
+
+<!-- ===================== 2+3 · the hospital gate ===================== -->
+<section class="sc" id="s2">
+  <div class="L far" data-d=".28">
+    <svg width="3200" height="1100" viewBox="-800 -110 3200 1100">
+      <defs>
+        <linearGradient id="sky2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4e7cf"/><stop offset=".7" stop-color="#f7efe0"/></linearGradient>
+        <linearGradient id="haze" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6f1e7" stop-opacity="0"/><stop offset="1" stop-color="#f6f1e7" stop-opacity=".95"/></linearGradient>
+      </defs>
+      <rect x="-800" y="0" width="3200" height="1100" fill="url(#sky2)"/>
+      <circle id="sun2" cx="1420" cy="170" r="70" fill="#fbe3b0" opacity=".9"/>
+      <g stroke="#0b1530" stroke-width="3" stroke-linejoin="round">
+        <path d="M-800 620 L-420 380 L-260 450 L40 250 L210 340 L420 190 L560 300 L760 140 L900 260 L1120 210 L1340 330 L1560 230 L1760 360 L2000 280 L2400 520 L2400 1100 L-800 1100Z" fill="#c4ccd9"/>
+        <path d="M40 250 L110 290 L150 270 L210 340 L160 330 L90 310Z M420 190 L480 240 L520 230 L560 300 L500 280 L455 260Z M760 140 L820 200 L860 190 L900 260 L840 240 L800 220Z M1120 210 L1200 250 L1250 240 L1340 330 L1260 300 L1180 270Z M1560 230 L1630 280 L1680 270 L1760 360 L1680 330 L1610 300Z" fill="#fbfcfe"/>
+      </g>
+      <rect x="-800" y="420" width="3200" height="680" fill="url(#haze)"/>
+    </svg>
+  </div>
+  <div class="L far" data-d=".6">
+    <svg width="3000" height="1100" viewBox="-600 0 3000 1100">
+      <path d="M-600 720 C-200 640 200 700 600 650 S1300 690 1700 640 S2200 700 2400 660 L2400 1100 L-600 1100Z" fill="#aebbcf" stroke="#0b1530" stroke-width="3"/>
+      <rect x="-600" y="700" width="3000" height="400" fill="#f6f1e7" opacity=".55"/>
+    </svg>
+  </div>
+  <div class="L mid" data-d="1">
+    <svg width="1920" height="1080" viewBox="0 0 1920 1080">
+      <g fill="none" stroke="#0b1530" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M-900 880 C400 872 1200 888 2900 880 L2900 1300 L-900 1300Z" fill="#ece4d4" stroke="none"/>
+        <path d="M-900 880 C400 872 1200 888 2900 880"/>
+        <rect x="300" y="330" width="72" height="550" fill="#e6dccb"/>
+        <rect x="1180" y="330" width="72" height="550" fill="#e6dccb"/>
+        <rect x="250" y="250" width="1052" height="96" rx="6" fill="#9a6644"/>
+        <text x="776" y="314" text-anchor="middle" font-family="Inter" font-weight="800" font-size="46" fill="#fffdf8" stroke="none" letter-spacing="3">HOSPITAL ·</text>
+        <text x="1010" y="316" text-anchor="middle" font-family="Noto Serif Devanagari" font-weight="600" font-size="44" fill="#fffdf8" stroke="none">अस्पताल</text>
+        <rect x="900" y="760" width="300" height="22" rx="4" fill="#9a6644"/>
+        <path d="M920 782 v98 M1180 782 v98"/>
+        {{AAMA_GATE}}
+        {{SITA_GATE}}
+      </g>
+    </svg>
+  </div>
+  <div class="L near" data-d="1.3">
+    <!-- the photo card (filled by JS) -->
+    <div class="glass" id="photocard" style="left:300px;top:120px;width:600px;height:800px;opacity:0;padding:34px 40px">
+      <div id="pc-rep" style="position:relative;height:640px"></div>
+      <div style="position:absolute;left:40px;right:40px;bottom:30px;text-align:center">
+        <div class="serif" style="font-size:28px;font-weight:600">The photo Aama took, unchanged</div>
+        <div class="deva" style="font-size:22px;color:#3b4460;margin-top:4px">आमाले खिचेको फोटो, जस्ताको तस्तै</div>
+      </div>
+    </div>
+    <div class="phone" id="ph2" style="left:1250px;top:150px;width:400px;height:800px">
+      <div class="screen">
+        <div class="ui" id="vf" style="background:#121a2e;padding:0">
+          <div style="position:absolute;left:0;right:0;top:64px;text-align:center;color:#dfe4ef;font-weight:600;font-size:17px">Photograph the paper</div>
+          <div id="vf-rep" style="position:absolute;left:34px;top:120px;width:322px;height:470px;overflow:hidden;border-radius:6px"></div>
+          <svg width="390" height="820" style="position:absolute;left:0;top:0" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round">
+            <path d="M24 140v-36h36M366 140v-36h-36M24 576v36h36M366 576v36h-36"/>
+          </svg>
+          <div id="scan" style="position:absolute;left:24px;right:24px;top:110px;height:6px;border-radius:3px;background:#3fd3c1;box-shadow:0 0 22px 8px rgba(63,211,193,.55);opacity:0"></div>
+          <div id="scanglow" style="position:absolute;left:24px;right:24px;top:110px;height:120px;background:linear-gradient(rgba(63,211,193,0),rgba(63,211,193,.22));opacity:0"></div>
+          <div style="position:absolute;left:50%;bottom:58px;width:84px;height:84px;margin-left:-42px;border-radius:50%;border:5px solid #fff"><div id="shutter" style="position:absolute;inset:7px;border-radius:50%;background:#fff"></div></div>
+          <div id="saved" style="position:absolute;left:24px;right:24px;top:640px;text-align:center;color:#fff;font-weight:600;font-size:18px;opacity:0">✓ Saved · kept exactly as it is</div>
+          <div id="phflash" style="position:absolute;inset:0;background:#fff;opacity:0"></div>
+        </div>
+        <div class="ui" id="rd" style="opacity:0">
+          <h3>Reading the page</h3>
+          <div class="sub">Two readers, separately <span class="badge bA">A</span><span class="badge bB">B</span></div>
+          <div class="card" id="rdcard">
+            <div class="lab">NAMUNA CLINICAL LABORATORY</div>
+            <div class="tft">THYROID FUNCTION TEST</div>
+            <div class="row"><span class="n">T.S.H.</span><span class="v">6.8</span><span class="u">µIU/mL</span><span class="pill">A=B</span></div>
+            <div class="row"><span class="n">Free T4</span><span class="v">1.1</span><span class="u">ng/dL</span><span class="pill">A=B</span></div>
+            <div class="row"><span class="n">Free T3</span><span class="v">3.1</span><span class="u">pg/mL</span><span class="pill">A=B</span></div>
+            <div class="row" id="tpo"><span class="n">Anti-TPO</span><span class="v"><span id="tpoA" style="opacity:0">A 12</span><span id="tpoB" style="position:absolute;right:0;opacity:0">B 17</span></span><span class="u">IU/mL</span><span id="tpoEmpty" style="position:absolute;left:112px;white-space:nowrap;color:#a26d16;font-family:Inter;font-weight:700;font-size:15px;opacity:0">left empty · खाली</span></div>
+            <div class="bar a" id="barA"><i>A</i></div><div class="bar b" id="barB"><i>B</i></div>
+          </div>
+          <div style="margin-top:18px">
+            <div class="sumline" style="color:var(--teal)">3 values: both readers agree</div>
+            <div class="sumline" style="color:#a26d16">1 value: they disagree, left empty</div>
+            <div class="sumline">Date: you type it as written</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="kin" id="kin1" style="top:330px"><span class="mask"><span style="font-size:84px;font-weight:600;line-height:1.05">Two readers.</span></span><span class="mask"><span style="font-size:84px;font-weight:600;line-height:1.05">Separately.</span></span><span class="mask"><span class="deva" style="font-size:40px;color:#3b4460">दुई रिडर, छुट्टाछुट्टै</span></span></div>
+    <div class="kin" id="kin2" style="top:330px"><span class="mask"><span style="font-size:96px;font-weight:600;line-height:1.05">Nothing is</span></span><span class="mask"><span style="font-size:96px;font-weight:600;line-height:1.05;color:var(--terra)">guessed.</span></span><span class="mask"><span class="deva" style="font-size:42px;color:#3b4460">केही पनि अड्कल गरिँदैन</span></span></div>
+  </div>
+  <div class="air" id="bloom" style="opacity:0;background:radial-gradient(ellipse 60% 55% at 72% 18%,rgba(255,214,140,.75),rgba(255,214,140,0) 70%);mix-blend-mode:soft-light"></div>
+  <div class="air"><div class="motes" data-n="30" data-box="0,0,1920,1000" data-c="2"></div></div>
+  <div class="air" id="flashall" style="background:#fff;opacity:0"></div>
+</section>
+
+<!-- ===================== whip-pan ===================== -->
+<section class="sc" id="whip">
+  <div class="fill" style="background:linear-gradient(#f4e7cf,#f6f1e7)"></div>
+  <svg id="whipridge" width="6000" height="1080" viewBox="0 0 6000 1080" style="position:absolute;left:0;top:0">
+    <path d="M0 640 L300 420 L520 520 L800 300 L1000 420 L1300 260 L1500 380 L1800 280 L2100 450 L2400 330 L2700 470 L3000 300 L3300 420 L3600 280 L3900 460 L4200 340 L4500 500 L4800 320 L5100 440 L5400 300 L5700 460 L6000 380 L6000 1080 L0 1080Z" fill="#c4ccd9" stroke="#0b1530" stroke-width="4"/>
+    <path d="M0 820 C800 760 1600 840 2400 780 S4400 840 6000 790 L6000 1080 L0 1080Z" fill="#aebbcf"/>
+  </svg>
+  <div id="whiplabel" style="position:absolute;left:0;right:0;top:470px;text-align:center;font-family:Fraunces,serif;font-size:64px;font-weight:600;color:var(--navy)">Pokhara <span style="color:var(--terra)">→</span> Kathmandu<div class="deva" style="font-size:36px;font-weight:600;color:#3b4460">पोखरा → काठमाडौं</div></div>
+</section>
+
+<!-- ===================== 4 · Kathmandu ===================== -->
+<section class="sc" id="s4">
+  <div class="L far" data-d=".35">
+    <svg width="2400" height="1100" viewBox="-240 0 2400 1100">
+      <rect x="-240" y="0" width="2400" height="1100" fill="#f3e2c4"/>
+      <circle cx="520" cy="170" r="54" fill="#fbe3b0"/>
+      <g stroke="#0b1530" stroke-width="3" stroke-linejoin="round">
+        <path d="M-240 520 L-100 520 L-100 460 L0 460 L0 500 L90 500 L90 430 L170 430 L170 490 L260 490 L260 520 L740 520 L740 470 L820 470 L820 520 L900 520 L900 440 L980 440 L980 520 L1200 520 L1200 1100 L-240 1100Z" fill="#9aa8bf"/>
+        <path d="M380 520 C380 440 600 440 600 520Z" fill="#fbfcfe"/>
+        <rect x="450" y="404" width="80" height="44" fill="#fbfcfe"/>
+        <path d="M466 426 q8 -6 16 0 M498 426 q8 -6 16 0" stroke-width="2.5"/>
+        <path d="M470 404 L490 300 L510 404Z" fill="#d9a441"/>
+        <path d="M490 300 v-26"/>
+      </g>
+      <rect x="-240" y="480" width="2400" height="620" fill="#f6f1e7" opacity=".45"/>
+    </svg>
+  </div>
+  <div class="L mid" data-d="1">
+    <svg width="1920" height="1080" viewBox="0 0 1920 1080">
+      <g fill="none" stroke="#0b1530" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <path fill-rule="evenodd" d="M-600 -200 H2600 V1300 H-600Z M150 130 H760 V600 H150Z" fill="#efe7d8" stroke="none"/>
+        <rect x="150" y="130" width="610" height="470" rx="4"/>
+        <path d="M455 130 v470 M150 365 h610" stroke-width="4"/>
+        <path d="M130 600 h650" stroke-width="6"/>
+        <path d="M-600 880 C400 872 1200 888 2600 880 L2600 1300 L-600 1300Z" fill="#ece4d4" stroke="none"/>
+        <path d="M-600 880 C400 872 1200 888 2600 880"/>
+        {{BIKASH}}
+        <rect x="620" y="660" width="620" height="24" rx="4" fill="#9a6644"/>
+        <path d="M650 684 v196 M1210 684 v196"/>
+        <path d="M980 660 v-40 h44 v40" fill="#d98a5a"/>
+        <rect x="760" y="636" width="120" height="24" rx="5" fill="#c4ccd9"/>
+      </g>
+    </svg>
+    <div class="shaft" style="left:300px;top:250px;width:1100px;height:220px;transform:rotate(22deg);opacity:.55"></div>
+  </div>
+  <div class="L near" data-d="1.3">
+    <div class="glass" id="ph4photo" style="left:760px;top:120px;width:560px;height:760px;padding:30px">
+      <div style="font-weight:700;font-size:16px;letter-spacing:.12em;color:var(--mute);margin-bottom:14px">THE PHOTO · UNCHANGED</div>
+      <div id="p4-rep" style="position:relative;height:640px"></div>
+    </div>
+    <div class="phone" id="ph4" style="left:1400px;top:90px;width:430px;height:900px">
+      <div class="screen"><div class="ui">
+        <div class="sub">Aama’s record</div>
+        <h3>Check against the paper</h3>
+        <div class="sub" style="font-size:14px">Thyroid profile · Namuna Clinical Lab</div>
+        <div class="card" style="padding:14px 16px">
+          <div style="font-size:13px;color:var(--mute);font-weight:600">TSH · as the readers copied it</div>
+          <div id="k4val" style="font-family:'DejaVu Sans Mono',monospace;font-size:44px;font-weight:700;margin:6px 0 2px">6.8 <span style="font-size:18px;color:var(--mute)">µIU/mL</span></div>
+          <div class="btn" id="k4btn" style="border:2.5px solid var(--teal);color:var(--teal);margin-top:10px"><span id="k4t1">Matches the paper</span><span id="k4t2" style="position:absolute;left:0;right:0;opacity:0">✓&nbsp; Matches the paper</span></div>
+        </div>
+        <div class="card" style="padding:14px 16px;margin-top:14px">
+          <div style="font-size:13px;color:#a26d16;font-weight:700">Anti-TPO · the readers did not agree</div>
+          <div class="field" id="k4field"><span id="k4ph">Type it from the paper</span><span id="k4typed" style="color:var(--navy);font-weight:700;position:absolute;left:14px;top:11px"></span></div>
+          <div style="font-size:14px;color:var(--mute);margin-top:8px">or leave it empty</div>
+        </div>
+        <div class="card" style="padding:14px 16px;margin-top:14px">
+          <div style="font-size:13px;color:var(--mute);font-weight:600">Report date · type it as written</div>
+          <div class="field" style="color:var(--navy);font-weight:700;border-style:solid">2083/08/12</div>
+        </div>
+      </div></div>
+    </div>
+    <svg id="thread4" width="1920" height="1080" style="position:absolute;left:0;top:0;overflow:visible" fill="none">
+      <path id="th4" stroke="#2d5bff" stroke-width="4" stroke-linecap="round"/>
+      <circle id="th4a" r="9" fill="#2d5bff" opacity="0"/><circle id="th4b" r="9" fill="#2d5bff" opacity="0"/>
+    </svg>
+  </div>
+  <div class="air" style="background:radial-gradient(ellipse 50% 60% at 25% 30%,rgba(255,206,130,.35),rgba(255,206,130,0) 70%);mix-blend-mode:soft-light"></div>
+  <div class="air"><div class="motes" data-n="26" data-box="150,100,1100,800" data-c="4"></div></div>
+</section>
+
+<!-- ===================== 5 · Pokhara clinic ===================== -->
+<section class="sc" id="s5">
+  <div class="L far" data-d=".35">
+    <svg width="2400" height="1100" viewBox="-240 0 2400 1100">
+      <defs><linearGradient id="sky5" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dfe8f3" id="sky5a"/><stop offset="1" stop-color="#f6efe0" id="sky5b"/></linearGradient></defs>
+      <rect x="-240" y="0" width="2400" height="1100" fill="url(#sky5)"/>
+      <g stroke="#0b1530" stroke-width="3" stroke-linejoin="round">
+        <path d="M-240 600 L0 470 L180 520 L360 380 L470 250 L500 300 L540 200 L600 330 L760 420 L940 360 L1200 520 L1200 1100 L-240 1100Z" fill="#c4ccd9"/>
+        <path d="M470 250 L500 300 L540 200 L600 330 L560 320 L530 290 L500 330 L480 300Z" fill="#fbfcfe"/>
+      </g>
+      <rect x="-240" y="500" width="2400" height="600" fill="#f6f1e7" opacity=".5"/>
+    </svg>
+  </div>
+  <div class="L mid" data-d="1">
+    <svg width="1920" height="1080" viewBox="0 0 1920 1080">
+      <g fill="none" stroke="#0b1530" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <path fill-rule="evenodd" d="M-600 -200 H2600 V1300 H-600Z M140 110 H800 V560 H140Z" fill="#efe9de" stroke="none" id="wall5"/>
+        <rect x="140" y="110" width="660" height="450" rx="4"/>
+        <path d="M470 110 v450" stroke-width="4"/>
+        <path d="M120 560 h700" stroke-width="6"/>
+        <rect x="1500" y="150" width="200" height="260" rx="6" fill="#fffdf8"/>
+        <text x="1600" y="195" text-anchor="middle" font-family="Inter" font-weight="800" font-size="20" fill="#1f3a8a" stroke="none">OPD</text>
+        <path d="M1530 230h140M1530 270h140M1530 310h100" stroke="#b9bcc6"/>
+        <path d="M-600 880 C400 872 1200 888 2600 880 L2600 1300 L-600 1300Z" fill="#ece4d4" stroke="none"/>
+        <path d="M-600 880 C400 872 1200 888 2600 880"/>
+        {{DOC_PKR}}
+        {{AAMA_PKR}}
+      </g>
+    </svg>
+    <div class="phone" id="aph" style="left:676px;top:410px;width:128px;height:230px;border-radius:22px;padding:7px;opacity:0;transform:rotate(-6deg)">
+      <div class="screen" style="border-radius:16px;display:flex;align-items:center;justify-content:center"><div style="width:96px;height:96px" id="qrbox">{{QR}}</div></div>
+    </div>
+    <div class="phone" id="dph" style="left:1236px;top:650px;width:84px;height:150px;border-radius:16px;padding:5px;transform:rotate(7deg)">
+      <div class="screen" style="border-radius:11px"><div id="dphglow" style="position:absolute;inset:0;background:var(--teal-soft);opacity:0"></div></div>
+    </div>
+    <svg id="bridge" width="1920" height="1080" style="position:absolute;left:0;top:0;overflow:visible" fill="none">
+      <defs><mask id="bmask" maskUnits="userSpaceOnUse"><path id="bpathm" d="M750 470 C900 300 1140 380 1272 660" stroke="#fff" stroke-width="12"/></mask></defs>
+      <path d="M750 470 C900 300 1140 380 1272 660" stroke="#13857a" stroke-width="4" stroke-dasharray="4 14" stroke-linecap="round" mask="url(#bmask)"/>
+    </svg>
+    <div id="rings" style="position:absolute;left:740px;top:525px"></div>
+  </div>
+  <div class="air" id="grade5" style="opacity:0;background:linear-gradient(180deg,rgba(38,46,110,.62),rgba(20,26,70,.5));mix-blend-mode:multiply"></div>
+  <div class="air" id="lamp5" style="opacity:0;background:radial-gradient(ellipse 30% 40% at 85% 70%,rgba(255,196,120,.5),rgba(255,196,120,0) 70%);mix-blend-mode:screen"></div>
+  <div class="L near" data-d="1.3" id="s5near">
+    <div class="phone" id="dview" style="left:330px;top:110px;width:500px;height:880px;opacity:0">
+      <div class="screen"><div class="ui">
+        <h3>Parbati Udaharan</h3>
+        <div class="sub">Shared by the patient · sample</div>
+        <div style="margin-top:14px;background:#e3e9ff;border-radius:10px;padding:10px 14px;font-weight:700;font-size:16px;color:#1f3a8a">Ends in 23 h 59 m</div>
+        <div style="margin-top:18px;font-weight:700;font-size:15px;letter-spacing:.06em">THYROID PROFILE · 2083/08/12</div>
+        <div style="font-size:14px;color:var(--mute)">Namuna Clinical Laboratory</div>
+        <div id="dvrows" style="margin-top:10px"></div>
+        <div class="btn" id="seeorig" style="background:var(--cobalt);color:#fff;margin-top:22px">See the original</div>
+        <div style="text-align:center;font-size:16px;color:var(--mute);margin-top:16px">What the paper says. No advice.</div>
+      </div>
+      <div class="frost" id="frost"><svg width="70" height="80" viewBox="0 0 70 80" fill="none" stroke="#0b1530" stroke-width="5" stroke-linecap="round"><rect x="8" y="34" width="54" height="40" rx="8" fill="#fffdf8"/><path d="M20 34 v-10 a15 15 0 0 1 30 0 v10"/></svg>
+        <div class="serif" style="font-size:34px;font-weight:600;margin-top:16px">This share has ended</div><div class="deva" style="font-size:24px;margin-top:4px">यो सेयर रोकिएको छ</div><div style="font-size:18px;color:#3b4460;margin-top:10px">Nothing is shown.</div></div>
+      </div>
+    </div>
+    <div class="glass" id="orig" style="left:900px;top:110px;width:640px;height:850px;opacity:0;padding:30px 36px">
+      <div style="font-weight:700;font-size:16px;letter-spacing:.12em;color:var(--mute);margin-bottom:14px">THE ORIGINAL · THE PHOTO AAMA TOOK</div>
+      <div id="o5-rep" style="position:relative;height:700px"></div>
+    </div>
+    <svg id="thread5" width="1920" height="1080" style="position:absolute;left:0;top:0;overflow:visible" fill="none">
+      <path id="th5" stroke="#2d5bff" stroke-width="4" stroke-linecap="round"/>
+      <circle id="th5a" r="8" fill="#2d5bff" opacity="0"/><circle id="th5b" r="8" fill="#2d5bff" opacity="0"/>
+    </svg>
+    <div class="evening" id="eve" style="left:1060px;top:1100px">
+      <div class="hd"><span>THAT EVENING · BIKASH’S PHONE</span><svg width="36" height="36" viewBox="0 0 36 36"><path d="M24 4 A15 15 0 1 0 32 26 A12 12 0 1 1 24 4Z" fill="#f3d9a4"/></svg></div>
+      <div class="deva" style="color:#aab3c8;font-size:19px;margin-top:2px">त्यो साँझ · विकासको फोन</div>
+      <div style="margin-top:14px">
+        <div class="lg"><b>10:42</b>Opened</div>
+        <div class="lg"><b>10:47</b>Original viewed</div>
+        <div class="lg" id="lg3"><b>18:05</b>You stopped this share.</div>
+        <div class="lg" id="lg4" style="color:#f3c77a"><b>18:20</b><span>Someone tried to open it.<br>Nothing was shown.</span></div>
+      </div>
+      <div class="btn" id="stopbtn" style="background:var(--terra);color:#fff;margin-top:22px;font-size:22px"><span id="stoptxt">Stop sharing</span><span id="stoptxt2" style="position:absolute;left:0;right:0;opacity:0">Share stopped</span></div>
+      <div style="text-align:center;color:#aab3c8;font-size:16px;margin-top:10px">No PIN needed to stop. It ends at once.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 6 · the paper stays ===================== -->
+<section class="sc" id="s6">
+  <div class="L far" data-d=".35">
+    <svg width="2400" height="1100" viewBox="-240 0 2400 1100">
+      <defs><linearGradient id="sky6" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2b3567"/><stop offset=".75" stop-color="#c98f7a"/></linearGradient></defs>
+      <rect x="-240" y="0" width="2400" height="1100" fill="#3a4170"/>
+      <rect x="1240" y="120" width="560" height="420" fill="url(#sky6)"/>
+      <path d="M1240 450 L1380 360 L1460 400 L1560 300 L1640 380 L1800 340 L1800 540 L1240 540Z" fill="#46507f" stroke="#0b1530" stroke-width="3"/>
+    </svg>
+  </div>
+  <div class="L mid" data-d="1">
+    <svg width="1920" height="1080" viewBox="0 0 1920 1080">
+      {{BAGDEFS}}
+      <g fill="none" stroke="#0b1530" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <path fill-rule="evenodd" d="M-600 -200 H2600 V1300 H-600Z M1240 120 H1800 V540 H1240Z" fill="#e9e0cf" stroke="none"/>
+        <rect x="1240" y="120" width="560" height="420" rx="4"/><path d="M1520 120 v420" stroke-width="4"/>
+        <rect x="200" y="700" width="1520" height="30" rx="5" fill="#9a6644"/>
+        <path d="M260 730 v350 M1660 730 v350"/>
+        <g transform="translate(560 702) scale(1.25) translate(-720 -646)">{{BAG}}</g>
+        <g transform="translate(880 690)"><circle cx="0" cy="0" r="26" fill="#fffdf8" fill-opacity=".5"/><circle cx="66" cy="0" r="26" fill="#fffdf8" fill-opacity=".5"/><path d="M26 -2 q7 -8 14 0 M-26 0 l-34 -16 M92 0 l34 -16"/></g>
+        <path d="M1690 700 v-220 M1650 480 h80 l-14 -70 h-52Z" fill="#f3d9a4"/>
+      </g>
+    </svg>
+    <div class="phone" id="rec6" style="left:1090px;top:290px;width:300px;height:450px;border-radius:40px;padding:11px;transform:rotate(-2deg)">
+      <div class="screen" style="border-radius:30px"><div class="ui" style="padding:40px 20px 20px">
+        <div class="serif" style="font-size:26px;font-weight:600">My record</div>
+        <div id="rec6rows" style="margin-top:8px"></div>
+        <div style="font-size:12px;color:var(--mute);margin-top:10px">Shares end on their own.</div>
+      </div></div>
+    </div>
+  </div>
+  <div class="air" style="background:linear-gradient(180deg,rgba(38,46,110,.6),rgba(20,26,70,.45));mix-blend-mode:multiply"></div>
+  <div class="air" style="background:radial-gradient(ellipse 38% 45% at 86% 58%,rgba(255,196,120,.55),rgba(255,196,120,0) 70%);mix-blend-mode:screen"></div>
+  <div class="air vig" style="opacity:.45"></div>
+  <div class="kin" id="kin6" style="left:0;width:1920px;top:70px;text-align:center;color:#fffdf8"><span class="mask"><span class="deva" style="font-size:60px;font-weight:600">कागज रहन्छ। इतिहास हिँड्छ।</span></span><span class="mask"><span style="font-size:52px;font-weight:500">The paper stays. The history moves.</span></span></div>
+</section>
+
+<!-- ===================== 7 · end card ===================== -->
+<section class="sc" id="endcard">
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+    <svg id="mark" width="190" height="190" viewBox="0 0 32 32" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <rect id="mk1" x="5" y="3" width="18" height="24" rx="3" fill="#fffdf8" fill-opacity="0" stroke="#0b1530" stroke-width="1.6"/>
+      <path id="mk2" d="M9 10h10M9 14h10M9 18h6" stroke="#0b1530" stroke-width="1.6"/>
+      <circle id="mk3" cx="23" cy="23" r="6.5" fill="#c2512f"/>
+      <path id="mk4" d="M20.3 23.2l1.9 1.9 3.6-3.8" stroke="#fff" stroke-width="1.8"/>
+    </svg>
+    <span class="mask"><span class="deva" id="endne" style="margin-top:6px;font-size:150px;font-weight:600;line-height:1.15">अभिलेख</span></span>
+    <span class="mask"><span class="serif" id="enden" style="font-size:66px">Abhilekh</span></span>
+    <span class="mask"><span class="serif" id="endt1" style="margin-top:26px;font-size:46px;color:#3b4460">Your medical history, with you.</span></span>
+    <span class="mask"><span class="deva" id="endt2" style="font-size:40px;color:#3b4460">तपाईंको स्वास्थ्यको इतिहास, तपाईंसँगै।</span></span>
+  </div>
+  <div id="endfoot" style="position:absolute;left:0;right:0;bottom:64px;text-align:center;font-weight:600;letter-spacing:.14em;text-transform:uppercase;font-size:23px;color:#6c6f79;opacity:0">Planning stage · abhilekh.org &nbsp;·&nbsp; A story · fictional family</div>
+</section>
+
+<div class="chip" id="chipStory">A story · fictional family</div>
+<div class="chip" id="chipPlanned">Planned: helping a family member<span>योजना: परिवारको सदस्यलाई सहयोग</span></div>
+</div>
+
+<script>{{GSAP}}</script>
+<script>
+(function(){
+'use strict';
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const SPRING = 'expo.out';
+if (/[?&]overlay/.test(location.search)) { document.body.classList.add('ov'); document.documentElement.classList.add('ov'); }
+
+/* ---------- the invented sample report ---------- */
+function report(scale){
+  return `<div class="rep" style="transform:scale(${scale});transform-origin:0 0">
+    <div class="rep-h">NAMUNA CLINICAL LABORATORY<span>नमूना ल्याब</span></div>
+    <div class="rep-m">Patient: Parbati Udaharan · 64/F<br>Date: 2083/08/12 &nbsp; Ref: Dr. Udaharan</div>
+    <div class="rep-t">THYROID FUNCTION TEST</div>
+    <table>
+      <tr><td>T.S.H.</td><td class="v" data-k="tsh">6.8</td><td class="u">µIU/mL</td><td class="r">0.4–4.0</td><td class="f">H</td></tr>
+      <tr><td>Free T4</td><td class="v">1.1</td><td class="u">ng/dL</td><td class="r">0.8–1.8</td><td class="f"></td></tr>
+      <tr><td>Free T3</td><td class="v">3.1</td><td class="u">pg/mL</td><td class="r">2.0–4.4</td><td class="f"></td></tr>
+      <tr><td>Anti-TPO</td><td class="v" data-k="tpo"><span class="smudge">12</span></td><td class="u">IU/mL</td><td class="r">&lt; 35</td><td class="f"></td></tr>
+    </table>
+    <div class="sig">Checked by: ________ &nbsp; Lab tech: Namuna</div>
+    <div class="stamp">SAMPLE · <span>नमूना</span></div>
+  </div>`;
+}
+$('#pc-rep').innerHTML = report(1.0);
+$('#vf-rep').innerHTML = report(0.62);
+$('#p4-rep').innerHTML = report(0.96);
+$('#o5-rep').innerHTML = report(1.09);
+
+/* clinic papers that fan out of the bag */
+const PAPERS = [
+  ['OPD TICKET','Udaharan Hospital','No. 2083-1147'],
+  ['NAMUNA LAB','HbA1c','6.1 %'],
+  ['PRESCRIPTION','Udaharan Clinic','Tab. 1-0-1 × 30'],
+  ['NAMUNA LAB','Urine routine','pH 6.0'],
+  ['X-RAY REPORT','Chest PA view','as printed'],
+  ['NAMUNA LAB','Lipid profile','—'],
+];
+const pw = $('#papers');
+PAPERS.forEach((p, i) => {
+  const d = document.createElement('div');
+  d.className = 'pp';
+  d.innerHTML = `<b>${p[0]}</b>${p[1]}<i></i><i style="width:70%"></i><em>${p[2]}</em><i style="width:80%"></i><i style="width:55%"></i>`;
+  d.style.left = '1190px'; d.style.top = '480px';
+  pw.appendChild(d);
+});
+
+/* doctor view rows */
+$('#dvrows').innerHTML = [
+  ['TSH','6.8','µIU/mL','printed 0.4–4.0','H'],
+  ['Free T4','1.1','ng/dL','printed 0.8–1.8',''],
+  ['Free T3','3.1','pg/mL','printed 2.0–4.4',''],
+  ['Anti-TPO','12','IU/mL','printed < 35',''],
+].map((r,i)=>`<div class="dvr" ${i===0?'id="dvtsh"':''} style="display:flex;align-items:center;padding:14px 4px;border-bottom:1px solid rgba(11,21,48,.1);font-size:19px;opacity:0">
+  <span style="width:110px;font-weight:600">${r[0]}</span><span style="width:60px;text-align:right;font-weight:800;font-size:22px">${r[1]}</span>
+  <span style="width:84px;padding-left:10px;color:#6c6f79;font-size:15px">${r[2]}</span><span style="flex:1;color:#6c6f79;font-size:14px">${r[3]}</span>
+  ${r[4]?'<span style="border:2px solid #0b1530;border-radius:5px;font-weight:800;font-size:13px;padding:0 5px">H</span>':''}</div>`).join('');
+
+$('#rec6rows').innerHTML = [['2083/08/12','Thyroid profile'],['2083/07/30','Prescription'],['2083/07/02','Urine routine'],['2083/06/18','Diabetes panel']]
+  .map(r=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(11,21,48,.08)"><div><div style="font-size:11px;color:#6c6f79">${r[0]}</div><div style="font-size:15px;font-weight:600">${r[1]}</div></div><span style="font-size:11px;font-weight:700;color:#13857a;background:#dcefeb;border-radius:9px;padding:3px 8px">original ✓</span></div>`).join('');
+
+/* ---------- geometry measured before anything moves ---------- */
+function rel(el, root){ const a = el.getBoundingClientRect(), b = root.getBoundingClientRect(); return {x:a.left-b.left, y:a.top-b.top, w:a.width, h:a.height}; }
+$$('.sc').forEach(s => s.style.visibility = 'visible');
+function boxOn(repRoot, key, layer){
+  const td = $(`td[data-k="${key}"]`, repRoot); const r = rel(td, layer);
+  const b = document.createElement('div'); b.className = 'cbox';
+  b.style.left = (r.x - 6) + 'px'; b.style.top = (r.y - 2) + 'px'; b.style.width = (r.w + 4) + 'px'; b.style.height = (r.h + 4) + 'px';
+  layer.appendChild(b); return {el:b, x:r.x - 6, y:r.y - 2, w:r.w + 4, h:r.h + 4};
+}
+const n4 = $('#s4 .near'), n5 = $('#s5near');
+const B4 = boxOn($('#p4-rep'), 'tsh', n4);
+const V4 = rel($('#k4val'), n4);
+const ax = B4.x + B4.w, ay = B4.y + B4.h/2, bx = V4.x - 8, by = V4.y + V4.h/2;
+$('#th4').setAttribute('d', `M${ax} ${ay} C${ax+90} ${ay-40} ${bx-110} ${by+20} ${bx} ${by}`);
+$('#th4a').setAttribute('cx', ax); $('#th4a').setAttribute('cy', ay); $('#th4b').setAttribute('cx', bx); $('#th4b').setAttribute('cy', by);
+const B5 = boxOn($('#o5-rep'), 'tsh', n5);
+const T5 = rel($('#dvtsh'), n5);
+const cx1 = T5.x + T5.w - 4, cy1 = T5.y + T5.h/2, cx2 = B5.x, cy2 = B5.y + B5.h/2;
+$('#th5').setAttribute('d', `M${cx1} ${cy1} C${cx1+80} ${cy1+60} ${cx2-120} ${cy2-40} ${cx2} ${cy2}`);
+$('#th5a').setAttribute('cx', cx1); $('#th5a').setAttribute('cy', cy1); $('#th5b').setAttribute('cx', cx2); $('#th5b').setAttribute('cy', cy2);
+const RD = $('#rdcard'); const rows = $$('.row', RD).map(r => rel(r, RD));
+$$('.sc').forEach(s => s.style.visibility = 'hidden');
+for (const p of ['#th4', '#th5']) { const L = $(p).getTotalLength(); gsap.set(p, {strokeDasharray: L, strokeDashoffset: L}); }
+const BL = $('#bpathm').getTotalLength(); gsap.set('#bpathm', {strokeDasharray: BL, strokeDashoffset: BL});
+for (const p of ['#mk1', '#mk2', '#mk4']) { const L = $(p).getTotalLength ? $(p).getTotalLength() : 100; gsap.set(p, {strokeDasharray: L, strokeDashoffset: L}); }
+gsap.set('#mk3', {scale: 0, transformOrigin: '50% 50%'});
+
+/* QR ripples */
+for (let i = 0; i < 3; i++) { const r = document.createElement('div'); r.className = 'ring'; r.style.cssText = 'left:-60px;top:-60px;width:120px;height:120px'; $('#rings').appendChild(r); }
+
+/* ---------- seeded dust motes, a pure function of time ---------- */
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const MOTES = [];
+$$('.motes').forEach(box => {
+  const [x0, y0, x1, y1] = box.dataset.box.split(',').map(Number);
+  for (let i = 0; i < +box.dataset.n; i++) {
+    const m = document.createElement('div'); m.className = 'mote'; box.appendChild(m);
+    MOTES.push({el:m, x:x0 + rnd()*(x1-x0), y:y0 + rnd()*(y1-y0), h:y1-y0, y0, a:20 + rnd()*40, f:.2 + rnd()*.5, v:6 + rnd()*14, p:rnd()*6.28, s:.4 + rnd()*1.1, o:.25 + rnd()*.6});
+  }
+});
+function motes(t){
+  for (const m of MOTES) {
+    const y = m.y0 + ((m.y - m.y0 - t*m.v) % m.h + m.h) % m.h;
+    const x = m.x + Math.sin(t*m.f + m.p)*m.a;
+    m.el.style.transform = `translate(${x}px,${y}px) scale(${m.s})`;
+    m.el.style.opacity = (m.o * (0.6 + 0.4*Math.sin(t*1.3 + m.p))).toFixed(3);
+  }
+}
+const BREATH = $$('.breath').map((g, i) => ({g, p:i*1.7}));
+function breathe(t){ for (const b of BREATH) b.g.setAttribute('transform', `scale(1 ${(1 + 0.007*Math.sin(t*1.6 + b.p)).toFixed(4)})`); }
+
+/* ---------- the camera: one focus point + zoom per scene, parallax by depth ---------- */
+const CAMS = {};
+$$('.sc').forEach(s => { CAMS[s.id] = {fx:960, fy:540, s:1, layers:$$(':scope > .L', s).map(l => ({el:l, d:+l.dataset.d}))}; });
+function applyCam(id){
+  const c = CAMS[id];
+  for (const L of c.layers) {
+    const sd = 1 + (c.s - 1)*L.d;
+    const tx = 960 - (960 + (c.fx - 960)*L.d)*sd, ty = 540 - (540 + (c.fy - 540)*L.d)*sd;
+    L.el.style.transform = `translate(${tx.toFixed(2)}px,${ty.toFixed(2)}px) scale(${sd.toFixed(4)})`;
+  }
+}
+
+/* ---------- the master timeline ---------- */
+const tl = gsap.timeline({paused:true});
+const show = (sel, a, b) => { tl.set(sel, {visibility:'visible'}, a); if (b != null) tl.set(sel, {visibility:'hidden'}, b); };
+const C = id => CAMS[id];
+
+/* ===== 1a · under the bed (0 – 7.6) ===== */
+gsap.set('#s1a', {visibility:'visible'});
+Object.assign(C('s1a'), {fx:1392, fy:990, s:5.2});
+tl.to(C('s1a'), {s:4.7, fx:1380, duration:1.2, ease:'sine.inOut'}, 0);
+tl.to(C('s1a'), {s:1.18, fx:1060, fy:650, duration:5.6, ease:'power3.inOut'}, 1.1);
+tl.fromTo('#film', {opacity:0}, {opacity:1, duration:.9, ease:'none'}, 0);
+tl.to('#s1vig', {opacity:.55, duration:5, ease:'sine.inOut'}, 1.6);
+tl.to('#s1dim', {opacity:.75, duration:5, ease:'sine.inOut'}, 1.6);
+tl.from('#chipStory', {opacity:0, y:16, duration:.8, ease:SPRING}, 1.2);
+
+/* crane up into the clinic (7.6 – 8.6) */
+show('#s1b', 7.5);
+tl.to('#s1a', {y:1080, filter:'blur(10px)', duration:1.05, ease:'power3.inOut'}, 7.55);
+tl.fromTo('#s1b', {y:-1080, filter:'blur(10px)'}, {y:0, filter:'blur(0px)', duration:1.05, ease:'power3.inOut'}, 7.55);
+tl.set('#s1a', {visibility:'hidden'}, 8.65);
+Object.assign(C('s1b'), {fx:1060, fy:600, s:1.12});
+tl.to(C('s1b'), {fx:980, fy:560, s:1.04, duration:8.5, ease:'sine.inOut'}, 7.6);
+
+/* ===== 1b · the bag lands, the papers fan, the stamp (8.6 – 17) ===== */
+tl.fromTo('.bagdrop', {y:-760}, {y:0, duration:.55, ease:'power2.in'}, 8.9);
+tl.to('.bagdrop', {scaleY:.9, scaleX:1.05, transformOrigin:'50% 100%', duration:.11, ease:'power1.out'}, 9.45);
+tl.to('.bagdrop', {scaleY:1, scaleX:1, duration:.6, ease:'elastic.out(1,.45)'}, 9.56);
+const fan = [[-560,-330,-14,10],[-300,-410,-6,-12],[-40,-440,4,8],[220,-400,11,-10],[460,-330,17,12],[-160,-250,-2,22]];
+$$('#papers .pp').forEach((p, i) => {
+  const f = fan[i];
+  tl.fromTo(p, {x:0, y:20, z:-200, scale:.4, rotation:0, rotationY:0, rotationX:40, opacity:0},
+    {x:f[0], y:f[1], z:f[3]*4, scale:1, rotation:f[2], rotationY:f[3], rotationX:6, opacity:1, duration:1.3, ease:SPRING}, 10.1 + i*.11);
+  tl.to(p, {y:'+=14', rotation:f[2]*.85, duration:2.2, ease:'sine.inOut'}, 11.6 + i*.05);
+});
+const docArm = $('#s1b .who-doctor .arm');
+if (docArm) {
+  tl.to(docArm, {attr:{transform:'rotate(-38)'}, duration:.5, ease:'power2.out'}, 10.2);
+  tl.to(docArm, {attr:{transform:'rotate(-22)'}, duration:.42, ease:'sine.inOut', repeat:4, yoyo:true}, 10.7);
+  tl.to(docArm, {attr:{transform:'rotate(0)'}, duration:.6, ease:'power2.inOut'}, 12.9);
+}
+tl.fromTo('#stampcall', {scale:1.9, rotation:-14, opacity:0}, {scale:1, rotation:-3, opacity:1, duration:.7, ease:'back.out(2.6)'}, 13.0);
+tl.to('#s1bdim', {opacity:1, duration:.8, ease:'power2.out'}, 13.15);
+tl.to('#papers', {filter:'blur(3px)', duration:.8}, 13.2);
+tl.to('#s1bvig', {opacity:.95, duration:1.2}, 13.2);
+
+/* ===== 2 · light opens; parallax slide to the gate (16.6 – 18.6) ===== */
+show('#s2', 16.6);
+tl.to('#s1b', {x:-1920, duration:1.6, ease:'power3.inOut'}, 16.7);
+tl.set('#s1b', {visibility:'hidden'}, 18.35);
+Object.assign(C('s2'), {fx:-300, fy:560, s:1.08});
+tl.fromTo('#s2', {x:1920}, {x:0, duration:1.6, ease:'power3.inOut'}, 16.7);
+tl.to(C('s2'), {fx:900, fy:540, s:1.0, duration:3.2, ease:'power3.out'}, 16.9);
+tl.to('#bloom', {opacity:1, duration:1.4, ease:'sine.out'}, 17.9);
+tl.to('#bloom', {opacity:.45, duration:2.5, ease:'sine.inOut'}, 19.4);
+tl.from('#ph2', {x:720, rotationY:-42, rotationZ:6, opacity:0, duration:1.3, ease:SPRING}, 21.0);
+tl.to(C('s2'), {fx:860, fy:560, s:1.06, duration:9, ease:'sine.inOut'}, 20.1);
+tl.to('#chipPlanned', {opacity:1, duration:.6}, 21.2);
+const sitaArm = $('#s2 .who-sita .arm');
+if (sitaArm) tl.to(sitaArm, {attr:{transform:'rotate(-34)'}, duration:.9, ease:'power2.inOut'}, 21.4);
+tl.set(['#scan', '#scanglow'], {opacity:1}, 22.5);
+tl.fromTo('#scan', {y:0}, {y:470, duration:2.0, ease:'sine.inOut'}, 22.5);
+tl.fromTo('#scanglow', {y:-120}, {y:350, duration:2.0, ease:'sine.inOut'}, 22.5);
+tl.to(['#scan', '#scanglow'], {opacity:0, duration:.2}, 24.5);
+tl.to('#shutter', {scale:.8, duration:.08, yoyo:true, repeat:1}, 24.95);
+tl.to('#phflash', {opacity:.95, duration:.06}, 25.0);
+tl.to('#phflash', {opacity:0, duration:.5, ease:'power2.out'}, 25.08);
+tl.to('#flashall', {opacity:.35, duration:.06}, 25.0);
+tl.to('#flashall', {opacity:0, duration:.6, ease:'power2.out'}, 25.08);
+tl.to('#ph2', {scale:.965, duration:.08, ease:'power2.out'}, 25.0);
+tl.to('#ph2', {scale:1, duration:.7, ease:'elastic.out(1.2,.4)'}, 25.08);
+tl.to('#saved', {opacity:1, duration:.4}, 25.4);
+tl.fromTo('#photocard', {x:1080, y:120, scale:.5, rotationY:-30, opacity:0},
+  {x:0, y:0, scale:1, rotationY:14, rotationX:4, opacity:1, duration:1.5, ease:SPRING}, 26.9);
+tl.to('#photocard', {rotationY:9, y:-8, duration:3, ease:'sine.inOut'}, 28.4);
+
+/* ===== 3 · two readers (31.4 – 42.5) ===== */
+tl.to('#photocard', {x:-700, opacity:0, rotationY:30, duration:.9, ease:'power3.in'}, 31.3);
+tl.to('#chipPlanned', {opacity:0, duration:.4}, 31.4);
+tl.to('#s2 .L:not(.near)', {filter:'blur(8px) brightness(1.02)', duration:1.2, ease:'power2.inOut'}, 31.5);
+tl.to(C('s2'), {s:1.12, fx:900, fy:540, duration:1.3, ease:'power2.inOut'}, 31.5);
+tl.to('#ph2', {x:-60, y:-40, scale:.9, rotationY:-4, duration:1.3, ease:'power3.inOut'}, 31.5);
+tl.to('#vf', {opacity:0, duration:.4}, 31.9);
+tl.to('#rd', {opacity:1, duration:.4}, 32.0);
+tl.fromTo('#kin1 .mask > span', {yPercent:110, opacity:0}, {yPercent:0, opacity:1, duration:.9, stagger:.12, ease:SPRING}, 32.2);
+const rTop = rows[0].y, rBot = rows[3].y + rows[3].h;
+tl.set(['#barA', '#barB'], {opacity:1, y:rTop}, 32.6);
+tl.to('#barA', {y:rBot, duration:1.25, ease:'sine.inOut'}, 32.6);
+tl.to('#barB', {y:rBot, duration:1.45, ease:'sine.inOut'}, 32.75);
+tl.to(['#barA', '#barB'], {opacity:0, duration:.25}, 34.2);
+$$('#rdcard .row').slice(0, 3).forEach((r, i) => {
+  tl.fromTo($('.pill', r), {scale:.4, opacity:0}, {scale:1, opacity:1, duration:.55, ease:'back.out(2.4)'}, 34.3 + i*.08);
+  tl.to(r, {borderColor:'rgba(19,133,122,.55)', backgroundColor:'#eef7f5', duration:.3}, 34.3 + i*.08);
+});
+tl.to('#kin1 .mask > span', {yPercent:-110, opacity:0, duration:.6, stagger:.06, ease:'power2.in'}, 37.6);
+tl.to('#tpo', {borderColor:'#c58b2a', borderStyle:'dashed', backgroundColor:'#fdf6e8', duration:.25}, 38.4);
+for (let k = 0; k < 8; k++) {
+  tl.set('#tpoA', {opacity: k % 2 ? 1 : 0}, 38.45 + k*.13);
+  tl.set('#tpoB', {opacity: k % 2 ? 0 : 1}, 38.45 + k*.13);
+}
+tl.set('#tpoB', {opacity:0}, 39.5); tl.set('#tpoA', {opacity:1}, 39.5);
+tl.fromTo('#tpoA', {clipPath:'inset(0% 0% 0% 0%)'}, {clipPath:'inset(0% 0% 0% 100%)', duration:.45, ease:'power2.inOut'}, 39.6);
+tl.to('#tpoEmpty', {opacity:1, duration:.35}, 40.0);
+tl.to('#rd .sumline', {opacity:1, duration:.4, stagger:.16}, 40.2);
+tl.fromTo('#kin2 .mask > span', {yPercent:110, opacity:0}, {yPercent:0, opacity:1, duration:.95, stagger:.14, ease:SPRING}, 40.3);
+
+/* ===== whip-pan to Kathmandu (42.3 – 43.6) ===== */
+show('#whip', 42.35, 43.75);
+tl.to('#s2', {x:-1920, filter:'blur(14px)', duration:.45, ease:'power3.in'}, 42.3);
+tl.set('#s2', {visibility:'hidden'}, 42.8);
+tl.fromTo('#whip', {x:1920}, {x:0, duration:.35, ease:'power2.out'}, 42.35);
+tl.fromTo('#whipridge', {x:0, filter:'blur(16px)'}, {x:-4100, filter:'blur(16px)', duration:1.35, ease:'power1.inOut'}, 42.35);
+tl.fromTo('#whiplabel', {opacity:0, scale:.94}, {opacity:1, scale:1, duration:.35, ease:SPRING}, 42.55);
+tl.to('#whiplabel', {opacity:0, duration:.25}, 43.25);
+show('#s4', 43.3);
+tl.fromTo('#s4', {x:1920, filter:'blur(14px)'}, {x:0, filter:'blur(0px)', duration:.5, ease:'power3.out'}, 43.3);
+Object.assign(C('s4'), {fx:900, fy:560, s:1.1});
+tl.to(C('s4'), {fx:1000, fy:540, s:1.0, duration:5.6, ease:'sine.inOut'}, 43.3);
+tl.to('#chipPlanned', {opacity:1, duration:.5}, 43.6);
+tl.from('#ph4photo', {x:-160, rotationY:22, opacity:0, duration:1.1, ease:SPRING}, 43.6);
+tl.from('#ph4', {x:220, rotationY:-26, opacity:0, duration:1.1, ease:SPRING}, 43.75);
+tl.fromTo(B4.el, {opacity:0, scale:1.4}, {opacity:1, scale:1, duration:.6, ease:'back.out(2)'}, 44.4);
+tl.to('#th4a', {opacity:1, duration:.2}, 44.75);
+tl.to('#th4', {strokeDashoffset:0, duration:.9, ease:'power2.inOut'}, 44.8);
+tl.to('#th4b', {opacity:1, duration:.2}, 45.65);
+const bArm = $('#s4 .who-bikash .arm');
+if (bArm) { tl.to(bArm, {attr:{transform:'rotate(-14)'}, duration:.3, yoyo:true, repeat:1}, 45.8); tl.to(bArm, {attr:{transform:'rotate(-10)'}, duration:.25, yoyo:true, repeat:3}, 47.0); }
+const rip4 = document.createElement('i'); rip4.className = 'ripple'; rip4.style.left = '50%'; rip4.style.top = '50%'; $('#k4btn').appendChild(rip4);
+tl.fromTo(rip4, {scale:0, opacity:1}, {scale:9, opacity:0, duration:.7, ease:'power2.out'}, 46.0);
+tl.to('#k4btn', {backgroundColor:'#13857a', color:'#fff', duration:.25}, 46.05);
+tl.set('#k4t1', {opacity:0}, 46.1); tl.set('#k4t2', {opacity:1}, 46.1);
+tl.fromTo('#k4btn', {scale:.92}, {scale:1, duration:.6, ease:'elastic.out(1.2,.4)'}, 46.1);
+tl.fromTo('#k4btn', {boxShadow:'0 0 0 0 rgba(19,133,122,.5)'}, {boxShadow:'0 0 0 22px rgba(19,133,122,0)', duration:.8, ease:'power2.out'}, 46.15);
+tl.to('#k4ph', {opacity:0, duration:.15}, 47.1);
+tl.set('#k4typed', {textContent:'1'}, 47.25); tl.set('#k4typed', {textContent:'12'}, 47.45);
+tl.to('#k4field', {borderStyle:'solid', borderColor:'rgba(11,21,48,.35)', duration:.2}, 47.5);
+
+/* ===== 5a · Pokhara: the QR (48.6 – 53.7) ===== */
+show('#s5', 48.5);
+tl.to('#s4', {x:-1920, duration:1.0, ease:'power3.inOut'}, 48.5);
+tl.set('#s4', {visibility:'hidden'}, 49.55);
+tl.to('#chipPlanned', {opacity:0, duration:.4}, 48.5);
+tl.fromTo('#s5', {x:1920}, {x:0, duration:1.0, ease:'power3.inOut'}, 48.5);
+Object.assign(C('s5'), {fx:1150, fy:560, s:1.1});
+tl.to(C('s5'), {fx:1000, fy:540, s:1.06, duration:5, ease:'sine.inOut'}, 48.6);
+const aArm = $('#s5 .who-aama .arm');
+if (aArm) tl.to(aArm, {attr:{transform:'rotate(-35)'}, duration:.8, ease:'power2.inOut'}, 49.4);
+tl.fromTo('#aph', {opacity:0, scale:.5, y:40}, {opacity:1, scale:1, y:0, duration:.7, ease:'back.out(1.8)'}, 49.9);
+$$('#rings .ring').forEach((r, i) => tl.fromTo(r, {scale:.6, opacity:.9}, {scale:2.6, opacity:0, duration:1.2, ease:'power2.out'}, 50.4 + i*.35));
+tl.to('#bpathm', {strokeDashoffset:0, duration:1.0, ease:'power2.inOut'}, 51.0);
+tl.to('#dphglow', {opacity:1, duration:.4}, 51.9);
+
+/* ===== 5b · the doctor reads the paper and sees the original (53.6 – 60.3) ===== */
+tl.to('#s5 .L.far, #s5 .L.mid', {filter:'blur(8px)', duration:.9, ease:'power2.inOut'}, 53.5);
+tl.to(C('s5'), {s:1.1, fx:980, fy:540, duration:1.2, ease:'power2.inOut'}, 53.5);
+tl.fromTo('#dview', {opacity:0, x:640, y:300, scale:.25, rotationY:-30}, {opacity:1, x:0, y:0, scale:1, rotationY:6, duration:1.2, ease:SPRING}, 53.6);
+tl.to('.dvr', {opacity:1, duration:.35, stagger:.06}, 54.4);
+const rip5 = document.createElement('i'); rip5.className = 'ripple'; rip5.style.left = '50%'; rip5.style.top = '50%'; $('#seeorig').appendChild(rip5);
+tl.fromTo(rip5, {scale:0, opacity:1}, {scale:9, opacity:0, duration:.7, ease:'power2.out'}, 56.5);
+tl.fromTo('#orig', {opacity:0, x:260, rotationY:-24}, {opacity:1, x:0, rotationY:-6, duration:1.2, ease:SPRING}, 56.7);
+tl.fromTo(B5.el, {opacity:0, scale:1.4}, {opacity:1, scale:1, duration:.5, ease:'back.out(2)'}, 57.5);
+tl.to('#th5a', {opacity:1, duration:.2}, 57.7);
+tl.to('#th5', {strokeDashoffset:0, duration:.8, ease:'power2.inOut'}, 57.75);
+tl.to('#th5b', {opacity:1, duration:.2}, 58.5);
+tl.to('#dview', {rotationY:2, duration:3, ease:'sine.inOut'}, 57.0);
+
+/* ===== 5c · that evening: the share is stopped (60.2 – 66.2) ===== */
+tl.to('#grade5', {opacity:1, duration:1.6, ease:'sine.inOut'}, 60.2);
+tl.to('#lamp5', {opacity:1, duration:1.6, ease:'sine.inOut'}, 60.6);
+tl.to('#sky5a', {attr:{'stop-color':'#2b3567'}, duration:1.6}, 60.2);
+tl.to('#sky5b', {attr:{'stop-color':'#c98f7a'}, duration:1.6}, 60.2);
+tl.to(['#orig', '#thread5', B5.el], {opacity:0, x:200, duration:.7, ease:'power2.in'}, 60.3);
+tl.to('#dview', {x:120, y:40, scale:.82, rotationY:10, duration:1.2, ease:'power3.inOut'}, 60.4);
+tl.to('#chipPlanned', {opacity:1, duration:.5}, 60.7);
+tl.to('#eve', {y:-830, duration:1.2, ease:SPRING}, 60.8);
+tl.to('#eve .lg:nth-child(1)', {opacity:1, duration:.3}, 61.5);
+tl.to('#eve .lg:nth-child(2)', {opacity:1, duration:.3}, 61.85);
+const rip6 = document.createElement('i'); rip6.className = 'ripple'; rip6.style.left = '50%'; rip6.style.top = '50%'; $('#stopbtn').appendChild(rip6);
+tl.fromTo(rip6, {scale:0, opacity:1}, {scale:12, opacity:0, duration:.7, ease:'power2.out'}, 62.5);
+tl.to('#stoptxt', {opacity:0, y:-20, duration:.25}, 62.6);
+tl.fromTo('#stoptxt2', {opacity:0, y:20}, {opacity:1, y:0, duration:.35, ease:SPRING}, 62.65);
+tl.fromTo('#stopbtn', {scale:.94}, {scale:1, duration:.6, ease:'elastic.out(1.2,.4)'}, 62.6);
+tl.to('#lg3', {opacity:1, duration:.3}, 63.0);
+tl.to('#frost', {opacity:1, duration:.7, ease:'power2.out'}, 63.6);
+tl.to('#lg4', {opacity:1, duration:.3}, 64.4);
+
+/* ===== 6 · the paper stays (66.0 – 71.0) ===== */
+show('#s6', 65.9);
+tl.fromTo('#s6', {opacity:0}, {opacity:1, duration:.8, ease:'sine.inOut'}, 65.9);
+tl.to('#s5', {scale:1.06, filter:'blur(6px)', duration:.8, ease:'sine.in'}, 65.9);
+tl.set('#s5', {visibility:'hidden'}, 66.75);
+tl.to('#chipPlanned', {opacity:0, duration:.4}, 65.9);
+Object.assign(C('s6'), {fx:1000, fy:560, s:1.16});
+tl.to(C('s6'), {s:1.0, fx:960, fy:540, duration:5, ease:'sine.inOut'}, 66.0);
+tl.fromTo('#kin6 .mask > span', {yPercent:110, opacity:0}, {yPercent:0, opacity:1, duration:1.0, stagger:.5, ease:SPRING}, 66.5);
+
+/* ===== 7 · the mark (70.9 – 80) ===== */
+show('#endcard', 70.9);
+tl.to('#chipStory', {opacity:0, duration:.4}, 70.8);
+tl.fromTo('#endcard', {opacity:0}, {opacity:1, duration:.7, ease:'sine.inOut'}, 70.9);
+tl.to('#s6', {scale:.9, duration:.8, ease:'power2.in'}, 70.9);
+tl.to('#mk1', {strokeDashoffset:0, duration:.9, ease:'power2.inOut'}, 71.3);
+tl.to('#mk1', {attr:{'fill-opacity':1}, duration:.4}, 72.0);
+tl.to('#mk2', {strokeDashoffset:0, duration:.6, ease:'power2.inOut'}, 71.9);
+tl.to('#mk3', {scale:1, duration:.6, ease:'back.out(2.6)'}, 72.4);
+tl.to('#mk4', {strokeDashoffset:0, duration:.4, ease:'power2.out'}, 72.75);
+tl.fromTo('#endne', {yPercent:110, opacity:0}, {yPercent:0, opacity:1, duration:1.0, ease:SPRING}, 72.6);
+tl.fromTo('#enden', {yPercent:110, opacity:0}, {yPercent:0, opacity:1, duration:1.0, ease:SPRING}, 72.95);
+tl.fromTo('#endt1', {yPercent:110, opacity:0}, {yPercent:0, opacity:1, duration:1.0, ease:SPRING}, 73.6);
+tl.fromTo('#endt2', {yPercent:110, opacity:0}, {yPercent:0, opacity:1, duration:1.0, ease:SPRING}, 73.95);
+tl.to('#endfoot', {opacity:1, duration:.8}, 74.6);
+tl.to({}, {duration:0}, 80);
+
+/* ---------- drive ---------- */
+const DUR = 80;
+function render(t){
+  tl.seek(t, false);
+  for (const id in CAMS) applyCam(id);
+  motes(t); breathe(t);
+}
+window.FILM = {duration:DUR, fps:60, seek:render};
+render(0);
+document.fonts.ready.then(() => { window.FILM.ready = true; });
+if (!/[?&]render/.test(location.search)) {
+  let t0 = null;
+  const loop = ts => { if (t0 === null) t0 = ts; const t = ((ts - t0)/1000) % DUR; render(t); requestAnimationFrame(loop); };
+  requestAnimationFrame(loop);
+}
+})();
+</script>
+</body></html>
