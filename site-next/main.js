@@ -16,10 +16,11 @@
     langBtns.forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-set-lang') === l)); });
     if (save) { try { localStorage.setItem('abhilekh-lang', l); } catch (e) {} }
   }
-  var start = 'en';
+  var start = 'ne';
   try { start = localStorage.getItem('abhilekh-lang') || start; } catch (e) {}
   if (location.hash === '#ne') start = 'ne';
-  setLang(start === 'ne' ? 'ne' : 'en', false);
+  if (location.hash === '#en') start = 'en';
+  setLang(start === 'en' ? 'en' : 'ne', false);
   langBtns.forEach(function (b) { b.addEventListener('click', function () { setLang(b.getAttribute('data-set-lang'), true); }); });
 
   /* ---------- nav ---------- */
@@ -126,41 +127,28 @@
   frame();
 
 
-  /* ---------- the film: downloaded only when asked for ---------- */
-  var filmBtn = document.querySelector('[data-film]');
-  var layer = document.querySelector('.film-layer');
-  if (filmBtn && layer) {
-    var conn = navigator.connection || {};
-    var small = window.innerWidth < 900 || conn.saveData;
-    var root = doc.getAttribute('data-root') || '';
-    var src = root + (small ? 'media/story-480-v2.mp4' : 'media/story-720-v2.mp4');
-    var sizeEl = filmBtn.querySelector('.js-film-size');
-    if (sizeEl) sizeEl.textContent = '79 s · ' + (small ? '2.7 MB' : '5.4 MB');
-    var lastFocus = null;
-    function closeFilm() {
-      var v = layer.querySelector('video'); if (v) { v.pause(); v.remove(); }
-      layer.hidden = true; if (lastFocus) lastFocus.focus();
+  /* ---------- the film: nothing loads from YouTube until play is tapped ---------- */
+  var FILM_ID = 'mw13BK-zZ8M';
+  document.querySelectorAll('.yt-film').forEach(function (box) {
+    var img = box.querySelector('img');
+    if (img) {
+      img.addEventListener('error', function () { img.remove(); });
+      if (img.complete && !img.naturalWidth) img.remove();
     }
-    filmBtn.addEventListener('click', function () {
-      lastFocus = document.activeElement;
-      var v = document.createElement('video');
-      v.src = src; v.controls = true; v.playsInline = true; v.autoplay = !reduce;
-      v.setAttribute('poster', root + 'media/story-poster-v2.jpg');
-      var ne = (doc.getAttribute('lang') || '').indexOf('ne') === 0;
-      [['ne', 'नेपाली'], ['en', 'English']].forEach(function (c) {
-        var t = document.createElement('track');
-        t.kind = 'subtitles'; t.srclang = c[0]; t.label = c[1];
-        t.src = root + 'media/story-' + c[0] + '.vtt';
-        if ((c[0] === 'en') !== ne) t.default = true;
-        v.appendChild(t);
-      });
-      layer.querySelector('.film-slot').appendChild(v);
-      layer.hidden = false;
-      layer.querySelector('[data-film-close]').focus();
+    var btn = box.querySelector('.yt-play');
+    btn.addEventListener('click', function () {
+      var ne = doc.getAttribute('data-lang') !== 'en';
+      var f = document.createElement('iframe');
+      f.src = 'https://www.youtube-nocookie.com/embed/' + FILM_ID + '?autoplay=1&rel=0&playsinline=1&cc_load_policy=1&cc_lang_pref=' + (ne ? 'ne' : 'en') + '&hl=' + (ne ? 'ne' : 'en');
+      f.title = ne ? 'अभिलेख · आमाको कथा' : 'Abhilekh · Aama’s story';
+      f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+      f.allowFullscreen = true;
+      f.referrerPolicy = 'strict-origin-when-cross-origin';
+      box.querySelector('.yt-frame').replaceChildren(f);
+      box.classList.add('playing');
+      f.focus();
     });
-    layer.addEventListener('click', function (e) { if (e.target === layer || e.target.closest('[data-film-close]')) closeFilm(); });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !layer.hidden) closeFilm(); });
-  }
+  });
 
   /* ---------- B · original vs extracted ---------- */
   var items = document.querySelectorAll('.ex-item');
@@ -201,7 +189,11 @@
       if (d) return d + ' d ' + h + ' h';
       return (h ? h + ' h ' : '') + (m < 10 && h ? '0' : '') + m + ' m ' + (x < 10 ? '0' : '') + x + ' s';
     }
-    function tick() { var t = fmt(endsAt - Date.now()); lefts.forEach(function (l) { l.textContent = t; }); }
+    function tick() {
+      var left = endsAt - Date.now();
+      lefts.forEach(function (l) { l.textContent = fmt(left); });
+      if (left <= 0) endShare(false);
+    }
     function startShare(sec) {
       endsAt = Date.now() + sec * 1000;
       live.classList.remove('ended'); ok.hidden = false; ended.hidden = true;
@@ -211,15 +203,16 @@
       tick(); clearInterval(timer); timer = setInterval(tick, 1000);
     }
     durBtns.forEach(function (b) { b.addEventListener('click', function () { startShare(+b.getAttribute('data-dur')); }); });
-    stopBtn.addEventListener('click', function () {
+    function endShare(focus) {
       clearInterval(timer); live.classList.add('ended'); ok.hidden = true; ended.hidden = false;
       stopBtn.hidden = true; againBtn.hidden = false;
       live.querySelector('.live-left').hidden = true; live.querySelector('.live-ended').hidden = false;
       durBtns.forEach(function (b) { b.disabled = true; });
-      againBtn.focus();
-    });
-    againBtn.addEventListener('click', function () { startShare(86400); });
-    startShare(86400);
+      if (focus) againBtn.focus();
+    }
+    stopBtn.addEventListener('click', function () { endShare(true); });
+    againBtn.addEventListener('click', function () { startShare(900); });
+    startShare(900);
 
     var origs = document.querySelectorAll('.br-orig');
     var cropBox = document.querySelector('.br-crop'), cropTxt = document.querySelector('.js-crop');
