@@ -5,6 +5,7 @@
 import { readFile } from 'node:fs/promises';
 import { extname } from 'node:path';
 import { PROMPT } from './prompt.mjs';
+import { legacy } from './copy.mjs';
 
 // USD per million tokens [input, output], as listed in the Chautari reader on 2026-11-19 (cost report only)
 export const PRICES = { 'claude-opus-5-5': [4, 20], 'claude-sonnet-5-5': [2, 10], 'gemini-3.8-flash': [0.75, 3.75] };
@@ -34,13 +35,14 @@ export async function readClaudeBytes(buf, mime, model = 'claude-opus-5-5', fetc
   const j = await retry(() => fetchImpl('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-    body: JSON.stringify({ model, max_tokens: 3000, messages: [{ role: 'user', content: [
+    body: JSON.stringify({ model, max_tokens: 8000, messages: [{ role: 'user', content: [
       { type: 'image', source: { type: 'base64', media_type: mime, data: buf.toString('base64') } }, { type: 'text', text: PROMPT }] }] }),
   }));
   const u = j.usage ?? {};
   const usd = cost(model, u.input_tokens ?? 0, u.output_tokens ?? 0);
   usage.push({ model, usd });
-  return { data: parseJson((j.content ?? []).filter((c) => c.type === 'text').map((c) => c.text).join('\n')), usd, model };
+  const full = parseJson((j.content ?? []).filter((c) => c.type === 'text').map((c) => c.text).join('\n'));
+  return { data: legacy(full), full, usd, model }; // data: the check-screen fields; full: the whole copy of the page (copy.mjs)
 }
 
 export async function readGeminiBytes(buf, mime, model = 'gemini-3.8-flash', fetchImpl = fetch) {
@@ -54,7 +56,8 @@ export async function readGeminiBytes(buf, mime, model = 'gemini-3.8-flash', fet
   const u = j.usageMetadata ?? {};
   const usd = cost(model, u.promptTokenCount ?? 0, (u.candidatesTokenCount ?? 0) + (u.thoughtsTokenCount ?? 0));
   usage.push({ model, usd });
-  return { data: parseJson((j.candidates?.[0]?.content?.parts ?? []).map((p) => p.text ?? '').join('\n')), usd, model };
+  const full = parseJson((j.candidates?.[0]?.content?.parts ?? []).map((p) => p.text ?? '').join('\n'));
+  return { data: legacy(full), full, usd, model };
 }
 
 export async function readClaude(file, model = 'claude-opus-5-5') {
