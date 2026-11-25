@@ -33,7 +33,10 @@ document.addEventListener('dragstart',e=>e.preventDefault());
       if(r.img){const im=el('img',{class:'crop',src:r.img,alt:'Region of the original page for '+r.test,style:'display:none',draggable:'false'});row.append(el('button',{class:'orig',onclick:()=>{im.style.display=im.style.display==='none'?'block':'none'}},'See the original'),im)}
       else row.append(el('div',{class:'mute'},'Original region not found; see the whole page.'));
       c.append(row)});
-    for(const m of d.medicines||[]){const row=el('div',{class:'res'});row.append(el('div',{class:'t'},m.as_written),el('div',{class:'mute'},[m.dose,m.duration].filter(Boolean).join(' · ')));c.append(row)}
+    for(const m of d.medicines||[]){const row=el('div',{class:'res'});row.append(el('div',{class:'t'},m.as_written),el('div',{class:'mute'},[m.dose,m.duration].filter(Boolean).join(' · ')));
+      const r=m.register;if(r&&!r.mixed){const p=r.products[0];row.append(el('div',{class:'mute'},'DDA register: '+[p.generics.map(g=>g.toLowerCase()).join(' + ')+(r.strengthMatched&&p.strength?' '+p.strength:''),p.form,p.manufacturer].filter(Boolean).join(' · ')+(p.valid?'':' · registration lapsed')))}
+      else if(r&&r.mixed)row.append(el('div',{class:'mute'},'DDA register: several products share this name'));
+      c.append(row)}
     if(d.origin==='photo'){ // the whole original, under the same watermark; asked for, not loaded by itself
       const big=el('img',{class:'crop',alt:'The whole original page',style:'display:none',draggable:'false'});
       c.append(el('button',{class:'orig',onclick:e=>{if(!big.src)big.src='/api/s/'+id+'/original/'+d.id;const o=big.style.display==='none';big.style.display=o?'block':'none';e.target.textContent=o?'Hide the whole original':'See the whole original page'}},'See the whole original page'),big);

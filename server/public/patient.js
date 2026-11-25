@@ -152,7 +152,7 @@ $('labelSave').onclick=async()=>{try{REC=await post('/api/record/label',{label:$
 $('trySample').onclick=async()=>{try{REC=await post('/api/record/sample');paint();paintForm()}catch(e){alert(e.message)}};
 function resultRows(d){
   const box=el('div',{class:'res-list'});
-  for(const m of d.medicines||[]){const row=el('div',{class:'res'});row.append(el('div',{class:'t'},m.as_written),el('div',{class:'mute'},[m.dose,m.duration].filter(Boolean).join(' · ')));box.append(row)}
+  for(const m of d.medicines||[]){const row=el('div',{class:'res'});row.append(el('div',{class:'t'},m.as_written),el('div',{class:'mute'},[m.dose,m.duration].filter(Boolean).join(' · ')));const rl=regLine(m.register);if(rl)row.append(rl);box.append(row)}
   for(const r of d.results){
     const row=el('div',{class:'res'});
     row.append(el('div',{class:'t'},r.test),el('div',{class:'v'},r.value+' ',el('span',{class:'u'},r.unit||''),r.flag?el('span',{class:'flag',title:'printed on the paper'},r.flag):''));
@@ -210,6 +210,13 @@ $('camIn').onchange=e=>{sendPhotos(e.target.files);e.target.value=''};
 $('galIn').onchange=e=>{sendPhotos(e.target.files);e.target.value=''};
 // What the two readers found. Shown as copies of the paper only: agreed, for you to confirm, or Unresolved. Never a meaning.
 const UNRES='Unresolved. Original document available.';
+// The DDA register entry for a medicine line, matched on the exact name. Facts from the register, not advice.
+function regLine(reg){
+  if(!reg)return null;
+  if(reg.mixed)return el('div',{class:'mute reg'},'On the DDA register: several products share this name ('+reg.products.map(p=>p.registered).slice(0,3).join('; ')+').');
+  const p=reg.products[0],gen=p.generics.map(g=>g.toLowerCase()).join(' + ');
+  return el('div',{class:'mute reg'},'On the DDA register: '+[p.registered,gen+(reg.strengthMatched&&p.strength?' '+p.strength:''),p.form,p.manufacturer].filter(Boolean).join(' · ')+(p.valid?'':' · registration lapsed'));
+}
 function fv(f){if(!f||f.state==='empty')return '';return f.state==='unresolved'?UNRES:f.text}
 function readingView(r){
   const box=el('div',{class:'res-list'});
@@ -231,7 +238,9 @@ function readingView(r){
     row.append(el('div',{class:'t'},m.as_written.state==='unresolved'?(m.as_written.a||m.as_written.b):m.as_written.text),
       el('div',{class:'mute'},[fv(m.dose),fv(m.duration)].filter(Boolean).join(' · ')));
     if(m.as_written.state==='unresolved')row.append(el('div',{class:'mute'},'The readers did not agree on this line. '+UNRES));
-    else if(m.dda==='not_found')row.append(el('div',{class:'mute'},'Not found on the DDA list: shown as written.'));
+    if(m.as_written.byRegister)row.append(el('div',{class:'mute'},'The readers did not agree, but this copy is on the DDA register exactly. Check it against the paper.'));
+    const rl=regLine(m.register);if(rl)row.append(rl);
+    else if(m.as_written.state!=='unresolved'&&m.dda==='not_found')row.append(el('div',{class:'mute'},'Not found on the DDA register: shown as written.'));
     box.append(row);
   }
   return box;
@@ -281,7 +290,8 @@ function openCheck(p){
     const row={removed:false,f:{}};
     const rm=el('button',{class:'orig',type:'button',onclick:()=>{row.removed=!row.removed;c.classList.toggle('off',row.removed);rm.textContent=row.removed?'Put this line back':'This line is not on the paper'}},'This line is not on the paper');
     row.f.as_written=add(c,'Medicine, as written',m.as_written);row.f.dose=add(c,'Dose',m.dose);row.f.duration=add(c,'Duration',m.duration);
-    if(m.dda==='not_found')c.append(el('div',{class:'mute'},'Not found on the DDA list: kept as written.'));
+    const rl=regLine(m.register);if(rl)c.append(rl);else if(m.dda==='not_found')c.append(el('div',{class:'mute'},'Not found on the DDA register: kept as written.'));
+    if(m.as_written.byRegister)c.append(el('div',{class:'mute'},'The readers did not agree, but this copy is on the DDA register exactly. Check it against the paper.'));
     c.append(rm);meds.push(row)});
   const err=el('div',{class:'mute',style:'color:#a01212;margin-top:6px'});
   const go=el('button',{class:'go',type:'button'},'Add to my record');

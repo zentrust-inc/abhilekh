@@ -62,5 +62,14 @@ export function createDrive({ credentials, fetchImpl = globalThis.fetch, now = (
     return (await c.json()).id;
   }
 
-  return { token, upload, download, folder };
+  // The newest file in a folder whose name starts with prefix (by name, so dated names sort by date). null if none.
+  async function latest(prefix, parent) {
+    const q = "name contains '" + prefix.replace(/'/g, "\\'") + "' and '" + parent + "' in parents and trashed = false";
+    const l = await fetchImpl(API + '?q=' + encodeURIComponent(q) + '&supportsAllDrives=true&includeItemsFromAllDrives=true&fields=files(id,name)&pageSize=100', { headers: { authorization: 'Bearer ' + await token() } });
+    if (l.status !== 200) throw new Error('Google Drive list answered ' + l.status);
+    const files = ((await l.json()).files || []).filter(f => f.name.startsWith(prefix)).sort((a, b) => a.name < b.name ? 1 : -1);
+    return files[0] || null;
+  }
+
+  return { token, upload, download, folder, latest };
 }
