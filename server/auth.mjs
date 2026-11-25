@@ -1,4 +1,4 @@
-// Abhilekh sign-in (prototype, SAMPLE data only). Zero dependencies.
+// Abhilekh sign-in. Zero dependencies.
 //
 // Design (status log 2026-11-21, PRD rev. 3.3 "Security and consent"):
 //   - Sign up with a Nepal mobile number (ONE SMS code) or with an email address (ONE code by email), then the patient

@@ -6,7 +6,7 @@ A patient-controlled portable health record for Nepal, run as a social enterpris
 
 Abhilekh keeps the record and shows what the paper says. It gives no advice: no interpretation, no added lines about results, no alarms.
 
-**Status: planning stage.** A share app runs at app.abhilekh.org with invented SAMPLE · नमूना papers only. Photos of papers can be kept (exactly as taken, in a Google shared drive) but are not read yet, and adding photos is switched off in production until real papers are decided. Hosting is Microsoft Azure; originals and backups are in Google Drive.
+**Status: live test (since 25 Nov 2026).** The app at app.abhilekh.org is being tested with real papers of patients who have signed consent. Photos are kept exactly as taken in a Google shared drive; reading them is the next step (M2). Invented SAMPLE · नमूना papers remain as a demo. Hosting is Microsoft Azure; originals and backups are in Google Drive.
 
 ## What is here
 

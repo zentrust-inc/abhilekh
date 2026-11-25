@@ -91,7 +91,7 @@ const NE={
 // Papers
 "My papers":"मेरा कागजात",
 "Each paper is shown the way it is printed. Dates keep the calendar printed on the paper; nothing is converted.":"प्रत्येक कागजातमा छापिएको विवरण जस्ताको तस्तै देखाइन्छ। मिति कागजातमा छापिएको पात्रोमै रहन्छ; केही पनि रूपान्तरण गरिँदैन।",
-"No papers yet. Add a SAMPLE paper from Home.":"अहिलेसम्म कुनै कागजात छैन। मुख्य पृष्ठबाट नमूना कागजात थप्नुहोस्।",
+"No papers yet. Photograph a paper from Home.":"अहिलेसम्म कुनै कागजात छैन। मुख्य पृष्ठबाट कागजको फोटो खिच्नुहोस्।",
 "See what it says":"के लेखिएको छ हेर्नुहोस्",
 "Hide what it says":"के लेखिएको छ लुकाउनुहोस्",
 // Sharing
@@ -146,7 +146,7 @@ const NE={
 "Home":"मुख्य",
 "Sharing":"साझा",
 // Titles
-"Abhilekh: share with a doctor (SAMPLE)":"अभिलेख: डाक्टरसँग साझा गर्नुहोस् (नमूना)",
+"Abhilekh: your medical papers":"अभिलेख: तपाईंका स्वास्थ्य कागजात",
 // Messages from the server
 "Not signed in.":"साइन इन गरिएको छैन।",
 "Sign in first.":"पहिले साइन इन गर्नुहोस्।",
@@ -197,7 +197,8 @@ const NE={
 "Coming soon":"छिट्टै आउँदैछ",
 "Add a paper":"कागज थप्नुहोस्",
 "The photo is kept exactly as taken: never straightened, cropped or changed. Abhilekh does not read it yet; reading comes next.":"फोटो जस्ताको तस्तै राखिन्छ: सिधा पारिँदैन, काटिँदैन, बदलिँदैन। अभिलेखले यसलाई अहिले पढ्दैन; पढ्ने काम अर्को चरणमा आउँछ।",
-"For now, photograph only SAMPLE papers.":"अहिलेलाई नमूना (SAMPLE) कागजको मात्र फोटो खिच्नुहोस्।",
+"For a good photo:":"राम्रो फोटोका लागि:",
+"one page at a time, flat on a dark table, the page filling the screen, no shine from a light or window.":"एकपटकमा एउटा पाना, गाढा रङको टेबलमा समतल राखेर, पानाले पूरै स्क्रिन ढाक्ने गरी, बत्ती वा झ्यालको चमक नपर्ने गरी।",
 "Take a photo":"फोटो खिच्नुहोस्",
 "Choose from the phone (several at once)":"फोनबाट रोज्नुहोस् (एकैपटक धेरै)",
 "No good internet? Photograph all the papers with the phone's camera now, then choose them here together when the connection is good.":"इन्टरनेट राम्रो छैन? अहिले फोनको क्यामेराले सबै कागजको फोटो खिच्नुहोस्, अनि इन्टरनेट राम्रो भएपछि यहाँ सबै एकैपटक रोज्नुहोस्।",

@@ -15,7 +15,8 @@
 
 ## How we work
 
-- Planning stage: describe plans, never results; label sample data.
+- Live test with real papers since 25 Nov 2026: patients have signed consent (Dr. Shrestha's decision). Treat every paper as confidential: never copy patient details into chat, docs, commits or test sets. Invented test pages stay labelled SAMPLE.
+- Describe what was checked and what was not; say plainly when something is untested.
 - One home for each thing. Product docs and the status log live in Google Drive › Kakani-3 › Abhilekh; code and test sets live here. Never keep a second copy.
 - The product baseline is PRD v2.1 (24 Nov 2026); the build order is the app build plan v1 (25 Nov 2026). Both are in Drive.
 - Hosting is Microsoft Azure; originals (paper photos) and backups are in a Google shared drive. Never claim that data stays in Nepal.

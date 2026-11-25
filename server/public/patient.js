@@ -231,12 +231,12 @@ function paint(){
     hc.append(el('button',{class:'card',style:'width:100%;text-align:left;font-weight:400;color:var(--ink)',onclick:()=>tab('share')},el('b',{},live?live+' active share'+(live>1?'s':''):'Nothing is being shared'),el('div',{class:'mute'},live?'Tap to see who looked':'Only you can see your papers')));
   }
   const pl=$('papers');pl.replaceChildren();
-  if(!n)pl.append(el('div',{class:'card mute'},'No papers yet. Add a SAMPLE paper from Home.'));
+  if(!n)pl.append(el('div',{class:'card mute'},'No papers yet. Photograph a paper from Home.'));
   for(const p of REC.papers||[])pl.append(paperCard(p));
   for(const d of REC.docs){
     const card=el('div',{class:'card'});
     const body=el('div',{style:'display:none'},resultRows(d));
-    card.append(el('div',{},el('span',{class:'chip'},'SAMPLE')),el('div',{class:'t',style:'margin-top:6px'},d.title),el('div',{class:'mute'},d.facility+' · '+d.date),
+    card.append(el('div',{},d.origin==='sample'?el('span',{class:'chip'},'SAMPLE'):''),el('div',{class:'t',style:'margin-top:6px'},d.title),el('div',{class:'mute'},d.facility+' · '+d.date),
       el('button',{class:'orig',type:'button',onclick:e=>{const o=body.style.display==='none';body.style.display=o?'':'none';e.target.textContent=o?'Hide what it says':'See what it says'}},'See what it says'),body);
     pl.append(card);
   }

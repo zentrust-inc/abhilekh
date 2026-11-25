@@ -1,4 +1,4 @@
-# Share server (prototype, SAMPLE data only)
+# Abhilekh server (live test with real papers)
 
 The share half of the promise, enforced by a server instead of a page: the patient picks reports, gets a QR code and
 link that lasts **15 minutes** (PRD v2.1, FR-064A; never longer, never forever), sees every open (including refused
@@ -6,11 +6,12 @@ ones in the log) and can stop the share at any time without a PIN. The doctor's 
 live and shows value, unit, printed range and printed flag only, under the banner "Patient-provided records. Not
 institution-verified. May be incomplete." No advice.
 
-Doctor's view: a watermark ("SAMPLE · shared by the patient · opened <time>") lies over every page and every crop of
+Doctor's view: a watermark ("Shared by the patient · opened <time>") lies over every page and every crop of
 the original; there is no download button, and right-click/long-press menus, dragging images out and printing are
 switched off. A screenshot or a photo of the screen cannot be prevented by a web page.
 
-Plans, not results: this is a plan under test, run only on invented SAMPLE · नमूना pages.
+Live test from 25 Nov 2026 with real papers of patients who have signed consent (Dr. Shrestha's decision). Every paper is
+confidential. The invented SAMPLE · नमूना papers stay as a demo ("Try it with a SAMPLE paper") and are labelled.
 
 ## Run
 
@@ -92,8 +93,8 @@ Where originals are kept (`originals.mjs`): with `GOOGLE_BACKUP_SA_JSON` and `GO
 shared drive, folder `originals` (made once), each file named by its SHA-256 only, so no name or paper is visible in
 Drive. Without them (tests, local runs): `DATA_DIR/originals`.
 
-Adding photos is **off** unless the Azure app setting `PHOTOS_ENABLED=1` is set (or `TEST_MODE=1`). Planning stage:
-SAMPLE papers only until real papers are decided; the page says so beside the camera button.
+Adding photos is **off** unless the Azure app setting `PHOTOS_ENABLED=1` is set (or `TEST_MODE=1`); it is on in
+production since 25 Nov 2026. Beside the camera button, the page gives photo tips (one page, flat, fill the screen, no shine).
 
 The upload is the one POST that is not JSON: raw image bytes with the header `X-Abhilekh-Upload: 1`, which a cross-site
 form cannot send.
