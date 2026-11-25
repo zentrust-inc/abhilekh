@@ -151,3 +151,25 @@ export function createReading({ store, save, keep, readers, rules, now = () => D
 
   return { enqueue, resume, pump, compare, spent, idle: () => !running && !queue.length };
 }
+
+// Crops of the original for the confirm screen and the doctor's view (M3): the region each value came from, with a margin.
+// The original is decoded once; each crop is a new small JPEG (data URL). Regions are in the original's pixels as the
+// JPEG stores them (the same frame Vision's boxes were scaled back to). A missing or empty region gives no crop.
+export function cropsOf(buf, mime, boxes) {
+  if (mime !== 'image/jpeg' || !boxes.some(Boolean)) return boxes.map(() => null);
+  const img = jpeg.decode(buf, { useTArray: true, maxMemoryUsageInMB: 1024, maxResolutionInMP: 200 });
+  return boxes.map(b => {
+    if (!b) return null;
+    const m = Math.max(12, Math.round((b[3] - b[1]) * 0.6));
+    const x0 = Math.max(0, Math.floor(b[0] - m)), y0 = Math.max(0, Math.floor(b[1] - m)), x1 = Math.min(img.width, Math.ceil(b[2] + m)), y1 = Math.min(img.height, Math.ceil(b[3] + m));
+    if (x1 - x0 < 4 || y1 - y0 < 4) return null;
+    const f = Math.min(1, 900 / (x1 - x0));
+    const w = Math.max(1, Math.round((x1 - x0) * f)), h = Math.max(1, Math.round((y1 - y0) * f));
+    const out = new Uint8Array(w * h * 4);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const i = ((y0 + Math.floor(y / f)) * img.width + (x0 + Math.floor(x / f))) * 4, o = (y * w + x) * 4;
+      out[o] = img.data[i]; out[o + 1] = img.data[i + 1]; out[o + 2] = img.data[i + 2]; out[o + 3] = 255;
+    }
+    return 'data:image/jpeg;base64,' + Buffer.from(jpeg.encode({ data: out, width: w, height: h }, 85).data).toString('base64');
+  });
+}

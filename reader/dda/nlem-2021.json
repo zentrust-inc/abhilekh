@@ -1,5 +1,5 @@
 {
- "source": "National List of Essential Medicines Nepal 2021 (sixth revision), Department of Drug Administration. Medicine entries only (vaccines and devices left out), duplicates across sections merged. Transcribed 2026-11-20 from the medbox.org copy of the DDA PDF through a web reader; to be checked line by line against the DDA PDF before any real use.",
+ "source": "National List of Essential Medicines Nepal 2021 (sixth revision), Department of Drug Administration. Medicine entries only (vaccines and devices left out), duplicates across sections merged. Transcribed 2026-11-20 from the medbox.org copy of the DDA PDF through a web reader; checked on 2026-11-25 against the DDA PDF (national-list-of-essential-medicines-nepal-sixth-revision-2021.pdf, 72 pages, in Drive › Kakani-3 › Abhilekh): every entry is in the PDF except \"bicalutamide\", which is not and was removed. The PDF was not checked for medicines missing from this file.",
  "note": "This is the ESSENTIAL list, not the full register of medicines DDA has registered. A medicine missing here may still be registered in Nepal.",
  "entries": [
   "ketamine",
@@ -192,7 +192,6 @@
   "imatinib",
   "filgrastim",
   "lenalidomide",
-  "bicalutamide",
   "letrozole",
   "methylprednisolone",
   "tamoxifen",
