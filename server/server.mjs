@@ -13,11 +13,12 @@ import { fileURLToPath } from 'node:url';
 import { createAuth } from './auth.mjs';
 import { akashSender, memorySender, noSender } from './sms.mjs';
 import { acsMailSender, memoryMail, noMail } from './mail.mjs';
+import { createBackup } from './backup.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PUBLIC = join(HERE, 'public');
 const ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789'; // 31 letters/digits, no look-alikes
-const ALLOWED_MINUTES = [60, 1440, 10080]; // 1 hour, 24 hours, 7 days. Never "forever".
+const ALLOWED_MINUTES = [15]; // PRD v2.1 FR-064A: a share lasts 15 minutes. Never "forever". (TEST_MODE also allows 1 minute.)
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
 
 export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-record.json'), testMode = false, seedSample = false, now = () => Date.now(), sms = memorySender(), mail = memoryMail(), google = null, rp = null, secureCookies = true, authLimits } = {}) {
@@ -102,7 +103,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
         const docs = Array.isArray(b.docs) ? [...new Set(b.docs)].filter(id => mine().docs.some(d => d.id === id)) : [];
         if (!docs.length) return send(res, 400, { error: 'Choose at least one report to share.' });
         const minutes = Number(b.minutes);
-        if (!(ALLOWED_MINUTES.includes(minutes) || (testMode && minutes === 1))) return send(res, 400, { error: 'Choose 1 hour, 24 hours or 7 days.' });
+        if (!(ALLOWED_MINUTES.includes(minutes) || (testMode && minutes === 1))) return send(res, 400, { error: 'A share lasts 15 minutes.' });
         const who = String(b.who || '').slice(0, 80);
         const t = now();
         const s = { id: token(), ownerId: cur.account.id, docs, who, created: new Date(t).toISOString(), expires: new Date(t + minutes * 60000).toISOString(), minutes, revokedAt: null, log: [] };
@@ -157,6 +158,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const rp = { id: new URL(publicUrl).hostname, origin: new URL(publicUrl).origin }; // passkeys belong to this site only
   console.log('SMS sender: ' + sms.name + '; mail sender: ' + mail.name + '; Google sign-in: ' + (google ? 'on' : 'off') + '; passkeys: ' + rp.id);
   const app = createApp({ storePath: join(dataDir, 'store.json'), testMode, sms, mail, google, rp, secureCookies: process.env.INSECURE_COOKIES !== '1' });
+  // Daily backup of store.json: local copies in DATA_DIR/backups, plus Azure Blob when BACKUP_BLOB_SAS_URL is set.
+  const sasUrl = process.env.BACKUP_BLOB_SAS_URL || '';
+  console.log('Backups: daily to ' + join(dataDir, 'backups') + (sasUrl ? ' and Azure Blob' : '; no second place set (BACKUP_BLOB_SAS_URL)'));
+  createBackup({ storePath: join(dataDir, 'store.json'), dir: join(dataDir, 'backups'), sasUrl }).start();
   const port = Number(process.env.PORT || 8080);
   http.createServer(app.handler).listen(port, () => console.log('Abhilekh share server (SAMPLE data) on port ' + port));
 }

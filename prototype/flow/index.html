@@ -2384,7 +2384,7 @@ function vRead(v){
 function img(src,alt){return el('img',{class:'crop',src,alt})}
 function vCheck(v){
   const req=required(),tk=ticked(),doneN=req.filter(reqDone).length;
-  v.append(el('h1',{},'Check against the paper'),el('p',{class:'sub'},'Dates and values with a decimal point are never filled in for you. Anything the readers disagreed on is left empty. '+doneN+' of '+req.length+' needs-you items done.'));
+  v.append(el('h1',{},'Check against the paper'),el('p',{class:'sub'},'Dates and values with a decimal point are never filled in for you. Anything the readers disagreed on says: Unresolved. Original document available. '+doneN+' of '+req.length+' needs-you items done.'));
   // date
   const dc=el('div',{class:'card'+(reqDone(req[0])?' done':'')});dc.append(el('div',{class:'t'},'Date'),img(page.date.img,'Date, cropped from the original page'));
   fieldWidget(dc,'date','date','',0);v.append(dc);
@@ -2416,7 +2416,7 @@ const KIND_LABEL={value:'Result',unit:'Unit',range:'Printed range',flag:'Flag pr
 function fieldWidget(card,id,kind,label,reading){
   const s=S[id]??(S[id]={confirmed:false,text:kind==='confirm'?reading:''});
   const wrap=el('div',{style:'margin-top:8px'});
-  if(s.confirmed){wrap.append(el('div',{class:'v'},'✓ '+(s.text||'(left empty)')),el('button',{class:'lnk',onclick:()=>{s.confirmed=false;render()}},'Change'));card.append(wrap);return}
+  if(s.confirmed){wrap.append(el('div',{class:'v'},'✓ '+(s.text||'Unresolved. Original document available.')),el('button',{class:'lnk',onclick:()=>{s.confirmed=false;render()}},'Change'));card.append(wrap);return}
   const lbl=kind==='date'?'Type the date as written (Nepali or English date)':kind==='confirm'?label+' as the reader copied it. Edit it if the paper differs.':label+': the readers did not agree, so it is empty. Type it from the paper, or leave it empty.';
   wrap.append(el('div',{class:'mute'},lbl));
   const inp=el('input',{type:'text',autocomplete:'off',value:s.text});

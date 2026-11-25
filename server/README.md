@@ -1,15 +1,20 @@
 # Share server (prototype, SAMPLE data only)
 
-The share half of the promise, enforced by a server instead of a page: the patient picks reports and a time
-(1 hour, 24 hours or 7 days, never forever), gets a QR code and link, sees every open (including refused ones in
-the log) and can stop the share. The doctor's view is served only while the share is live and shows value, unit,
-printed range and printed flag only. No advice.
+The share half of the promise, enforced by a server instead of a page: the patient picks reports, gets a QR code and
+link that lasts **15 minutes** (PRD v2.1, FR-064A; never longer, never forever), sees every open (including refused
+ones in the log) and can stop the share at any time without a PIN. The doctor's view is served only while the share is
+live and shows value, unit, printed range and printed flag only, under the banner "Patient-provided records. Not
+institution-verified. May be incomplete." No advice.
+
+Doctor's view: a watermark ("SAMPLE · shared by the patient · opened <time>") lies over every page and every crop of
+the original; there is no download button, and right-click/long-press menus, dragging images out and printing are
+switched off. A screenshot or a photo of the screen cannot be prevented by a web page.
 
 Plans, not results: this is a plan under test, run only on invented SAMPLE · नमूना pages.
 
 ## Run
 
-    cd server && npm test          # 53 tests, node:test, no packages to install
+    cd server && npm test          # 77 tests, node:test, no packages to install
     PORT=8080 DATA_DIR=./data node server.mjs
 
 `TEST_MODE=1` also allows a 1-minute share so expiry can be watched on a live URL, and, when no SMS token is set,
@@ -36,7 +41,7 @@ Plan agreed 21 Nov 2026 (status log; PRD rev. 3.3, Security and consent):
   Google: that is the first check after the OAuth client exists.
 - **Fingerprint or face (passkeys, `passkey.mjs`)**: optional, next to the PIN, never instead of it. Signed in, the patient turns it on
   for a phone (the PIN is asked, so a stolen session cannot add a way in that outlives sign-out). After that one touch signs in. The phone's
-  own unlock does the check; Abhilekh stores only a public key, never a fingerprint or a face. The same touch confirms **creating or stopping a share** in place of the PIN (the PIN still works; a passkey answer is a one-time, account-bound proof and does not count towards the PIN lockout). A recovery with a
+  own unlock does the check; Abhilekh stores only a public key, never a fingerprint or a face. The same touch confirms **creating a share** in place of the PIN (the PIN still works; a passkey answer is a one-time, account-bound proof and does not count towards the PIN lockout). A recovery with a
   code removes every passkey. At most 5 per account. The site name (rpId) is the host of `PUBLIC_URL`. Checked with a software authenticator in
   the tests; **not yet tried on a real phone**.
 - One field on the sign-in page: an "@" means email, anything else is read as a Nepal mobile number. The email is lower-cased; dots and +tags are kept.
@@ -44,13 +49,13 @@ Plan agreed 21 Nov 2026 (status log; PRD rev. 3.3, Security and consent):
   from another phone; a new phone gets an SMS code.
 - A code again only for recovery (by SMS for a phone account, by email for an email account): **new phone, forgotten PIN, lockout**. Recovery signs out every other phone and
   **pauses new shares for 24 hours**; stopping a share is never paused.
-- The PIN is asked again to **create or stop a share**. Every share belongs to the account that made it.
+- The PIN (or fingerprint/face) is asked again to **create a share**. Stopping a share needs no PIN, so it is easy in a hurry. Every share belongs to the account that made it.
 - Wrong PIN: 5 in a row means a 15-minute wait; 10 means a code by SMS. A code works 10 minutes, 5 tries, once.
 - Code limits (cost and abuse): one a minute, 3 an hour and 5 a day per number or address; 10 an hour per connection;
   200 SMS and 1,000 emails a day in total. The SMS and the email carry no health content.
 - Stored: phone number, email address or Google id and email, scrypt hash of the PIN, SHA-256 of codes, sessions and device tokens; never a plain code,
   PIN or token. Cookies are HttpOnly, Secure, SameSite=Strict; every POST must be JSON.
-- Later, not here: passkeys (rpId abhilekh.org), family profiles, consent records.
+- Later, not here: family profiles (one person managing a parent's record, build plan M1), consent records.
 
 SMS: Akash SMS v3 (`POST https://sms.aakashsms.com/sms/v3/send/`, form fields auth_token, to, text; docs at
 bitbucket.org/aakashsms/api, branch v4). About Rs 1 per code (one credit per SMS). The token is set only as the
@@ -69,11 +74,23 @@ service. That is the first thing to check after the resource exists.
 `python3 prototype/share/build.py <qrcode.js>` also writes `server/data/sample-record.json` (same invented L21 and L22
 pages and crops as the share prototype). `server/public/qrcode.js` is qrcode-generator 2.0.4 (MIT), licence header kept.
 
+## Backups (backup.mjs)
+
+Once at start-up and then every 24 hours, `store.json` is checked (a broken file is never copied) and copied to
+`DATA_DIR/backups/store-YYYY-MM-DD.json`; the newest 30 copies are kept. If the Azure app setting
+`BACKUP_BLOB_SAS_URL` is set (a Blob Storage **container** URL with a SAS token allowing create and write; never in the
+repository), the same copy is also uploaded there, so a copy survives if the app's own disk is lost. The start-up log
+says which. Without that setting, the copies sit on the same disk as the store.
+
+Restore: stop the app; copy the chosen backup over `DATA_DIR/store.json` (or call `restoreBackup`, which first checks
+the backup is a readable store and keeps the old file as `store.json.before-restore`); start the app.
+`test/backup.test.mjs` runs this restore end to end.
+
 ## What it does not do yet
 
-- **One record for everyone.** Every account sees the same invented SAMPLE record; each patient's own confirmed
-  record comes next.
-- **Storage is one JSON file** (atomic writes). Fine for a demo; a real record needs a database and backups.
+- **No photos yet.** Each account has its own record, but it can hold only the invented SAMPLE papers. Taking and
+  keeping a photo of a paper is build plan M1.
+- **Storage is one JSON file** (atomic writes, daily backups). Fine for a demo; photos will go to Azure Blob Storage.
 - **Unknown links** return 404 and are not logged (no share to log against); more than 30 misses a minute from one address are slowed down. The limiter is per process and per address, not a defence against a determined attacker.
 - Links are 14 characters from 31 letters and digits (about 69 bits), not guessable in practice.
-- English only; the QR code is drawn but not yet scanned by a phone; not tested with real people.
+- English and Nepali (the Nepali wording still needs a native speaker's review); the QR code is drawn but not yet scanned by a phone; not tested with real people.

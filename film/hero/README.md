@@ -11,5 +11,6 @@ Made with HyperFrames 0.9.77 (open source, HTML rendered to video). Everything i
     npx hyperframes@0.9.77 check
     npx hyperframes@0.9.77 render --output hero.mp4
 
-Web encodes (into site/media/): H.264 1080p CRF 24 and 720p CRF 25 (faststart, no audio), VP9 1080p CRF 36, and a
-poster frame at 6.6 s. See site/README.md for the exact ffmpeg lines.
+The current site (`site-next/`) no longer uses this loop; the hero is the film v4 poster. The old `site/` folder, which
+held the web encodes (H.264 1080p CRF 24 and 720p CRF 25, VP9 1080p CRF 36, poster at 6.6 s) and the exact ffmpeg
+lines in its README, was removed on 25 Nov 2026; both are in the git history before that change.

@@ -229,7 +229,7 @@ const confirmBody = async (ph, auth, opts) => {
 };
 const share = async (ph, proof, extra = {}) => {
   const rec = (await ph.call('/api/record')).json;
-  return ph.call('/api/shares', 'POST', { docs: [rec.docs[0].id], minutes: 60, who: 'Dr. Namuna', ...proof, ...extra });
+  return ph.call('/api/shares', 'POST', { docs: [rec.docs[0].id], minutes: 15, who: 'Dr. Namuna', ...proof, ...extra });
 };
 
 test('passkey confirms a share and its stop, with no PIN typed; the PIN still works too', async () => {
