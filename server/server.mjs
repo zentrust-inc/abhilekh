@@ -20,7 +20,7 @@ import { acsMailSender, memoryMail, noMail } from './mail.mjs';
 import { createBackup, googleDriveUploader } from './backup.mjs';
 import { createDrive } from './drive.mjs';
 import { localOriginals, driveOriginals, EXT } from './originals.mjs';
-import { createReading } from './reading.mjs';
+import { createReading, cropsOf } from './reading.mjs';
 // The reader lives in reader/ (one home, reused from Chautari). In the repository it is ../reader; on the server it is
 // deployed next to this file as ./reader.
 const READER = existsSync(join(dirname(fileURLToPath(import.meta.url)), 'reader')) ? './reader/' : '../reader/';
@@ -34,6 +34,7 @@ const PUBLIC = join(HERE, 'public');
 const ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789'; // 31 letters/digits, no look-alikes
 const ALLOWED_MINUTES = [15]; // PRD v2.1 FR-064A: a share lasts 15 minutes. Never "forever". (TEST_MODE also allows 1 minute.)
 const MAX_PEOPLE = 6;
+const KIND_TITLE = { lab_report: 'Lab report', prescription: 'Prescription', other: 'Paper' };
 const MAX_PHOTO = 15 * 1024 * 1024; // 15 MB: a phone photo, with room to spare
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
 
@@ -77,9 +78,9 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
     req.on('end', () => resolve(over ? null : Buffer.concat(chunks)));
     req.on('error', reject);
   });
-  const readJson = req => new Promise((resolve, reject) => {
+  const readJson = (req, max = 20000) => new Promise((resolve, reject) => {
     let n = 0; const chunks = [];
-    req.on('data', c => { n += c.length; if (n > 20000) { reject(new Error('too large')); req.destroy(); } else chunks.push(c); });
+    req.on('data', c => { n += c.length; if (n > max) { reject(new Error('too large')); req.destroy(); } else chunks.push(c); });
     req.on('end', () => { try { resolve(JSON.parse(Buffer.concat(chunks).toString() || '{}')); } catch (e) { reject(e); } });
     req.on('error', reject);
   });
@@ -114,7 +115,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
       const mine = () => { const r = acct(); return r.people.find(p => p.id === cur.session.personId) || r.people[0]; }; // the person in view on this session
       const forPerson = s => mineOnly(s) && (s.personId ? s.personId === mine().id : mine() === acct().people[0]); // shares made before M1 belong to the first person
       const paperOut = p => ({ id: p.id, sha256: p.sha256, mime: p.mime, bytes: p.bytes, added: p.added, status: p.status, reading: p.reading ? { ...p.reading, usd: undefined } : null });
-      const summary = () => { const r = mine(); return { label: r.name, person: r.id, people: acct().people.map(p => ({ id: p.id, name: p.name, papers: p.docs.length + p.papers.length })), docs: r.docs.map(d => ({ id: d.id, title: d.title, facility: d.facility, date: d.date_as_written, origin: d.origin || 'sample', results: d.results.map(({ img, ...r }) => r) })), papers: r.papers.map(paperOut).reverse(), photos: photos || testMode, testMode, minutes: ALLOWED_MINUTES }; };
+      const summary = () => { const r = mine(); return { label: r.name, person: r.id, people: acct().people.map(p => ({ id: p.id, name: p.name, papers: p.docs.length + p.papers.length })), docs: r.docs.map(d => ({ id: d.id, title: d.title, facility: d.facility, date: d.date_as_written, origin: d.origin || 'sample', paper: d.paperId || null, results: d.results.map(({ img, ...r }) => r), medicines: d.medicines || [] })).reverse(), papers: r.papers.map(paperOut).reverse(), photos: photos || testMode, testMode, minutes: ALLOWED_MINUTES }; };
       if (req.method === 'GET' && path === '/api/record') return send(res, 200, summary());
       if (req.method === 'POST' && path === '/api/record/sample') { // copy the invented SAMPLE papers into THIS account only; asking twice adds nothing
         const r = mine();
@@ -174,6 +175,41 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
         res.writeHead(200, { 'content-type': p.mime, 'content-length': buf.length, 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff', 'content-disposition': 'inline', 'referrer-policy': 'no-referrer' });
         return res.end(buf);
       }
+      // --- M3: the patient checks what the readers found against the paper, then adds it to the record ---
+      // Rules (PRD v2.1): the date is always typed; a value with a decimal point needs its own tick; an Unresolved field is
+      // typed from the paper or left Unresolved. Nothing reaches a doctor until this is done. The server checks the same.
+      mp = path.match(/^\/api\/papers\/(p[0-9a-f]+)\/confirm$/);
+      if (req.method === 'POST' && mp) {
+        const r = mine(), p = r.papers.find(x => x.id === mp[1]);
+        if (!p) return send(res, 404, { error: 'No such paper.' });
+        if (p.status !== 'ready' || !p.reading) return send(res, 409, { error: 'This paper is not ready to check yet.' });
+        const b = await readJson(req, 200000);
+        const str = (v, n = 200) => String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, n);
+        const date = str(b.date, 40);
+        if (!date) return send(res, 400, { error: 'Type the date exactly as it is printed on the paper.' });
+        const rd = p.reading, UN = 'Unresolved. Original document available.';
+        // each submitted field: { value, ok } where ok = the patient ticked "Matches the paper" (or typed it) or chose to leave it Unresolved
+        const take = (sent, from, label) => {
+          const v = str(sent?.value), keep = !!sent?.unresolved;
+          if (from && from.state === 'confirm' && !sent?.ok && !keep) throw Object.assign(new Error('Check ' + label + ' against the paper.'), { status: 400 });
+          if (from && from.state === 'unresolved' && !v && !keep) throw Object.assign(new Error('Type ' + label + ' from the paper, or leave it Unresolved.'), { status: 400 });
+          return keep && !v ? UN : v;
+        };
+        let results, medicines;
+        try {
+          const R = Array.isArray(b.results) ? b.results : [], M = Array.isArray(b.medicines) ? b.medicines : [];
+          if (R.length !== rd.results.length || M.length !== rd.medicines.length) return send(res, 400, { error: 'Bad request.' });
+          results = rd.results.map((x, i) => R[i]?.removed ? null : ({ test: take(R[i].test, x.test, 'the test name'), value: take(R[i].value, x.value, 'the value of ' + (x.test.text || x.test.a || 'a test')), unit: take(R[i].unit, x.unit, 'the unit'), range: take(R[i].range, x.range, 'the printed range'), flag: take(R[i].flag, x.flag, 'the printed flag'), box: x.vregion?.box || null })).filter(Boolean);
+          medicines = rd.medicines.map((x, i) => M[i]?.removed ? null : ({ as_written: take(M[i].as_written, x.as_written, 'the medicine line'), dose: take(M[i].dose, x.dose, 'the dose'), duration: take(M[i].duration, x.duration, 'the duration'), dda: x.dda })).filter(Boolean);
+        } catch (e) { return send(res, e.status || 400, { error: e.status ? e.message : 'Bad request.' }); }
+        let crops = results.map(() => null);
+        try { crops = cropsOf(await keep.get(p.ref), p.mime, results.map(x => x.box)); } catch (e) { console.error('Crops not made: ' + e.message); }
+        const doc = { id: 'd' + p.id.slice(1), paperId: p.id, origin: 'photo', title: KIND_TITLE[rd.kind] || 'Paper', facility: str(b.facility) || '', clinician: str(b.clinician) || '', patient: '', date_as_written: date,
+          results: results.map(({ box, ...x }, i) => ({ ...x, ...(crops[i] ? { img: crops[i] } : {}) })), medicines, confirmedAt: new Date(now()).toISOString() };
+        r.docs = r.docs.filter(d => d.paperId !== p.id); r.docs.push(doc);
+        p.status = 'confirmed'; save();
+        return send(res, 200, summary());
+      }
       if (req.method === 'GET' && path === '/api/shares') return send(res, 200, { shares: store.shares.filter(forPerson).map(publicShare).reverse() });
       if (req.method === 'POST' && path === '/api/shares') {
         const b = await readJson(req);
@@ -202,6 +238,21 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
       }
 
       // --- doctor side: the ONLY place a record leaves, and only while the share is live ---
+      // the whole original photo of a confirmed paper, only while the share is live (the doctor's view lays the watermark over it)
+      m = path.match(/^\/api\/s\/([a-z0-9]+)\/original\/(d[0-9a-f]+)$/);
+      if (req.method === 'GET' && m) {
+        const s = store.shares.find(x => x.id === m[1]);
+        if (!s || stateOf(s) !== 'live' || !s.docs.includes(m[2])) return send(res, 410, { error: 'This share is not live.' });
+        const ppl = (store.records[s.ownerId] || { people: [] }).people;
+        const doc = ppl.flatMap(p => p.docs).find(d => d.id === m[2]);
+        const paper = doc && ppl.flatMap(p => p.papers).find(p => p.id === doc.paperId);
+        if (!paper) return send(res, 404, { error: 'not found' });
+        let buf; try { buf = await keep.get(paper.ref); } catch (e) { return send(res, 503, { error: 'The original could not be fetched just now.' }); }
+        if (createHash('sha256').update(buf).digest('hex') !== paper.sha256) return send(res, 500, { error: 'This original does not match what was kept.' });
+        log(s, 'The original photo was opened on a doctor\'s phone.'); save();
+        res.writeHead(200, { 'content-type': paper.mime, 'content-length': buf.length, 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff', 'content-disposition': 'inline', 'referrer-policy': 'no-referrer' });
+        return res.end(buf);
+      }
       m = path.match(/^\/api\/s\/([a-z0-9]+)$/);
       if (req.method === 'GET' && m) {
         const s = store.shares.find(x => x.id === m[1]);

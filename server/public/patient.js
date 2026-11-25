@@ -128,7 +128,7 @@ async function enter(){
   if(!started){started=true;await setup()}else await load();
 }
 function tab(name){
-  for(const t of ['home','papers','share'])$('tab-'+t).style.display=t===name?'':'none';
+  for(const t of ['home','papers','share','check'])$('tab-'+t).style.display=t===name?'':'none';
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===name));
   scrollTo(0,0);
 }
@@ -152,6 +152,7 @@ $('labelSave').onclick=async()=>{try{REC=await post('/api/record/label',{label:$
 $('trySample').onclick=async()=>{try{REC=await post('/api/record/sample');paint();paintForm()}catch(e){alert(e.message)}};
 function resultRows(d){
   const box=el('div',{class:'res-list'});
+  for(const m of d.medicines||[]){const row=el('div',{class:'res'});row.append(el('div',{class:'t'},m.as_written),el('div',{class:'mute'},[m.dose,m.duration].filter(Boolean).join(' · ')));box.append(row)}
   for(const r of d.results){
     const row=el('div',{class:'res'});
     row.append(el('div',{class:'t'},r.test),el('div',{class:'v'},r.value+' ',el('span',{class:'u'},r.unit||''),r.flag?el('span',{class:'flag',title:'printed on the paper'},r.flag):''));
@@ -235,7 +236,69 @@ function readingView(r){
   }
   return box;
 }
-const STATUS={waiting:'Original kept · waiting to be read',reading:'Being read…',paused:'Waiting: the reading limit for this month is reached',failed:'Could not be read. The original is kept.',ready:'Read · ready to check'};
+// ---- M3: check against the paper, then add to my record ----
+// Agreed: filled in and ticked (the patient can still change it). A date: always typed. A value with a decimal point: needs
+// its own tick. Unresolved: typed from the paper, or left Unresolved. There is no "confirm all".
+function checkField(label,f,opt={}){
+  const wrap=el('div',{class:'chk'});
+  const st=f?f.state:'empty';
+  const inp=el('input',{type:'text',value:opt.typed?'':(st==='agreed'||st==='confirm'?f.text:''),maxlength:'200','aria-label':label});
+  const tick=el('input',{type:'checkbox'});if(st==='agreed')tick.checked=true;
+  const leave=el('input',{type:'checkbox'});
+  const note=el('div',{class:'mute'});
+  wrap.append(el('div',{class:'t'},label),inp);
+  if(opt.typed){inp.placeholder='Type it exactly as printed';note.textContent='Dates are always typed by you, as printed on the paper (any calendar).'}
+  else if(st==='agreed')note.textContent='Both readers read this the same.';
+  else if(st==='confirm')note.textContent='Has a decimal point: check it against the paper yourself.';
+  else if(st==='unresolved'){inp.placeholder='Unresolved. Original document available.';note.textContent='The readers did not agree. Type it from the paper, or leave it Unresolved.'}
+  wrap.append(note);
+  if(!opt.typed&&(st==='agreed'||st==='confirm'))wrap.append(el('label',{class:'opt'},tick,el('span',{},'Matches the paper')));
+  if(!opt.typed&&st==='unresolved')wrap.append(el('label',{class:'opt'},leave,el('span',{},'Leave it Unresolved')));
+  inp.addEventListener('input',()=>{if(st==='agreed'||st==='confirm')tick.checked=false;if(inp.value)leave.checked=false});
+  return{node:wrap,get:()=>({value:inp.value.trim(),ok:tick.checked,unresolved:leave.checked}),
+    done:()=>opt.typed?!!inp.value.trim():st==='confirm'?tick.checked:st==='unresolved'?(!!inp.value.trim()||leave.checked):true,mark:on=>wrap.classList.toggle('need',on)};
+}
+function openCheck(p){
+  const r=p.reading,v=$('checkView');v.replaceChildren();tab('check');
+  const fields=[];const add=(box,label,f,opt)=>{const c=checkField(label,f,opt);box.append(c.node);fields.push(c);return c};
+  v.append(el('button',{class:'orig',type:'button',onclick:()=>tab('papers')},'\u2039 ',el('span',{},'Back to my papers')),el('h1',{},'Check against the paper'),
+    el('p',{class:'sub'},'Look at the paper and at each line below. Nothing reaches a doctor until you add it to your record.'));
+  const img=el('img',{class:'crop',alt:'The original photo, as taken',src:'/api/papers/'+p.id+'/original'});
+  v.append(el('div',{class:'card'},img,el('div',{class:'mute'},'Tap the photo to see it larger.')));
+  img.onclick=()=>window.open('/api/papers/'+p.id+'/original','_blank','noopener');
+  const top=el('div',{class:'card'});v.append(top);
+  const date=add(top,'Date on the paper',r.date,{typed:true});
+  const fac=add(top,'Clinic, hospital or lab',r.facility);const doc=add(top,'Doctor',r.clinician);
+  const rows=[],meds=[];
+  if(r.results.length){v.append(el('h2',{},'Results'));}
+  r.results.forEach(t=>{const c=el('div',{class:'card'});v.append(c);
+    const row={removed:false,f:{}};
+    const rm=el('button',{class:'orig',type:'button',onclick:()=>{row.removed=!row.removed;c.classList.toggle('off',row.removed);rm.textContent=row.removed?'Put this line back':'This line is not on the paper'}},'This line is not on the paper');
+    row.f.test=add(c,'Test',t.test);row.f.value=add(c,'Value',t.value);row.f.unit=add(c,'Unit',t.unit);row.f.range=add(c,'Printed range',t.range);row.f.flag=add(c,'Flag printed by the lab',t.flag);
+    c.append(rm);rows.push(row)});
+  if(r.medicines.length){v.append(el('h2',{},'Medicines'));}
+  r.medicines.forEach(m=>{const c=el('div',{class:'card'});v.append(c);
+    const row={removed:false,f:{}};
+    const rm=el('button',{class:'orig',type:'button',onclick:()=>{row.removed=!row.removed;c.classList.toggle('off',row.removed);rm.textContent=row.removed?'Put this line back':'This line is not on the paper'}},'This line is not on the paper');
+    row.f.as_written=add(c,'Medicine, as written',m.as_written);row.f.dose=add(c,'Dose',m.dose);row.f.duration=add(c,'Duration',m.duration);
+    if(m.dda==='not_found')c.append(el('div',{class:'mute'},'Not found on the DDA list: kept as written.'));
+    c.append(rm);meds.push(row)});
+  const err=el('div',{class:'mute',style:'color:#a01212;margin-top:6px'});
+  const go=el('button',{class:'go',type:'button'},'Add to my record');
+  v.append(go,err,el('p',{class:'mute'},'Abhilekh keeps what the paper says. It gives no advice.'));
+  go.onclick=async()=>{
+    let missing=0;
+    const live=f=>!rows.concat(meds).some(r=>r.removed&&Object.values(r.f).includes(f));
+    for(const f of fields){const need=live(f)&&!f.done();f.mark(need);if(need)missing++}
+    if(missing){err.textContent=missing+' line'+(missing>1?'s':'')+' still to check. They are marked in yellow.';const n=v.querySelector('.need');if(n)n.scrollIntoView({block:'center'});return}
+    err.textContent='';go.disabled=true;
+    const pack=row=>row.removed?{removed:true}:Object.fromEntries(Object.entries(row.f).map(([k,c])=>[k,c.get()]));
+    try{REC=await post('/api/papers/'+p.id+'/confirm',{date:date.get().value,facility:fac.get().value,clinician:doc.get().value,results:rows.map(pack),medicines:meds.map(pack)});
+      paint();paintForm();tab('papers')}
+    catch(e){err.textContent=e.message;go.disabled=false}
+  };
+}
+const STATUS={confirmed:'Checked and added to your record',waiting:'Original kept · waiting to be read',reading:'Being read…',paused:'Waiting: the reading limit for this month is reached',failed:'Could not be read. The original is kept.',ready:'Read · ready to check'};
 function paperCard(p){
   const card=el('div',{class:'card'});
   const img=el('img',{class:'crop',alt:'The original photo, as taken',loading:'lazy',src:'/api/papers/'+p.id+'/original'});
@@ -246,6 +309,7 @@ function paperCard(p){
     card.append(el('div',{class:'mute'},s.agreed+' agreed by both readers · '+s.confirm+' for you to check · '+s.unresolved+' unresolved'));
     if(p.reading.oneReader)card.append(el('div',{class:'mute'},'Only one reader answered, so nothing is marked as agreed.'));
     const body=el('div',{style:'display:none'},readingView(p.reading));
+    card.append(el('button',{class:'go',type:'button',onclick:()=>openCheck(p)},'Check and add to my record'));
     card.append(el('button',{class:'orig',type:'button',onclick:e=>{const o=body.style.display==='none';body.style.display=o?'':'none';e.target.textContent=o?'Hide what the readers found':'See what the readers found'}},'See what the readers found'),body);
   }
   card.append(el('div',{class:'mute'},'Added '+fmt(p.added)),el('div',{class:'mute'},Math.round(p.bytes/1024)+' KB'),
@@ -269,11 +333,11 @@ function paint(){
   }
   const pl=$('papers');pl.replaceChildren();
   if(!n)pl.append(el('div',{class:'card mute'},'No papers yet. Photograph a paper from Home.'));
-  for(const p of REC.papers||[])pl.append(paperCard(p));
+  for(const p of REC.papers||[])if(p.status!=='confirmed')pl.append(paperCard(p));
   for(const d of REC.docs){
     const card=el('div',{class:'card'});
     const body=el('div',{style:'display:none'},resultRows(d));
-    card.append(el('div',{},d.origin==='sample'?el('span',{class:'chip'},'SAMPLE'):''),el('div',{class:'t',style:'margin-top:6px'},d.title),el('div',{class:'mute'},d.facility+' · '+d.date),
+    card.append(el('div',{},d.origin==='sample'?el('span',{class:'chip'},'SAMPLE'):el('span',{class:'chip'},'Checked by you')),el('div',{class:'t',style:'margin-top:6px'},d.title),el('div',{class:'mute'},d.facility+' · '+d.date),
       el('button',{class:'orig',type:'button',onclick:e=>{const o=body.style.display==='none';body.style.display=o?'':'none';e.target.textContent=o?'Hide what it says':'See what it says'}},'See what it says'),body);
     pl.append(card);
   }

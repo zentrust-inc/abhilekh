@@ -70,3 +70,7 @@ body.doctor img{-webkit-user-drag:none;user-select:none;-webkit-touch-callout:no
 .opt-person{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px;margin:6px 0;color:var(--ink);font-weight:400}
 .opt-person.on{border-color:var(--accent)}.opt-person.pick{border-width:2px;border-color:var(--accent)}
 .v.unres{font-size:14px;font-weight:600;color:#8a5a00}
+.chk{padding:8px 0;border-top:1px solid var(--line)}.chk:first-child{border-top:0}
+.chk input[type=text]{width:100%;font-size:17px;margin-top:4px}
+.chk.need{background:#fff3cd;border-radius:8px;padding:8px}
+.card.off{opacity:.45}

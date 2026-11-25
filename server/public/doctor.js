@@ -25,7 +25,7 @@ document.addEventListener('dragstart',e=>e.preventDefault());
   tick();
   for(const d of j.docs){
     const c=el('div',{class:'card',style:'margin-top:10px'});
-    c.append(el('h2',{},d.title),el('div',{class:'mute'},d.facility+' · '+d.patient+' · '+d.date_as_written));
+    c.append(el('h2',{},d.title),el('div',{class:'mute'},[d.facility,d.patient,d.date_as_written].filter(Boolean).join(' · ')));
     d.results.forEach(r=>{
       const row=el('div',{class:'res'});
       row.append(el('div',{class:'t'},r.test),el('div',{class:'v'},r.value+' ',el('span',{class:'u'},r.unit||''),r.flag?el('span',{class:'flag',title:'printed on the paper'},r.flag):''));
@@ -33,6 +33,11 @@ document.addEventListener('dragstart',e=>e.preventDefault());
       if(r.img){const im=el('img',{class:'crop',src:r.img,alt:'Region of the original page for '+r.test,style:'display:none',draggable:'false'});row.append(el('button',{class:'orig',onclick:()=>{im.style.display=im.style.display==='none'?'block':'none'}},'See the original'),im)}
       else row.append(el('div',{class:'mute'},'Original region not found; see the whole page.'));
       c.append(row)});
+    for(const m of d.medicines||[]){const row=el('div',{class:'res'});row.append(el('div',{class:'t'},m.as_written),el('div',{class:'mute'},[m.dose,m.duration].filter(Boolean).join(' · ')));c.append(row)}
+    if(d.origin==='photo'){ // the whole original, under the same watermark; asked for, not loaded by itself
+      const big=el('img',{class:'crop',alt:'The whole original page',style:'display:none',draggable:'false'});
+      c.append(el('button',{class:'orig',onclick:e=>{if(!big.src)big.src='/api/s/'+id+'/original/'+d.id;const o=big.style.display==='none';big.style.display=o?'block':'none';e.target.textContent=o?'Hide the whole original':'See the whole original page'}},'See the whole original page'),big);
+    }
     ph.append(c);
   }
   ph.append(el('p',{class:'mute'},'Only what the paper says: value, unit, printed range and any printed flag. Abhilekh gives no advice.'));
