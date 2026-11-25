@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createBackup, restoreBackup, backupName } from '../backup.mjs';
+import { createBackup, restoreBackup, backupName, googleDriveUploader } from '../backup.mjs';
+import { generateKeyPairSync, createVerify } from 'node:crypto';
 import { createApp } from '../server.mjs';
 
 const DAY = 86400000;
@@ -25,20 +26,36 @@ test('a broken store is never backed up', async () => {
   assert.deepEqual(b.list(), []);
 });
 
-test('with a SAS URL the copy also goes to Azure Blob as a block blob; a failed upload keeps the local copy', async () => {
+test('with Google settings the copy also goes to Google Drive (shared drive); a failed upload keeps the local copy', async () => {
   const f = fresh(); writeFileSync(f.store, JSON.stringify({ shares: [] }));
+  const { privateKey, publicKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+  const credentials = { client_email: 'backup@abhilekh-test.iam.gserviceaccount.com', private_key: privateKey.export({ type: 'pkcs8', format: 'pem' }), token_uri: 'https://oauth2.googleapis.com/token' };
   const calls = [];
-  const ok = async (url, o) => { calls.push({ url, o }); return { status: 201 }; };
+  const fake = async (url, o) => {
+    calls.push({ url, o });
+    if (url.startsWith('https://oauth2.googleapis.com/token')) return { status: 200, json: async () => ({ access_token: 'tok', expires_in: 3600 }) };
+    return { status: 200, json: async () => ({ id: 'x' }) };
+  };
   const t = Date.parse('2026-11-25T06:00:00Z');
-  const b = createBackup({ storePath: f.store, dir: f.dir, sasUrl: 'https://acct.blob.core.windows.net/abhilekh-backups?sv=x&sig=y', fetchImpl: ok, now: () => t, logger: quiet });
+  const uploader = googleDriveUploader({ credentials, folderId: 'FOLDER123', fetchImpl: fake, now: () => t });
+  const b = createBackup({ storePath: f.store, dir: f.dir, uploader, now: () => t, logger: quiet });
   assert.equal((await b.run()).remote, 'uploaded');
-  assert.equal(calls[0].url, 'https://acct.blob.core.windows.net/abhilekh-backups/store-2026-11-25.json?sv=x&sig=y');
-  assert.equal(calls[0].o.method, 'PUT');
-  assert.equal(calls[0].o.headers['x-ms-blob-type'], 'BlockBlob');
-  const bad = createBackup({ storePath: f.store, dir: f.dir, sasUrl: 'https://acct.blob.core.windows.net/c?sig=y', fetchImpl: async () => ({ status: 403 }), now: () => t + DAY, logger: quiet });
-  const r = await bad.run();
-  assert.equal(r.remote, 'failed');
+  // the token request carries a JWT signed by the service account's key, for the Drive scope
+  const jwt = new URLSearchParams(calls[0].o.body).get('assertion').split('.');
+  assert.ok(createVerify('RSA-SHA256').update(jwt[0] + '.' + jwt[1]).verify(publicKey, Buffer.from(jwt[2], 'base64url')));
+  const claim = JSON.parse(Buffer.from(jwt[1], 'base64url'));
+  assert.equal(claim.iss, credentials.client_email);
+  assert.equal(claim.scope, 'https://www.googleapis.com/auth/drive');
+  // the upload goes into the folder, works in shared drives, and is named by date
+  assert.match(calls[1].url, /upload\/drive\/v3\/files\?uploadType=multipart&supportsAllDrives=true/);
+  assert.equal(calls[1].o.headers.authorization, 'Bearer tok');
+  assert.match(calls[1].o.body, /"name":"store-2026-11-25\.json","parents":\["FOLDER123"\]/);
+  assert.match(calls[1].o.body, /\{"shares":\[\]\}/);
+  await b.run(); assert.equal(calls.filter(c => c.url.includes('token')).length, 1); // token reused within the hour
+  const bad = createBackup({ storePath: f.store, dir: f.dir, uploader: googleDriveUploader({ credentials, folderId: 'F', fetchImpl: async () => ({ status: 403 }) }), now: () => t + DAY, logger: quiet });
+  assert.equal((await bad.run()).remote, 'failed');
   assert.ok(existsSync(join(f.dir, backupName(t + DAY))));
+  assert.throws(() => googleDriveUploader({ credentials: {}, folderId: 'F' }));
 });
 
 test('restore test: a backup brings back every record and share, and the app starts from it', async () => {

@@ -2,15 +2,17 @@
 //
 // 1. Every day (and once at start-up) the current store is copied to DATA_DIR/backups/store-YYYY-MM-DD.json.
 //    The last KEEP_DAYS copies are kept; older ones are removed.
-// 2. If BACKUP_BLOB_SAS_URL is set (an Azure Blob Storage *container* URL with a SAS token that allows
-//    create and write, set only as an Azure app setting, never in the repository), the same copy is also
-//    uploaded there as store-YYYY-MM-DD.json. That is the "second place": a copy that survives if the app's
-//    own disk is lost. Without the setting, only the local copies are made, and the start-up log says so.
+// 2. The "second place" is Google Drive (decided 25 Nov 2026): if GOOGLE_BACKUP_SA_JSON (a Google service
+//    account key, set only as an Azure app setting, never in the repository) and GOOGLE_BACKUP_FOLDER_ID (a
+//    folder in a Google *shared drive* where that service account is a Content manager) are both set, the same
+//    copy is also uploaded there as store-YYYY-MM-DD.json. That copy survives if the app's own disk is lost.
+//    Without the settings, only the local copies are made, and the start-up log says so.
 //
 // Restore: stop the app, copy a backup over DATA_DIR/store.json, start the app. `restoreBackup` does the copy
 // and checks that the file is a readable store first (see test/backup.test.mjs).
 import { readFileSync, writeFileSync, renameSync, existsSync, mkdirSync, readdirSync, unlinkSync, copyFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { createSign } from 'node:crypto';
 
 const DAY = 24 * 60 * 60 * 1000;
 const NAME = /^store-(\d{4}-\d{2}-\d{2})\.json$/;
@@ -24,15 +26,12 @@ export function checkStore(text) {
   return s;
 }
 
-export function createBackup({ storePath, dir, keepDays = 30, sasUrl = '', fetchImpl = globalThis.fetch, now = () => Date.now(), logger = console } = {}) {
+export function createBackup({ storePath, dir, keepDays = 30, uploader = null, now = () => Date.now(), logger = console } = {}) {
   mkdirSync(dir, { recursive: true });
 
   async function upload(name, body) {
-    if (!sasUrl) return 'skipped';
-    const u = new URL(sasUrl);
-    u.pathname = u.pathname.replace(/\/$/, '') + '/' + name;
-    const r = await fetchImpl(u.toString(), { method: 'PUT', headers: { 'x-ms-blob-type': 'BlockBlob', 'content-type': 'application/json' }, body });
-    if (r.status !== 201) throw new Error('Blob upload answered ' + r.status);
+    if (!uploader) return 'skipped';
+    await uploader(name, body);
     return 'uploaded';
   }
 
@@ -68,4 +67,35 @@ export function restoreBackup({ backupPath, storePath }) {
   checkStore(readFileSync(backupPath, 'utf8'));
   if (existsSync(storePath)) copyFileSync(storePath, storePath + '.before-restore');
   copyFileSync(backupPath, storePath);
+}
+
+// Google Drive uploader. Zero dependencies: a service-account JWT (RS256, node:crypto) is exchanged for an
+// access token, then the file is sent with a multipart upload. supportsAllDrives=true because a service account
+// has no storage of its own: the folder must be in a shared drive (Workspace), where the files count against
+// the organisation's pooled storage.
+const b64url = b => Buffer.from(b).toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+export function googleDriveUploader({ credentials, folderId, fetchImpl = globalThis.fetch, now = () => Date.now() }) {
+  if (!credentials?.client_email || !credentials?.private_key) throw new Error('GOOGLE_BACKUP_SA_JSON is not a service account key.');
+  if (!folderId) throw new Error('GOOGLE_BACKUP_FOLDER_ID is missing.');
+  const tokenUri = credentials.token_uri || 'https://oauth2.googleapis.com/token';
+  let cached = null;
+  async function token() {
+    const t = Math.floor(now() / 1000);
+    if (cached && cached.exp - 60 > t) return cached.token;
+    const head = b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+    const claim = b64url(JSON.stringify({ iss: credentials.client_email, scope: 'https://www.googleapis.com/auth/drive', aud: tokenUri, iat: t, exp: t + 3600 }));
+    const sig = b64url(createSign('RSA-SHA256').update(head + '.' + claim).sign(credentials.private_key));
+    const r = await fetchImpl(tokenUri, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: head + '.' + claim + '.' + sig }).toString() });
+    if (r.status !== 200) throw new Error('Google token answered ' + r.status);
+    const j = await r.json();
+    cached = { token: j.access_token, exp: t + (j.expires_in || 3600) };
+    return cached.token;
+  }
+  return async function upload(name, body) {
+    const boundary = 'abhilekh' + Math.random().toString(36).slice(2);
+    const multipart = '--' + boundary + '\r\ncontent-type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify({ name, parents: [folderId], mimeType: 'application/json' }) +
+      '\r\n--' + boundary + '\r\ncontent-type: application/json\r\n\r\n' + body + '\r\n--' + boundary + '--';
+    const r = await fetchImpl('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true&fields=id', { method: 'POST', headers: { authorization: 'Bearer ' + await token(), 'content-type': 'multipart/related; boundary=' + boundary }, body: multipart });
+    if (r.status !== 200) throw new Error('Google Drive upload answered ' + r.status);
+  };
 }

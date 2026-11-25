@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 import { createAuth } from './auth.mjs';
 import { akashSender, memorySender, noSender } from './sms.mjs';
 import { acsMailSender, memoryMail, noMail } from './mail.mjs';
-import { createBackup } from './backup.mjs';
+import { createBackup, googleDriveUploader } from './backup.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PUBLIC = join(HERE, 'public');
@@ -158,10 +158,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const rp = { id: new URL(publicUrl).hostname, origin: new URL(publicUrl).origin }; // passkeys belong to this site only
   console.log('SMS sender: ' + sms.name + '; mail sender: ' + mail.name + '; Google sign-in: ' + (google ? 'on' : 'off') + '; passkeys: ' + rp.id);
   const app = createApp({ storePath: join(dataDir, 'store.json'), testMode, sms, mail, google, rp, secureCookies: process.env.INSECURE_COOKIES !== '1' });
-  // Daily backup of store.json: local copies in DATA_DIR/backups, plus Azure Blob when BACKUP_BLOB_SAS_URL is set.
-  const sasUrl = process.env.BACKUP_BLOB_SAS_URL || '';
-  console.log('Backups: daily to ' + join(dataDir, 'backups') + (sasUrl ? ' and Azure Blob' : '; no second place set (BACKUP_BLOB_SAS_URL)'));
-  createBackup({ storePath: join(dataDir, 'store.json'), dir: join(dataDir, 'backups'), sasUrl }).start();
+  // Daily backup of store.json: local copies in DATA_DIR/backups, plus Google Drive when both Google settings are set.
+  let uploader = null;
+  if (process.env.GOOGLE_BACKUP_SA_JSON && process.env.GOOGLE_BACKUP_FOLDER_ID) {
+    try { uploader = googleDriveUploader({ credentials: JSON.parse(process.env.GOOGLE_BACKUP_SA_JSON), folderId: process.env.GOOGLE_BACKUP_FOLDER_ID }); }
+    catch (e) { console.error('Backups: Google Drive settings are not usable: ' + e.message); }
+  }
+  console.log('Backups: daily to ' + join(dataDir, 'backups') + (uploader ? ' and Google Drive' : '; no second place set (GOOGLE_BACKUP_SA_JSON, GOOGLE_BACKUP_FOLDER_ID)'));
+  createBackup({ storePath: join(dataDir, 'store.json'), dir: join(dataDir, 'backups'), uploader }).start();
   const port = Number(process.env.PORT || 8080);
   http.createServer(app.handler).listen(port, () => console.log('Abhilekh share server (SAMPLE data) on port ' + port));
 }

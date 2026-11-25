@@ -77,10 +77,18 @@ pages and crops as the share prototype). `server/public/qrcode.js` is qrcode-gen
 ## Backups (backup.mjs)
 
 Once at start-up and then every 24 hours, `store.json` is checked (a broken file is never copied) and copied to
-`DATA_DIR/backups/store-YYYY-MM-DD.json`; the newest 30 copies are kept. If the Azure app setting
-`BACKUP_BLOB_SAS_URL` is set (a Blob Storage **container** URL with a SAS token allowing create and write; never in the
-repository), the same copy is also uploaded there, so a copy survives if the app's own disk is lost. The start-up log
-says which. Without that setting, the copies sit on the same disk as the store.
+`DATA_DIR/backups/store-YYYY-MM-DD.json`; the newest 30 copies are kept.
+
+The second place is **Google Drive** (decided 25 Nov 2026). When both Azure app settings below are set, the same copy is
+also uploaded to a Google Drive folder, so a copy survives if the app's own disk is lost. The start-up log says which.
+
+- `GOOGLE_BACKUP_SA_JSON`: the whole JSON key of a Google Cloud **service account** (secret: Azure app setting only,
+  never the repository, never chat). The Google Drive API must be switched on in that Cloud project.
+- `GOOGLE_BACKUP_FOLDER_ID`: the id of a folder **inside a shared drive** (the part after `/folders/` in its link).
+  Add the service account's email to that shared drive as **Content manager**. A service account has no storage of
+  its own, so a folder in someone's My Drive does not work; in a shared drive the files use the organisation's storage.
+
+Copies on Drive are not deleted by the app. Without the settings, the copies sit only on the app's own disk.
 
 Restore: stop the app; copy the chosen backup over `DATA_DIR/store.json` (or call `restoreBackup`, which first checks
 the backup is a readable store and keeps the old file as `store.json.before-restore`); start the app.
