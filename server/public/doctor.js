@@ -16,12 +16,12 @@ document.addEventListener('dragstart',e=>e.preventDefault());
   if(r.status===410){ph.append(el('div',{class:'gone'},j.state==='revoked'?'This share was stopped by the patient.':'This share has run out of time.',el('div',{class:'mute',style:'font-weight:400;margin-top:6px'},'Ask the patient for a new link.')));return}
   // PRD v2.1 FR-064A: watermark on, no download. The watermark names who shared it and when it was opened;
   // it lies over every page and every crop of the original. Saving, dragging and printing are switched off.
-  watermark('SAMPLE · shared by the patient · opened '+fmt(new Date().toISOString()));
+  watermark('Shared by the patient · opened '+fmt(new Date().toISOString()));
   ph.append(el('div',{class:'banner'},'Patient-provided records. Not institution-verified. May be incomplete.'));
   const left=el('div',{class:'mute'});ph.append(left);
   const tick=()=>{const ms=Date.parse(j.expires)-Date.now();
     if(ms<=0){ph.replaceChildren(el('div',{class:'gone'},'This share has run out of time.',el('div',{class:'mute',style:'font-weight:400;margin-top:6px'},'Ask the patient for a new link.')));return}
-    left.textContent='SAMPLE · नमूना · patient-confirmed record · visible for '+Math.ceil(ms/60000)+' more minute'+(Math.ceil(ms/60000)>1?'s':'')+' (until '+fmt(j.expires)+')';setTimeout(tick,15000)};
+    left.textContent='Patient-confirmed record · visible for '+Math.ceil(ms/60000)+' more minute'+(Math.ceil(ms/60000)>1?'s':'')+' (until '+fmt(j.expires)+')';setTimeout(tick,15000)};
   tick();
   for(const d of j.docs){
     const c=el('div',{class:'card',style:'margin-top:10px'});

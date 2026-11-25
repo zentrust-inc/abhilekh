@@ -1,7 +1,7 @@
-// Abhilekh share server (prototype, SAMPLE data only).
+// Abhilekh share server. Live test with real papers from 25 Nov 2026 (patients have consented); the invented SAMPLE papers remain as a demo.
 // Zero dependencies: node:http + a JSON file. Expiry and revocation are enforced HERE, not in the page.
 //
-// What it does: stores shares of confirmed SAMPLE records, serves the doctor's view only while a share is live,
+// What it does: stores shares of confirmed records, serves the doctor's view only while a share is live,
 // logs every open and every refused open, lets the patient stop a share.
 // Sign-in (auth.mjs): Nepal mobile number (one SMS code), email address (one code by email) or Google, then a 6-digit PIN; the PIN is asked again to create or stop a
 // share. Every share belongs to the account that made it.
@@ -95,7 +95,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
 
       if (await auth.route(req, res, path, { ip, send, readJson })) return;
 
-      // --- patient side: signed in only. Every account sees the same invented SAMPLE record. ---
+      // --- patient side: signed in only. Each account sees only its own people and papers. ---
       const cur = path.startsWith('/api/') && !path.startsWith('/api/s/') ? auth.current(req) : null;
       if (path.startsWith('/api/') && !path.startsWith('/api/s/') && !cur) return send(res, 401, { error: 'Sign in first.' });
       const mineOnly = s => s.ownerId === cur.account.id;
@@ -230,7 +230,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const rp = { id: new URL(publicUrl).hostname, origin: new URL(publicUrl).origin }; // passkeys belong to this site only
   console.log('SMS sender: ' + sms.name + '; mail sender: ' + mail.name + '; Google sign-in: ' + (google ? 'on' : 'off') + '; passkeys: ' + rp.id);
   // Originals (paper photos): the Google shared drive when the Google settings are set, else the app's own disk.
-  // Adding photos stays off until PHOTOS_ENABLED=1 (planning stage: SAMPLE papers only until real papers are decided).
+  // Adding photos is on only with PHOTOS_ENABLED=1 (on in production since 25 Nov 2026, live test with real papers).
   let originals = null;
   if (process.env.GOOGLE_BACKUP_SA_JSON && process.env.GOOGLE_BACKUP_FOLDER_ID) {
     try { originals = driveOriginals(createDrive({ credentials: JSON.parse(process.env.GOOGLE_BACKUP_SA_JSON) }), process.env.GOOGLE_BACKUP_FOLDER_ID); }
@@ -248,5 +248,5 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   console.log('Backups: daily to ' + join(dataDir, 'backups') + (uploader ? ' and Google Drive' : '; no second place set (GOOGLE_BACKUP_SA_JSON, GOOGLE_BACKUP_FOLDER_ID)'));
   createBackup({ storePath: join(dataDir, 'store.json'), dir: join(dataDir, 'backups'), uploader }).start();
   const port = Number(process.env.PORT || 8080);
-  http.createServer(app.handler).listen(port, () => console.log('Abhilekh share server (SAMPLE data) on port ' + port));
+  http.createServer(app.handler).listen(port, () => console.log('Abhilekh server on port ' + port));
 }
