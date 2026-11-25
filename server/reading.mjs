@@ -119,7 +119,7 @@ export function createReading({ store, save, keep, readers, rules, register = nu
     A = A || {};
     const out = {
       kind: ['prescription', 'lab_report'].includes(A.kind) ? A.kind : 'other',
-      date: { ...field(A.date_as_printed, all, { confirm: true }), typed: true, region: region(() => dateRegion(words)) }, // the patient types the date
+      date: { ...field(A.date_as_printed, all, { confirm: true }), region: region(() => dateRegion(words)) }, // agreed: filled in, the patient ticks it; otherwise she types it
       facility: field(A.facility, all),
       clinician: field(A.clinician, all),
       results: [], medicines: [],

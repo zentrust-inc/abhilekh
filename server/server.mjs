@@ -103,7 +103,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
       if (req.method === 'POST' && !String(req.headers['content-type'] || '').startsWith('application/json') && path !== '/api/papers') return send(res, 415, { error: 'Send JSON.' });
       if (req.method === 'GET' && path === '/healthz') return send(res, 200, { ok: true });
       if (req.method === 'GET' && path === '/') return file(res, 'patient.html');
-      if (req.method === 'GET' && (path === '/style.css' || path === '/qrcode.js' || path === '/doctor.js' || path === '/patient.js' || path === '/i18n.js')) return file(res, path.slice(1));
+      if (req.method === 'GET' && (path === '/style.css' || path === '/qrcode.js' || path === '/doctor.js' || path === '/patient.js' || path === '/i18n.js' || path === '/medline.js')) return file(res, path.slice(1));
       if (req.method === 'GET' && /^\/s\/[a-z0-9]+$/.test(path)) return file(res, 'doctor.html'); // the shell shows nothing; data comes from /api/s/:id
 
       if (await auth.route(req, res, path, { ip, send, readJson })) return;
@@ -178,7 +178,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
         return res.end(buf);
       }
       // --- M3: the patient checks what the readers found against the paper, then adds it to the record ---
-      // Rules (PRD v2.1): the date is always typed; a value with a decimal point needs its own tick; an Unresolved field is
+      // Rules (PRD v2.1, date changed 25 Nov 2026): the date is filled in only when both readers agree and then needs its own tick, otherwise typed; a value with a decimal point needs its own tick; an Unresolved field is
       // typed from the paper or left Unresolved. Nothing reaches a doctor until this is done. The server checks the same.
       mp = path.match(/^\/api\/papers\/(p[0-9a-f]+)\/confirm$/);
       if (req.method === 'POST' && mp) {
@@ -187,11 +187,15 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
         if (p.status !== 'ready' || !p.reading) return send(res, 409, { error: 'This paper is not ready to check yet.' });
         const b = await readJson(req, 200000);
         const str = (v, n = 200) => String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, n);
-        const date = str(b.date, 40);
-        if (!date) return send(res, 400, { error: 'Type the date exactly as it is printed on the paper.' });
         const rd = p.reading, UN = 'Unresolved. Original document available.';
+        // the date: filled in only when both readers agreed, and then the patient ticks it herself; otherwise she types it
+        const sentDate = b.date && typeof b.date === 'object' ? b.date : { value: b.date, ok: false };
+        const date = str(sentDate.value, 40);
+        if (!date) return send(res, 400, { error: 'Type the date exactly as it is printed on the paper.' });
+        if (rd.date && rd.date.state === 'confirm' && !sentDate.ok) return send(res, 400, { error: 'Check the date against the paper.' });
         // each submitted field: { value, ok } where ok = the patient ticked "Matches the paper" (or typed it) or chose to leave it Unresolved
         const take = (sent, from, label) => {
+          if (sent?.none) return ''; // "Not written on the paper"
           const v = str(sent?.value), keep = !!sent?.unresolved;
           if (from && from.state === 'confirm' && !sent?.ok && !keep) throw Object.assign(new Error('Check ' + label + ' against the paper.'), { status: 400 });
           if (from && from.state === 'unresolved' && !v && !keep) throw Object.assign(new Error('Type ' + label + ' from the paper, or leave it Unresolved.'), { status: 400 });
