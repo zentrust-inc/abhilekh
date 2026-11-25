@@ -1,6 +1,6 @@
 // Decides, for one page, what the app does with each field, WITHOUT the answer key:
 // both readers (Claude Opus copy + Vision lines) agree -> pre-filled; a date or a value with a decimal
-// point -> must be confirmed by the patient; anything else -> left empty and flagged.
+// point -> must be confirmed by the patient; anything else -> "Unresolved. Original document available." (never blank, never guessed).
 // Same rules as reader/score.mjs (copied here because score.mjs only runs as a script); compare with SCORE.md.
 import { readFileSync } from 'node:fs';
 import { norm, loose, same, mustConfirmValue } from '../../reader/normalise.mjs';

@@ -5,7 +5,7 @@ const api=async(p,o)=>{const r=await fetch(p,o);const j=await r.json().catch(()=
 const post=(p,b)=>api(p,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(b||{})});
 let REC={docs:[]},SH=[];
 const qrSvg=url=>{const q=qrcode(0,'M');q.addData(url);q.make();return q.createSvgTag({cellSize:4,margin:2,scalable:true})};
-const LABEL={60:'1 hour',1440:'24 hours',10080:'7 days',1:'1 minute (test only)'};
+const LABEL={15:'15 minutes',1:'1 minute (test only)'};
 function render(){
   $('shHead').style.display=SH.length?'':'none';
   const box=$('shares');box.replaceChildren();
@@ -191,7 +191,7 @@ function paintForm(){
 async function setup(){
   REC=await api('/api/record');
   const mins=REC.testMode?[1,...REC.minutes]:REC.minutes;
-  mins.forEach(m=>{const o=el('option',{value:m},LABEL[m]);if(m===1440)o.selected=true;$('dur').append(o)});
+  mins.forEach(m=>{const o=el('option',{value:m},LABEL[m]);if(m===15)o.selected=true;$('dur').append(o)});
   $('create').onclick=async()=>{
     const docs=REC.docs.filter(d=>$('d-'+d.id)&&$('d-'+d.id).checked).map(d=>d.id);
     if(!docs.length){$('makeErr').textContent='Choose at least one report to share.';return}

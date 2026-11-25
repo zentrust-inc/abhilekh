@@ -59,10 +59,10 @@ test('signed out: no record and no shares; the doctor link needs no account', as
   const anon = s.phone();
   assert.equal((await anon.call('/api/record')).status, 401);
   assert.equal((await anon.call('/api/shares')).status, 401);
-  assert.equal((await anon.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, pin: PIN })).status, 401);
+  assert.equal((await anon.call('/api/shares', 'POST', { docs: ['L21'], minutes: 15, pin: PIN })).status, 401);
   const me = s.phone();
   await s.signUp(me, '9841000001');
-  const c = await me.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, pin: PIN });
+  const c = await me.call('/api/shares', 'POST', { docs: ['L21'], minutes: 15, pin: PIN });
   assert.equal(c.status, 201);
   assert.equal((await s.phone().call('/api/s/' + c.json.id)).status, 200);
   s.close();
@@ -171,9 +171,9 @@ test('PIN is asked again to create a share; stopping needs none', async () => {
   const s = await start();
   const me = s.phone();
   await s.signUp(me, '9841000001');
-  assert.equal((await me.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60 })).status, 400);
-  assert.equal((await me.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, pin: '000001' })).status, 401);
-  const c = await me.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, pin: PIN });
+  assert.equal((await me.call('/api/shares', 'POST', { docs: ['L21'], minutes: 15 })).status, 400);
+  assert.equal((await me.call('/api/shares', 'POST', { docs: ['L21'], minutes: 15, pin: '000001' })).status, 401);
+  const c = await me.call('/api/shares', 'POST', { docs: ['L21'], minutes: 15, pin: PIN });
   assert.equal(c.status, 201);
   assert.equal((await me.call('/api/shares/' + c.json.id + '/stop', 'POST', {})).json.state, 'revoked'); // stopping only removes access: no PIN
   assert.equal((await s.phone().call('/api/shares/' + c.json.id + '/stop', 'POST', {})).status, 401); // but still only for a signed-in account
@@ -203,7 +203,7 @@ test('each account sees and stops only its own shares', async () => {
   const a = s.phone(), b = s.phone();
   await s.signUp(a, '9841000001');
   await s.signUp(b, '9841000002');
-  const c = await a.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, pin: PIN });
+  const c = await a.call('/api/shares', 'POST', { docs: ['L21'], minutes: 15, pin: PIN });
   assert.equal((await b.call('/api/shares')).json.shares.length, 0);
   assert.equal((await b.call('/api/shares/' + c.json.id + '/stop', 'POST', { pin: PIN })).status, 404);
   assert.equal((await a.call('/api/shares')).json.shares.length, 1);
@@ -214,17 +214,17 @@ test('recovery on a new phone: old phone signed out, new shares paused 24 hours,
   const s = await start();
   const oldPh = s.phone(), newPh = s.phone();
   await s.signUp(oldPh, '9841000001');
-  const c = await oldPh.call('/api/shares', 'POST', { docs: ['L21'], minutes: 10080, pin: PIN });
+  const c = await oldPh.call('/api/shares', 'POST', { docs: ['L21'], minutes: 15, pin: PIN });
   s.clock.advance(5);
   const r = await s.signUp(newPh, '9841000001', '590284');
   assert.equal(r.verify.isNew, false);
   assert.ok(r.me.sharesPausedUntil);
   assert.equal((await oldPh.call('/api/me')).status, 401); // old session ended
   assert.equal((await oldPh.call('/api/auth/login', 'POST', { phone: '9841000001', pin: '590284' })).status, 403); // old phone forgotten
-  assert.equal((await newPh.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, pin: '590284' })).status, 403);
+  assert.equal((await newPh.call('/api/shares', 'POST', { docs: ['L21'], minutes: 15, pin: '590284' })).status, 403);
   assert.equal((await newPh.call('/api/shares/' + c.json.id + '/stop', 'POST', { pin: '590284' })).json.state, 'revoked');
   s.clock.advance(24 * 60 + 1);
-  assert.equal((await newPh.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, pin: '590284' })).status, 201);
+  assert.equal((await newPh.call('/api/shares', 'POST', { docs: ['L21'], minutes: 15, pin: '590284' })).status, 201);
   s.close();
 });
 
@@ -355,7 +355,7 @@ test('one account per sign-in method: a phone account and an email account do no
   const a = s.phone(), b = s.phone();
   await s.signUp(a, '9841000001');
   await emailSignUp(s, mail, b, 'asha@example.com', '590284');
-  const made = await a.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, who: '', pin: PIN });
+  const made = await a.call('/api/shares', 'POST', { docs: ['L21'], minutes: 15, who: '', pin: PIN });
   assert.equal(made.status, 201);
   assert.equal((await b.call('/api/shares')).json.shares.length, 0); // the email account cannot see the phone account's share
   assert.equal((await b.call('/api/shares/' + made.json.id + '/stop', 'POST', { pin: '590284' })).status, 404);
@@ -515,8 +515,8 @@ test('Google sign-up: new account sets a PIN once, then shares need that PIN; th
   const p = await br.call('/api/auth/pin', 'POST', { ticket: t.json.ticket, pin: PIN });
   assert.equal(p.status, 200);
   assert.equal(p.json.email, 'a***@gmail.com'); assert.equal(p.json.kind, 'google'); assert.equal(p.json.phone, undefined);
-  assert.equal((await br.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60 })).status, 400); // no PIN, no share
-  assert.equal((await br.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, pin: PIN })).status, 201);
+  assert.equal((await br.call('/api/shares', 'POST', { docs: ['L21'], minutes: 15 })).status, 400); // no PIN, no share
+  assert.equal((await br.call('/api/shares', 'POST', { docs: ['L21'], minutes: 15, pin: PIN })).status, 201);
 });
 
 test('Google sign-in on another device: no code and no PIN to get in; the PIN is still asked for a share', async () => {
@@ -530,8 +530,8 @@ test('Google sign-in on another device: no code and no PIN to get in; the PIN is
   assert.equal(r.cb.status, 302); assert.equal(r.cb.location, '/');
   assert.equal((await b.call('/api/me')).status, 200);
   assert.equal((await b.call('/api/me')).json.kind, 'google');
-  assert.equal((await b.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60 })).status, 400);
-  assert.equal((await b.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, pin: PIN })).status, 201);
+  assert.equal((await b.call('/api/shares', 'POST', { docs: ['L21'], minutes: 15 })).status, 400);
+  assert.equal((await b.call('/api/shares', 'POST', { docs: ['L21'], minutes: 15, pin: PIN })).status, 201);
   assert.equal(s.sms.sent.length, 0);
 });
 
@@ -547,7 +547,7 @@ test('forgotten PIN on a Google account: sign in with Google again, set a new PI
   const p = await nw.call('/api/auth/pin', 'POST', { ticket: t.json.ticket, pin: '590284' });
   assert.equal(p.status, 200); assert.notEqual(p.json.sharesPausedUntil, null);
   assert.equal((await old.call('/api/me')).status, 401);
-  assert.equal((await nw.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, pin: '590284' })).status, 403);
+  assert.equal((await nw.call('/api/shares', 'POST', { docs: ['L21'], minutes: 15, pin: '590284' })).status, 403);
   // reset for a Google account that does not exist is refused, nothing is created
   const stranger = s.phone();
   const x = await googleRound(s, g, stranger, { sub: '999', email: 'nobody@gmail.com' }, { intent: 'reset' });
@@ -560,7 +560,7 @@ test('wrong PINs on a Google account point back to Google, not to SMS', async ()
   await googleRound(s, g, br);
   await br.call('/api/auth/pin', 'POST', { ticket: (await br.call('/api/auth/google/ticket', 'POST', {})).json.ticket, pin: PIN });
   let last;
-  for (let i = 0; i < 5; i++) last = await br.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, pin: '111112' });
+  for (let i = 0; i < 5; i++) last = await br.call('/api/shares', 'POST', { docs: ['L21'], minutes: 15, pin: '111112' });
   assert.equal(last.status, 423); assert.match(last.json.error, /sign in with Google again/i); assert.doesNotMatch(last.json.error, /SMS/);
 });
 
@@ -621,7 +621,7 @@ test('one account per sign-in method: a Google account and an email account with
   const a = s.phone(), b = s.phone();
   await googleRound(s, g, a, { sub: '1001', email: 'asha@gmail.com' });
   await a.call('/api/auth/pin', 'POST', { ticket: (await a.call('/api/auth/google/ticket', 'POST', {})).json.ticket, pin: PIN });
-  assert.equal((await a.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, pin: PIN })).status, 201);
+  assert.equal((await a.call('/api/shares', 'POST', { docs: ['L21'], minutes: 15, pin: PIN })).status, 201);
   await emailSignUp(s, mail, b, 'asha@gmail.com', '590284');
   assert.equal((await b.call('/api/shares')).json.shares.length, 0);
   // the same person changes their Google address: still the same account, shares still there
@@ -650,8 +650,8 @@ test('change PIN while signed in: needs the current PIN, keeps other devices sig
   const second = s.phone();
   assert.equal((await me.call('/api/auth/pin/change', 'POST', { pin: PIN, newPin: '590284' })).status, 200); // sanity: a good change works
   // old PIN no longer works, new PIN does (shares ask for it)
-  assert.equal((await me.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, pin: PIN })).status, 401);
-  assert.equal((await me.call('/api/shares', 'POST', { docs: ['L21'], minutes: 60, pin: '590284' })).status, 201);
+  assert.equal((await me.call('/api/shares', 'POST', { docs: ['L21'], minutes: 15, pin: PIN })).status, 401);
+  assert.equal((await me.call('/api/shares', 'POST', { docs: ['L21'], minutes: 15, pin: '590284' })).status, 201);
   // wrong current PIN is refused and counted; a run or a repeat is refused; no session means no change
   assert.equal((await me.call('/api/auth/pin/change', 'POST', { pin: '000001', newPin: '735128' })).status, 401);
   assert.equal((await me.call('/api/auth/pin/change', 'POST', { pin: '590284', newPin: '123456' })).status, 400);
