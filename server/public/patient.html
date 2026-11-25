@@ -65,10 +65,11 @@
   <div class="card" id="addPaper" style="display:none">
     <b>Add a paper</b>
     <p class="mute" style="margin:4px 0 8px">The photo is kept exactly as taken: never straightened, cropped or changed. Abhilekh does not read it yet; reading comes next.</p>
+    <p class="mute" style="margin:0 0 8px">No good internet? Photograph all the papers with the phone's camera now, then choose them here together when the connection is good.</p>
     <p class="chip" style="margin:0 0 8px">For now, photograph only SAMPLE papers.</p>
     <input type="file" id="camIn" accept="image/*" capture="environment" style="display:none">
-    <input type="file" id="galIn" accept="image/*" style="display:none">
-    <div class="row"><button class="go" id="camBtn" type="button" style="margin-top:0">Take a photo</button><button class="sec" id="galBtn" type="button">Choose from the phone</button></div>
+    <input type="file" id="galIn" accept="image/*" multiple style="display:none">
+    <div class="row"><button class="go" id="camBtn" type="button" style="margin-top:0">Take a photo</button><button class="sec" id="galBtn" type="button">Choose from the phone (several at once)</button></div>
     <div class="mute" id="addMsg" style="margin-top:6px"></div>
   </div>
   <div id="peopleBox" class="card" style="display:none">
