@@ -25,4 +25,5 @@ Rules:
 - If no range is printed, "range" is null. Never supply a normal range from your own knowledge.
 - Medicine names: copy the name as written. Never replace a brand with a generic name or guess what a name means.
 - If a character is unclear, give your best reading of the characters only; if a field is unreadable, use null.
-- Ignore the "SAMPLE · नमूना" watermark and stamp.`;
+- Ignore the "SAMPLE · नमूना" watermark and stamp, and any highlighter marks over the text.
+- The page may be photographed sideways or upside down, with a table or other objects around it: read only the paper.`;

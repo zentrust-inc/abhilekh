@@ -20,6 +20,14 @@ import { acsMailSender, memoryMail, noMail } from './mail.mjs';
 import { createBackup, googleDriveUploader } from './backup.mjs';
 import { createDrive } from './drive.mjs';
 import { localOriginals, driveOriginals, EXT } from './originals.mjs';
+import { createReading } from './reading.mjs';
+// The reader lives in reader/ (one home, reused from Chautari). In the repository it is ../reader; on the server it is
+// deployed next to this file as ./reader.
+const READER = existsSync(join(dirname(fileURLToPath(import.meta.url)), 'reader')) ? './reader/' : '../reader/';
+const { loose, norm, mustConfirmValue, confirmsDose } = await import(READER + 'normalise.mjs');
+const { loadList, checkMedicine, namePart } = await import(READER + 'medicine-check.mjs');
+const { valueRegion, rangeRegion, dateRegion } = await import(READER + 'regions.mjs');
+const RULES = { loose, norm, mustConfirmValue, confirmsDose, checkMedicine, namePart, valueRegion, rangeRegion, dateRegion, ddaIndex: loadList(fileURLToPath(new URL(READER + 'dda/nlem-2021.json', import.meta.url))) };
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PUBLIC = join(HERE, 'public');
@@ -29,7 +37,7 @@ const MAX_PEOPLE = 6;
 const MAX_PHOTO = 15 * 1024 * 1024; // 15 MB: a phone photo, with room to spare
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
 
-export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-record.json'), testMode = false, seedSample = false, photos = false, originals = null, now = () => Date.now(), sms = memorySender(), mail = memoryMail(), google = null, rp = null, secureCookies = true, authLimits } = {}) {
+export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-record.json'), testMode = false, seedSample = false, photos = false, originals = null, readers = null, readingLimits = {}, now = () => Date.now(), sms = memorySender(), mail = memoryMail(), google = null, rp = null, secureCookies = true, authLimits } = {}) {
   const record = JSON.parse(readFileSync(recordPath, 'utf8'));
   let store = { shares: [] };
   if (storePath) {
@@ -47,6 +55,8 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
     writeFileSync(tmp, JSON.stringify(store));
     renameSync(tmp, storePath); // atomic: never a half-written file
   };
+  // M2: photos are read by the two readers (Claude, Google Vision) when both are set up; otherwise they wait.
+  const reading = readers ? createReading({ store, save, keep, readers, rules: RULES, now, ...readingLimits }) : null;
   const auth = createAuth({ store, save, now, sms, mail, google, rp, testMode, secureCookies, limits: authLimits });
   const token = () => Array.from(randomBytes(14), b => ALPHABET[b % 31]).join('');
   const stateOf = s => (s.revokedAt ? 'revoked' : now() >= Date.parse(s.expires) ? 'expired' : 'live');
@@ -103,7 +113,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
       const acct = () => (store.records[cur.account.id] = store.records[cur.account.id] || { people: [{ id: pid(), name: '', docs: seedSample ? sampleDocs() : [], papers: [] }] }); // seedSample: tests only
       const mine = () => { const r = acct(); return r.people.find(p => p.id === cur.session.personId) || r.people[0]; }; // the person in view on this session
       const forPerson = s => mineOnly(s) && (s.personId ? s.personId === mine().id : mine() === acct().people[0]); // shares made before M1 belong to the first person
-      const paperOut = p => ({ id: p.id, sha256: p.sha256, mime: p.mime, bytes: p.bytes, added: p.added, status: p.status });
+      const paperOut = p => ({ id: p.id, sha256: p.sha256, mime: p.mime, bytes: p.bytes, added: p.added, status: p.status, reading: p.reading ? { ...p.reading, usd: undefined } : null });
       const summary = () => { const r = mine(); return { label: r.name, person: r.id, people: acct().people.map(p => ({ id: p.id, name: p.name, papers: p.docs.length + p.papers.length })), docs: r.docs.map(d => ({ id: d.id, title: d.title, facility: d.facility, date: d.date_as_written, origin: d.origin || 'sample', results: d.results.map(({ img, ...r }) => r) })), papers: r.papers.map(paperOut).reverse(), photos: photos || testMode, testMode, minutes: ALLOWED_MINUTES }; };
       if (req.method === 'GET' && path === '/api/record') return send(res, 200, summary());
       if (req.method === 'POST' && path === '/api/record/sample') { // copy the invented SAMPLE papers into THIS account only; asking twice adds nothing
@@ -150,8 +160,9 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
         if (r.papers.some(x => x.sha256 === sha256)) return send(res, 200, { ...summary(), already: true }); // the same photo twice: kept once
         let ref;
         try { ref = await keep.put(sha256, mime, buf); } catch (e) { console.error('Original not kept: ' + e.message); return send(res, 503, { error: 'The photo could not be kept just now. Nothing was added. Try again in a minute.' }); }
-        r.papers.push({ id: pid(), sha256, mime, bytes: buf.length, ref, added: new Date(now()).toISOString(), status: 'waiting' });
-        save(); return send(res, 201, summary());
+        const paper = { id: pid(), sha256, mime, bytes: buf.length, ref, added: new Date(now()).toISOString(), status: 'waiting' };
+        r.papers.push(paper);
+        save(); if (reading) reading.enqueue(paper.id); return send(res, 201, summary());
       }
       let mp = path.match(/^\/api\/papers\/(p[0-9a-f]+)\/original$/);
       if (req.method === 'GET' && mp) {
@@ -213,7 +224,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
       send(res, 400, { error: 'Bad request.' });
     }
   };
-  return { handler, store: () => store };
+  return { handler, store: () => store, reading };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
@@ -237,8 +248,16 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     catch (e) { console.error('Originals: Google Drive settings are not usable: ' + e.message); }
   }
   const photos = process.env.PHOTOS_ENABLED === '1';
+  // M2 readers: Claude (fields) and Google Cloud Vision (lines that confirm them). Both keys must be set (Azure app
+  // settings only). Limits: US$0.10 a page, US$20 a month (25 Nov 2026).
+  let readers = null;
+  if (process.env.ANTHROPIC_API_KEY && process.env.VISION_API_KEY) {
+    const eng = await import(READER + 'engines.mjs'), vis = await import(READER + 'vision.mjs');
+    readers = { claude: (b, m) => eng.readClaudeBytes(b, m), vision: b => vis.readVisionBytes(b) };
+  }
+  console.log('Reading: ' + (readers ? 'on (Claude + Google Vision; US$0.10 a page, US$20 a month)' : 'off (ANTHROPIC_API_KEY and VISION_API_KEY are both needed)'));
   console.log('Photos: ' + (photos || testMode ? 'on' : 'off (PHOTOS_ENABLED)') + '; originals kept in ' + (originals ? 'Google Drive' : join(dataDir, 'originals')));
-  const app = createApp({ storePath: join(dataDir, 'store.json'), testMode, photos, originals, sms, mail, google, rp, secureCookies: process.env.INSECURE_COOKIES !== '1' });
+  const app = createApp({ storePath: join(dataDir, 'store.json'), testMode, photos, originals, readers, sms, mail, google, rp, secureCookies: process.env.INSECURE_COOKIES !== '1' });
   // Daily backup of store.json: local copies in DATA_DIR/backups, plus Google Drive when both Google settings are set.
   let uploader = null;
   if (process.env.GOOGLE_BACKUP_SA_JSON && process.env.GOOGLE_BACKUP_FOLDER_ID) {
@@ -249,4 +268,5 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   createBackup({ storePath: join(dataDir, 'store.json'), dir: join(dataDir, 'backups'), uploader }).start();
   const port = Number(process.env.PORT || 8080);
   http.createServer(app.handler).listen(port, () => console.log('Abhilekh server on port ' + port));
+  if (app.reading) app.reading.resume(); // read what is waiting, including photos added before reading was switched on
 }

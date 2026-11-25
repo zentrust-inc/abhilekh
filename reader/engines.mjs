@@ -26,31 +26,41 @@ async function retry(fn) {
   }
 }
 
-export async function readClaude(file, model = 'claude-opus-5-5') {
+// Bytes versions, used by the app (server/reading.mjs): the image is passed in memory, never written to disk.
+// Each returns { data, usd }: the copy of the paper and what that one call cost.
+export async function readClaudeBytes(buf, mime, model = 'claude-opus-5-5', fetchImpl = fetch) {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) throw new Error('ANTHROPIC_API_KEY is not set');
-  const data = (await readFile(file)).toString('base64');
-  const j = await retry(() => fetch('https://api.anthropic.com/v1/messages', {
+  const j = await retry(() => fetchImpl('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
     body: JSON.stringify({ model, max_tokens: 3000, messages: [{ role: 'user', content: [
-      { type: 'image', source: { type: 'base64', media_type: media(file), data } }, { type: 'text', text: PROMPT }] }] }),
+      { type: 'image', source: { type: 'base64', media_type: mime, data: buf.toString('base64') } }, { type: 'text', text: PROMPT }] }] }),
   }));
   const u = j.usage ?? {};
-  usage.push({ model, usd: cost(model, u.input_tokens ?? 0, u.output_tokens ?? 0) });
-  return parseJson((j.content ?? []).filter((c) => c.type === 'text').map((c) => c.text).join('\n'));
+  const usd = cost(model, u.input_tokens ?? 0, u.output_tokens ?? 0);
+  usage.push({ model, usd });
+  return { data: parseJson((j.content ?? []).filter((c) => c.type === 'text').map((c) => c.text).join('\n')), usd, model };
 }
 
-export async function readGemini(file, model = 'gemini-3.8-flash') {
+export async function readGeminiBytes(buf, mime, model = 'gemini-3.8-flash', fetchImpl = fetch) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error('GEMINI_API_KEY is not set');
-  const data = (await readFile(file)).toString('base64');
-  const j = await retry(() => fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+  const j = await retry(() => fetchImpl(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
     method: 'POST', headers: { 'x-goog-api-key': key, 'content-type': 'application/json' },
-    body: JSON.stringify({ contents: [{ parts: [{ inline_data: { mime_type: media(file), data } }, { text: PROMPT }] }],
+    body: JSON.stringify({ contents: [{ parts: [{ inline_data: { mime_type: mime, data: buf.toString('base64') } }, { text: PROMPT }] }],
       generationConfig: { temperature: 0, responseMimeType: 'application/json' } }),
   }));
   const u = j.usageMetadata ?? {};
-  usage.push({ model, usd: cost(model, u.promptTokenCount ?? 0, (u.candidatesTokenCount ?? 0) + (u.thoughtsTokenCount ?? 0)) });
-  return parseJson((j.candidates?.[0]?.content?.parts ?? []).map((p) => p.text ?? '').join('\n'));
+  const usd = cost(model, u.promptTokenCount ?? 0, (u.candidatesTokenCount ?? 0) + (u.thoughtsTokenCount ?? 0));
+  usage.push({ model, usd });
+  return { data: parseJson((j.candidates?.[0]?.content?.parts ?? []).map((p) => p.text ?? '').join('\n')), usd, model };
+}
+
+export async function readClaude(file, model = 'claude-opus-5-5') {
+  return (await readClaudeBytes(await readFile(file), media(file), model)).data;
+}
+
+export async function readGemini(file, model = 'gemini-3.8-flash') {
+  return (await readGeminiBytes(await readFile(file), media(file), model)).data;
 }

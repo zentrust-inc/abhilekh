@@ -2,7 +2,15 @@
   "name": "abhilekh-share-server",
   "private": true,
   "type": "module",
-  "description": "Prototype share server, SAMPLE data only. No dependencies.",
-  "scripts": { "start": "node server.mjs", "test": "node --test test/*.test.mjs" },
-  "engines": { "node": ">=20" }
+  "description": "Abhilekh server. One dependency: jpeg-js (pure JavaScript), to make a smaller copy of a photo for the readers.",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "jpeg-js": "^0.4.4"
+  }
 }
