@@ -21,6 +21,7 @@ import { createBackup, googleDriveUploader } from './backup.mjs';
 import { createDrive } from './drive.mjs';
 import { localOriginals, driveOriginals, EXT } from './originals.mjs';
 import { createReading, cropsOf } from './reading.mjs';
+import { createRegister } from './register.mjs';
 // The reader lives in reader/ (one home, reused from Chautari). In the repository it is ../reader; on the server it is
 // deployed next to this file as ./reader.
 const READER = existsSync(join(dirname(fileURLToPath(import.meta.url)), 'reader')) ? './reader/' : '../reader/';
@@ -38,7 +39,7 @@ const KIND_TITLE = { lab_report: 'Lab report', prescription: 'Prescription', oth
 const MAX_PHOTO = 15 * 1024 * 1024; // 15 MB: a phone photo, with room to spare
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
 
-export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-record.json'), testMode = false, seedSample = false, photos = false, originals = null, readers = null, readingLimits = {}, now = () => Date.now(), sms = memorySender(), mail = memoryMail(), google = null, rp = null, secureCookies = true, authLimits } = {}) {
+export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-record.json'), testMode = false, seedSample = false, photos = false, originals = null, readers = null, readingLimits = {}, registerIndex = null, now = () => Date.now(), sms = memorySender(), mail = memoryMail(), google = null, rp = null, secureCookies = true, authLimits } = {}) {
   const record = JSON.parse(readFileSync(recordPath, 'utf8'));
   let store = { shares: [] };
   if (storePath) {
@@ -57,7 +58,8 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
     renameSync(tmp, storePath); // atomic: never a half-written file
   };
   // M2: photos are read by the two readers (Claude, Google Vision) when both are set up; otherwise they wait.
-  const reading = readers ? createReading({ store, save, keep, readers, rules: RULES, now, ...readingLimits }) : null;
+  const register = createRegister({ index: registerIndex, namePart: RULES.namePart });
+  const reading = readers ? createReading({ store, save, keep, readers, rules: RULES, register, now, ...readingLimits }) : null;
   const auth = createAuth({ store, save, now, sms, mail, google, rp, testMode, secureCookies, limits: authLimits });
   const token = () => Array.from(randomBytes(14), b => ALPHABET[b % 31]).join('');
   const stateOf = s => (s.revokedAt ? 'revoked' : now() >= Date.parse(s.expires) ? 'expired' : 'live');
@@ -200,7 +202,9 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
           const R = Array.isArray(b.results) ? b.results : [], M = Array.isArray(b.medicines) ? b.medicines : [];
           if (R.length !== rd.results.length || M.length !== rd.medicines.length) return send(res, 400, { error: 'Bad request.' });
           results = rd.results.map((x, i) => R[i]?.removed ? null : ({ test: take(R[i].test, x.test, 'the test name'), value: take(R[i].value, x.value, 'the value of ' + (x.test.text || x.test.a || 'a test')), unit: take(R[i].unit, x.unit, 'the unit'), range: take(R[i].range, x.range, 'the printed range'), flag: take(R[i].flag, x.flag, 'the printed flag'), box: x.vregion?.box || null })).filter(Boolean);
-          medicines = rd.medicines.map((x, i) => M[i]?.removed ? null : ({ as_written: take(M[i].as_written, x.as_written, 'the medicine line'), dose: take(M[i].dose, x.dose, 'the dose'), duration: take(M[i].duration, x.duration, 'the duration'), dda: x.dda })).filter(Boolean);
+          medicines = rd.medicines.map((x, i) => { if (M[i]?.removed) return null; const w = take(M[i].as_written, x.as_written, 'the medicine line');
+            const reg = register.lookup(w); // looked up again on what the patient confirmed: exact name only
+            return { as_written: w, dose: take(M[i].dose, x.dose, 'the dose'), duration: take(M[i].duration, x.duration, 'the duration'), dda: reg ? 'on_register' : x.dda === 'on_register' ? 'not_found' : x.dda, register: reg }; }).filter(Boolean);
         } catch (e) { return send(res, e.status || 400, { error: e.status ? e.message : 'Bad request.' }); }
         let crops = results.map(() => null);
         try { crops = cropsOf(await keep.get(p.ref), p.mime, results.map(x => x.box)); } catch (e) { console.error('Crops not made: ' + e.message); }
@@ -275,7 +279,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
       send(res, 400, { error: 'Bad request.' });
     }
   };
-  return { handler, store: () => store, reading };
+  return { handler, store: () => store, reading, register, useRegister: i => { register.set(i); return reading ? reading.refreshRegister() : 0; } };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
@@ -320,4 +324,16 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const port = Number(process.env.PORT || 8080);
   http.createServer(app.handler).listen(port, () => console.log('Abhilekh server on port ' + port));
   if (app.reading) app.reading.resume(); // read what is waiting, including photos added before reading was switched on
+  // The DDA register (brand index): the newest abhilekh-register-index-*.json in the shared drive's "register" folder.
+  if (process.env.GOOGLE_BACKUP_SA_JSON && process.env.GOOGLE_BACKUP_FOLDER_ID) (async () => {
+    try {
+      const drive = createDrive({ credentials: JSON.parse(process.env.GOOGLE_BACKUP_SA_JSON) });
+      const folder = await drive.folder('register', process.env.GOOGLE_BACKUP_FOLDER_ID);
+      const f = await drive.latest('abhilekh-register-index-', folder);
+      if (!f) return console.log('Register: none found in the shared drive (folder "register")');
+      const index = JSON.parse((await drive.download(f.id)).toString('utf8'));
+      const n = app.useRegister(index);
+      console.log('Register: ' + f.name + ' (' + Object.keys(index.entries).length + ' names); added to ' + n + ' papers waiting to be checked');
+    } catch (e) { console.error('Register not loaded: ' + e.message); }
+  })();
 }

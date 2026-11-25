@@ -18,6 +18,7 @@
 // US$0.10 left; when the month is used up, photos wait ("paused") and are read next month. Spend is kept in the store.
 import { createHash } from 'node:crypto';
 import jpeg from 'jpeg-js';
+import { applyRegister } from './register.mjs';
 
 const MAX_SIDE = 2000;
 
@@ -41,11 +42,13 @@ export function readingCopy(buf, mime) {
   return { buf: Buffer.from(jpeg.encode({ data: out, width: w, height: h }, 85).data), mime: 'image/jpeg', scale: f };
 }
 
-export function createReading({ store, save, keep, readers, rules, now = () => Date.now(), monthCapUsd = 20, pageCapUsd = 0.10, logger = console }) {
+export function createReading({ store, save, keep, readers, rules, register = null, now = () => Date.now(), monthCapUsd = 20, pageCapUsd = 0.10, logger = console }) {
   const { mustConfirmValue, checkMedicine, namePart, ddaIndex, loose, norm, confirmsDose, valueRegion, rangeRegion, dateRegion } = rules;
   const queue = [];
   let running = false;
   store.reading = store.reading || { spend: {} };
+  store.register = store.register || { missing: {} }; // names both readers agreed on that are not on the register (no patient details)
+  const withRegister = r => register ? applyRegister(r, register, store.register.missing, now) : r;
   const month = () => new Date(now()).toISOString().slice(0, 7);
   const spent = () => store.reading.spend[month()] || 0;
 
@@ -74,7 +77,7 @@ export function createReading({ store, save, keep, readers, rules, now = () => D
           store.reading.spend[month()] = spent() + usd;
           if (usd > pageCapUsd) logger.error('Reading: one page cost US$' + usd.toFixed(3) + ', above the page limit');
           if (a.status === 'rejected') throw new Error('the Claude reader failed: ' + String(a.reason?.message).slice(0, 120) + (b.status === 'rejected' ? ' / Vision: ' + String(b.reason?.message).slice(0, 80) : ''));
-          p.reading = compare(a.value.data, b.status === 'fulfilled' ? b.value.data : null, copy.scale);
+          p.reading = withRegister(compare(a.value.data, b.status === 'fulfilled' ? b.value.data : null, copy.scale));
           p.reading.at = new Date(now()).toISOString();
           p.reading.usd = Math.round(usd * 10000) / 10000;
           p.reading.readers = [a, b].map(r => r.status === 'fulfilled' ? r.value.model : 'failed');
@@ -149,7 +152,16 @@ export function createReading({ store, save, keep, readers, rules, now = () => D
     return out;
   }
 
-  return { enqueue, resume, pump, compare, spent, idle: () => !running && !queue.length };
+  // Photos read before the register was there (or with an older one): add the register to what is not yet checked.
+  function refreshRegister() {
+    if (!register || !register.loaded()) return 0;
+    let n = 0;
+    for (const p of all()) if (p.status === 'ready' && p.reading && p.reading.registerVersion !== register.version()) { withRegister(p.reading); n++; }
+    if (n) save();
+    return n;
+  }
+
+  return { enqueue, resume, pump, compare, refreshRegister, spent, idle: () => !running && !queue.length };
 }
 
 // Crops of the original for the confirm screen and the doctor's view (M3): the region each value came from, with a margin.
