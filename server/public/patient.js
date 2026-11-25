@@ -188,16 +188,25 @@ $('addPerson').onclick=async()=>{$('peopleErr').textContent='';
 $('tilePhoto').onclick=()=>{const o=$('addPaper').style.display==='none';$('addPaper').style.display=o?'':'none';$('addMsg').textContent=''};
 $('camBtn').onclick=()=>$('camIn').click();
 $('galBtn').onclick=()=>$('galIn').click();
-async function sendPhoto(f){
-  const m=$('addMsg');m.style.color='';if(!f)return;
-  if(f.size>15*1024*1024){m.style.color='#a01212';m.textContent='This photo is larger than 15 MB.';return}
-  m.textContent='Keeping the original…';
-  try{const r=await api('/api/papers',{method:'POST',headers:{'content-type':f.type||'image/jpeg','x-abhilekh-upload':'1'},body:f});
-    REC=r;paint();paintForm();m.style.color='#1d6b4a';m.textContent=r.already?'This photo is already kept.':'Original kept. It will be read in the next step.'}
-  catch(e){m.style.color='#a01212';m.textContent=e.message}
+// One photo or many (chosen together from the gallery). Sent one at a time, so a weak connection only has to carry one;
+// if one fails, the others still go, and the message says which did not.
+async function sendPhotos(files){
+  const m=$('addMsg');m.style.color='';files=[...files];if(!files.length)return;
+  let kept=0,same=0;const failed=[];
+  for(let i=0;i<files.length;i++){
+    const f=files[i];
+    m.textContent=files.length>1?'Keeping the originals: '+(i+1)+' of '+files.length:'Keeping the original…';
+    if(f.size>15*1024*1024){failed.push(f.name+': larger than 15 MB');continue}
+    try{const r=await api('/api/papers',{method:'POST',headers:{'content-type':f.type||'image/jpeg','x-abhilekh-upload':'1'},body:f});REC=r;r.already?same++:kept++;paint();paintForm()}
+    catch(e){failed.push(f.name+': '+e.message)}
+  }
+  m.style.color=failed.length?'#a01212':'#1d6b4a';
+  m.textContent=files.length===1&&!failed.length?(same?'This photo is already kept.':'Original kept. It will be read in the next step.')
+    :[kept+' kept',same?same+' already kept':'',failed.length?failed.length+' not kept':''].filter(Boolean).join(' · ')+'.';
+  if(failed.length)m.append(el('ul',{class:'log'},...failed.map(t=>el('li',{},t))));
 }
-$('camIn').onchange=e=>{sendPhoto(e.target.files[0]);e.target.value=''};
-$('galIn').onchange=e=>{sendPhoto(e.target.files[0]);e.target.value=''};
+$('camIn').onchange=e=>{sendPhotos(e.target.files);e.target.value=''};
+$('galIn').onchange=e=>{sendPhotos(e.target.files);e.target.value=''};
 function paperCard(p){
   const card=el('div',{class:'card'});
   const img=el('img',{class:'crop',alt:'The original photo, as taken',loading:'lazy',src:'/api/papers/'+p.id+'/original'});
