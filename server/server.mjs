@@ -24,9 +24,10 @@ import { createReading } from './reading.mjs';
 // The reader lives in reader/ (one home, reused from Chautari). In the repository it is ../reader; on the server it is
 // deployed next to this file as ./reader.
 const READER = existsSync(join(dirname(fileURLToPath(import.meta.url)), 'reader')) ? './reader/' : '../reader/';
-const { same, loose, mustConfirmValue } = await import(READER + 'normalise.mjs');
-const { loadList, checkMedicine } = await import(READER + 'medicine-check.mjs');
-const RULES = { same, loose, mustConfirmValue, checkMedicine, ddaIndex: loadList(fileURLToPath(new URL(READER + 'dda/nlem-2021.json', import.meta.url))) };
+const { loose, norm, mustConfirmValue, confirmsDose } = await import(READER + 'normalise.mjs');
+const { loadList, checkMedicine, namePart } = await import(READER + 'medicine-check.mjs');
+const { valueRegion, rangeRegion, dateRegion } = await import(READER + 'regions.mjs');
+const RULES = { loose, norm, mustConfirmValue, confirmsDose, checkMedicine, namePart, valueRegion, rangeRegion, dateRegion, ddaIndex: loadList(fileURLToPath(new URL(READER + 'dda/nlem-2021.json', import.meta.url))) };
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PUBLIC = join(HERE, 'public');
@@ -54,7 +55,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
     writeFileSync(tmp, JSON.stringify(store));
     renameSync(tmp, storePath); // atomic: never a half-written file
   };
-  // M2: photos are read by the two readers when both are set up (keys in the Azure settings); otherwise they wait.
+  // M2: photos are read by the two readers (Claude, Google Vision) when both are set up; otherwise they wait.
   const reading = readers ? createReading({ store, save, keep, readers, rules: RULES, now, ...readingLimits }) : null;
   const auth = createAuth({ store, save, now, sms, mail, google, rp, testMode, secureCookies, limits: authLimits });
   const token = () => Array.from(randomBytes(14), b => ALPHABET[b % 31]).join('');
@@ -247,13 +248,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     catch (e) { console.error('Originals: Google Drive settings are not usable: ' + e.message); }
   }
   const photos = process.env.PHOTOS_ENABLED === '1';
-  // M2 readers: both keys must be set (Azure app settings only). Limits: US$0.10 a page, US$20 a month (25 Nov 2026).
+  // M2 readers: Claude (fields) and Google Cloud Vision (lines that confirm them). Both keys must be set (Azure app
+  // settings only). Limits: US$0.10 a page, US$20 a month (25 Nov 2026).
   let readers = null;
-  if (process.env.ANTHROPIC_API_KEY && process.env.GEMINI_API_KEY) {
-    const eng = await import(READER + 'engines.mjs');
-    readers = { a: (b, m) => eng.readClaudeBytes(b, m), b: (b, m) => eng.readGeminiBytes(b, m) };
+  if (process.env.ANTHROPIC_API_KEY && process.env.VISION_API_KEY) {
+    const eng = await import(READER + 'engines.mjs'), vis = await import(READER + 'vision.mjs');
+    readers = { claude: (b, m) => eng.readClaudeBytes(b, m), vision: b => vis.readVisionBytes(b) };
   }
-  console.log('Reading: ' + (readers ? 'on (Claude + Gemini; US$0.10 a page, US$20 a month)' : 'off (ANTHROPIC_API_KEY and GEMINI_API_KEY are both needed)'));
+  console.log('Reading: ' + (readers ? 'on (Claude + Google Vision; US$0.10 a page, US$20 a month)' : 'off (ANTHROPIC_API_KEY and VISION_API_KEY are both needed)'));
   console.log('Photos: ' + (photos || testMode ? 'on' : 'off (PHOTOS_ENABLED)') + '; originals kept in ' + (originals ? 'Google Drive' : join(dataDir, 'originals')));
   const app = createApp({ storePath: join(dataDir, 'store.json'), testMode, photos, originals, readers, sms, mail, google, rp, secureCookies: process.env.INSECURE_COOKIES !== '1' });
   // Daily backup of store.json: local copies in DATA_DIR/backups, plus Google Drive when both Google settings are set.

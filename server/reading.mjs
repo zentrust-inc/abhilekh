@@ -1,13 +1,18 @@
-// Reading the photos (build plan M2). The two readers from reader/engines.mjs (Claude and Gemini, two companies) each copy
-// the paper into JSON on their own; then every field is compared. Nothing here interprets a result.
+// Reading the photos (build plan M2). Two readers from two companies, as in the Chautari reader:
+//   - Claude copies the paper into fields (JSON): date, facility, doctor, test rows, medicine lines.
+//   - Google Cloud Vision reads the same photo as plain lines of text with word boxes (it does not fill fields).
+// Vision then confirms or disputes each field Claude copied: a field counts as read the same only when the same
+// characters stand on the matching line of Vision's text. Nothing here interprets a result.
 //
-//   - Both readers give the same text            -> "agreed"   (pre-ticked later, in the confirm screen, M3)
-//   - The date, or a value with a decimal point   -> "confirm"  (the patient always checks it herself, even when they agree)
-//   - The readers differ, or only one saw it       -> "unresolved": "Unresolved. Original document available." Never guessed.
-//   - A medicine name not exactly on the DDA list  -> shown as written, flagged.
+//   - Claude's copy is on Vision's line               -> "agreed"   (pre-ticked later, in the confirm screen, M3)
+//   - The date, or a value with a decimal point        -> "confirm"  (the patient always checks it herself)
+//   - Not on Vision's line, or only one reader answered -> "unresolved": "Unresolved. Original document available."
+//   - A medicine name not exactly on the DDA list      -> shown as written, flagged.
+// Vision's word boxes also give, where they can be found, the region of the photo each value came from (regions.mjs);
+// a region that cannot be found is left out, never guessed.
 //
 // The original is never changed. The readers get a smaller JPEG copy made in memory (long side at most 2000 px), because a
-// phone photo is often larger than a reader accepts; the copy is not kept.
+// phone photo is often larger than a reader accepts; the copy is not kept. Regions are given in the original's pixels.
 //
 // Cost (decided 25 Nov 2026): at most US$0.10 a page and US$20 a month. A page is only started when the month still has
 // US$0.10 left; when the month is used up, photos wait ("paused") and are read next month. Spend is kept in the store.
@@ -18,10 +23,10 @@ const MAX_SIDE = 2000;
 
 // A smaller copy for the readers. Non-JPEG photos (PNG, WebP, HEIC) are sent as they are.
 export function readingCopy(buf, mime) {
-  if (mime !== 'image/jpeg') return { buf, mime };
+  if (mime !== 'image/jpeg') return { buf, mime, scale: 1 };
   const img = jpeg.decode(buf, { useTArray: true, maxMemoryUsageInMB: 1024, maxResolutionInMP: 200 });
   const f = Math.min(1, MAX_SIDE / Math.max(img.width, img.height));
-  if (f === 1 && buf.length < 3.5 * 1024 * 1024) return { buf, mime };
+  if (f === 1 && buf.length < 3.5 * 1024 * 1024) return { buf, mime, scale: 1 };
   const w = Math.max(1, Math.round(img.width * f)), h = Math.max(1, Math.round(img.height * f));
   const out = new Uint8Array(w * h * 4);
   for (let y = 0; y < h; y++) { // box filter: average the source pixels that fall in each target pixel
@@ -33,11 +38,11 @@ export function readingCopy(buf, mime) {
       const o = (y * w + x) * 4; out[o] = r / n; out[o + 1] = g / n; out[o + 2] = b / n; out[o + 3] = 255;
     }
   }
-  return { buf: Buffer.from(jpeg.encode({ data: out, width: w, height: h }, 85).data), mime: 'image/jpeg' };
+  return { buf: Buffer.from(jpeg.encode({ data: out, width: w, height: h }, 85).data), mime: 'image/jpeg', scale: f };
 }
 
 export function createReading({ store, save, keep, readers, rules, now = () => Date.now(), monthCapUsd = 20, pageCapUsd = 0.10, logger = console }) {
-  const { same, mustConfirmValue, checkMedicine, ddaIndex, loose } = rules;
+  const { mustConfirmValue, checkMedicine, namePart, ddaIndex, loose, norm, confirmsDose, valueRegion, rangeRegion, dateRegion } = rules;
   const queue = [];
   let running = false;
   store.reading = store.reading || { spend: {} };
@@ -64,12 +69,12 @@ export function createReading({ store, save, keep, readers, rules, now = () => D
           const orig = await keep.get(p.ref);
           if (createHash('sha256').update(orig).digest('hex') !== p.sha256) throw new Error('original does not match its SHA-256');
           const copy = readingCopy(orig, p.mime);
-          const [a, b] = await Promise.allSettled([readers.a(copy.buf, copy.mime), readers.b(copy.buf, copy.mime)]);
+          const [a, b] = await Promise.allSettled([readers.claude(copy.buf, copy.mime), readers.vision(copy.buf, copy.mime)]);
           const usd = [a, b].reduce((s, r) => s + (r.status === 'fulfilled' ? r.value.usd || 0 : 0), 0);
           store.reading.spend[month()] = spent() + usd;
           if (usd > pageCapUsd) logger.error('Reading: one page cost US$' + usd.toFixed(3) + ', above the page limit');
-          if (a.status === 'rejected' && b.status === 'rejected') throw new Error('both readers failed: ' + String(a.reason?.message).slice(0, 80) + ' / ' + String(b.reason?.message).slice(0, 80));
-          p.reading = compare(a.status === 'fulfilled' ? a.value.data : null, b.status === 'fulfilled' ? b.value.data : null);
+          if (a.status === 'rejected') throw new Error('the Claude reader failed: ' + String(a.reason?.message).slice(0, 120) + (b.status === 'rejected' ? ' / Vision: ' + String(b.reason?.message).slice(0, 80) : ''));
+          p.reading = compare(a.value.data, b.status === 'fulfilled' ? b.value.data : null, copy.scale);
           p.reading.at = new Date(now()).toISOString();
           p.reading.usd = Math.round(usd * 10000) / 10000;
           p.reading.readers = [a, b].map(r => r.status === 'fulfilled' ? r.value.model : 'failed');
@@ -84,56 +89,60 @@ export function createReading({ store, save, keep, readers, rules, now = () => D
     } finally { running = false; }
   }
 
-  // ---- comparing two copies of the paper, field by field ----
+  // ---- Claude's fields, confirmed or disputed by Vision's lines ----
   const blank = v => v == null || String(v).trim() === '' || String(v).trim() === '-';
-  function field(va, vb, { confirm = false } = {}) {
-    const both = va !== undefined && vb !== undefined;
-    const agree = both && (blank(va) ? blank(vb) : !blank(vb) && same(va, vb));
-    const text = !blank(va) ? String(va) : !blank(vb) ? String(vb) : '';
-    if (agree && blank(va)) return { text: '', state: 'empty' };
-    if (!agree) return { text: '', state: 'unresolved', a: blank(va) ? '' : String(va), b: blank(vb) ? '' : String(vb) };
-    return { text, state: confirm ? 'confirm' : 'agreed' };
+  const FLAGS = new Set(['h', 'l', 'hh', 'll', '*']);
+  const on = (text, v) => loose(text).includes(loose(v));
+  // one field: Claude's copy (a) checked against Vision's text (where). Vision missing: nothing can be agreed.
+  function field(a, where, { confirm = false, emptyOk = true } = {}) {
+    if (blank(a)) return { text: '', state: 'empty' };
+    const a1 = String(a);
+    if (where === null || !on(where, a1)) return { text: '', state: 'unresolved', a: a1 };
+    return { text: a1, state: confirm ? 'confirm' : 'agreed' };
   }
-  const matchBy = (list, key, wanted) => { const t = loose(wanted); return (list || []).find(x => loose(x[key]) === t) || (list || []).find(x => { const k = loose(x[key]); return k && t && (k.includes(t) || t.includes(k)); }); };
+  function flagField(a, row) {
+    if (row === null) return blank(a) ? { text: '', state: 'empty' } : { text: '', state: 'unresolved', a: String(a) };
+    const toks = norm(row).split(/[\s|]+/);
+    if (blank(a)) { const f = toks.find(t => FLAGS.has(t)); return f ? { text: '', state: 'unresolved', b: f.toUpperCase() } : { text: '', state: 'empty' }; }
+    return toks.includes(norm(a)) ? { text: String(a), state: 'agreed' } : { text: '', state: 'unresolved', a: String(a) };
+  }
+  const scaled = (r, f) => r ? { box: r.box.map(v => Math.round(v / f)), how: r.how } : null;
 
-  function compare(A, B) {
-    const one = !A || !B; // only one reader answered: nothing can be agreed
-    A = A || {}; B = B || {};
+  function compare(A, V, scale = 1) {
+    const lines = V ? V.lines || [] : null, words = V ? V.words || [] : [];
+    const all = lines === null ? null : lines.join('\n');
+    const rowOf = test => { if (lines === null) return null; const t = loose(test); const r = t ? lines.filter(l => loose(l).includes(t)) : []; return r.length ? r.join('  ') : ''; };
+    const region = fn => { try { return V ? scaled(fn(), scale) : null; } catch { return null; } };
+    A = A || {};
     const out = {
-      kind: field(A.kind, one ? undefined : B.kind).text || (A.kind || B.kind || 'other'),
-      date: { ...field(A.date_as_printed, one ? undefined : B.date_as_printed, { confirm: true }), typed: true }, // the patient types the date
-      facility: field(A.facility, one ? undefined : B.facility),
-      clinician: field(A.clinician, one ? undefined : B.clinician),
-      results: [], medicines: [], notes: (A.notes || B.notes || []).map(String),
-      oneReader: one,
+      kind: ['prescription', 'lab_report'].includes(A.kind) ? A.kind : 'other',
+      date: { ...field(A.date_as_printed, all, { confirm: true }), typed: true, region: region(() => dateRegion(words)) }, // the patient types the date
+      facility: field(A.facility, all),
+      clinician: field(A.clinician, all),
+      results: [], medicines: [],
+      oneReader: lines === null,
     };
-    const seen = new Set();
-    for (const [X, Y, first] of [[A, B, true], [B, A, false]]) {
-      for (const r of X.results || []) {
-        const o = one ? undefined : matchBy(Y.results, 'test', r.test);
-        const key = loose(r.test) + '|' + loose(o?.test || '');
-        if (!first && o && seen.has(loose(o.test) + '|' + loose(r.test))) continue;
-        seen.add(key);
-        const ra = first ? r : o, rb = first ? o : r;
-        const must = mustConfirmValue(ra?.value, rb?.value, ra?.range, rb?.range);
-        out.results.push({
-          test: field(ra?.test, rb?.test),
-          value: field(ra?.value, rb?.value, { confirm: must }),
-          unit: field(ra?.unit, rb?.unit), range: field(ra?.range, rb?.range), flag: field(ra?.flag, rb?.flag),
-        });
-      }
+    for (const r of A.results || []) {
+      const row = rowOf(r.test);
+      const found = row === null ? null : row === '' ? null : row;
+      out.results.push({
+        test: row === null || row === '' ? { text: '', state: 'unresolved', a: String(r.test || '') } : { text: String(r.test), state: 'agreed' },
+        value: field(r.value, found, { confirm: mustConfirmValue(r.value, r.range) }),
+        unit: field(r.unit, found), range: field(r.range, found), flag: flagField(r.flag, found),
+        vregion: region(() => valueRegion(words, r.test, r.value)), rregion: region(() => rangeRegion(words, r.test)),
+      });
     }
-    const medSeen = new Set();
-    for (const [X, Y, first] of [[A, B, true], [B, A, false]]) {
-      for (const m of X.medicines || []) {
-        const o = one ? undefined : matchBy(Y.medicines, 'as_written', m.as_written);
-        if (!first && o && medSeen.has(loose(o.as_written))) continue;
-        medSeen.add(loose(m.as_written));
-        const ma = first ? m : o, mb = first ? o : m;
-        const name = field(ma?.as_written, mb?.as_written);
-        const dda = checkMedicine(name.text || m.as_written, ddaIndex).status; // 'on_list' | 'not_found': shown as written either way
-        out.medicines.push({ as_written: name, dose: field(ma?.dose, mb?.dose), duration: field(ma?.duration, mb?.duration), dda });
-      }
+    for (const m of A.medicines || []) {
+      const name = namePart(m.as_written || '');
+      const medLines = lines === null ? null : lines.filter(l => name && loose(l).includes(loose(name)));
+      const row = medLines === null || !medLines.length ? null : medLines.join('  ');
+      const dose = blank(m.dose) ? { text: '', state: 'empty' }
+        : row !== null && (confirmsDose(row, m.dose) || on(row, m.dose)) ? { text: String(m.dose), state: 'agreed' } : { text: '', state: 'unresolved', a: String(m.dose) };
+      out.medicines.push({
+        as_written: row === null ? { text: '', state: 'unresolved', a: String(m.as_written || '') } : { text: String(m.as_written), state: 'agreed' },
+        dose, duration: field(m.duration, row),
+        dda: checkMedicine(m.as_written || '', ddaIndex).status, // 'on_list' | 'not_found': shown as written either way
+      });
     }
     const fs = [out.date, out.facility, out.clinician, ...out.results.flatMap(r => [r.test, r.value, r.unit, r.range, r.flag]), ...out.medicines.flatMap(m => [m.as_written, m.dose, m.duration])].filter(f => f.state !== 'empty');
     out.summary = { fields: fs.length, agreed: fs.filter(f => f.state === 'agreed').length, confirm: fs.filter(f => f.state === 'confirm').length, unresolved: fs.filter(f => f.state === 'unresolved').length };
