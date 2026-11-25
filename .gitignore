@@ -2,3 +2,4 @@ samples/*/fonts/
 __pycache__/
 .env
 *.key
+node_modules/

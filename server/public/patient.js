@@ -31,7 +31,7 @@ function render(){
     box.append(card);
   }
 }
-async function load(){try{SH=(await api('/api/shares')).shares;render();if(REC.docs)paint()}catch(e){if(e.status===401)return showAuth();throw e}}
+async function load(){try{SH=(await api('/api/shares')).shares;if(REC.docs){REC=await api('/api/record');paintForm()}render();if(REC.docs)paint()}catch(e){if(e.status===401)return showAuth();throw e}}
 window.addEventListener('langchange',()=>{if(SH&&document.getElementById('shares'))render()});
 let PHONE='',TICKET='';
 const show=(...ids)=>['stepWelcome','stepPhone','stepCode','stepPin'].forEach(i=>$(i).style.display=ids.includes(i)?'':'none');
@@ -207,12 +207,48 @@ async function sendPhotos(files){
 }
 $('camIn').onchange=e=>{sendPhotos(e.target.files);e.target.value=''};
 $('galIn').onchange=e=>{sendPhotos(e.target.files);e.target.value=''};
+// What the two readers found. Shown as copies of the paper only: agreed, for you to confirm, or Unresolved. Never a meaning.
+const UNRES='Unresolved. Original document available.';
+function fv(f){if(!f||f.state==='empty')return '';return f.state==='unresolved'?UNRES:f.text}
+function readingView(r){
+  const box=el('div',{class:'res-list'});
+  const line=(label,f)=>{if(!f||f.state==='empty')return;const row=el('div',{class:'res'});
+    row.append(el('div',{class:'t'},label),el('div',{class:'v'+(f.state==='unresolved'?' unres':'')},fv(f)));
+    if(f.state==='confirm')row.append(el('div',{class:'mute'},'Check this against the paper.'));box.append(row)};
+  line('Date on the paper',r.date);line('Clinic, hospital or lab',r.facility);line('Doctor',r.clinician);
+  for(const t of r.results){
+    const row=el('div',{class:'res'});
+    const name=t.test.state==='unresolved'?(t.test.a||t.test.b):t.test.text;
+    row.append(el('div',{class:'t'},name),el('div',{class:'v'+(t.value.state==='unresolved'?' unres':'')},fv(t.value)+' ',el('span',{class:'u'},t.unit.state==='agreed'?t.unit.text:''),t.flag.state==='agreed'&&t.flag.text?el('span',{class:'flag',title:'printed on the paper'},t.flag.text):''));
+    row.append(el('div',{class:'mute'},'Printed range: '+(t.range.state==='agreed'?t.range.text:t.range.state==='unresolved'?UNRES:'—')));
+    if(t.value.state==='confirm')row.append(el('div',{class:'mute'},'Check this against the paper.'));
+    if(t.test.state==='unresolved')row.append(el('div',{class:'mute'},'Only one reader saw this line.'));
+    box.append(row);
+  }
+  for(const m of r.medicines){
+    const row=el('div',{class:'res'});
+    row.append(el('div',{class:'t'},m.as_written.state==='unresolved'?(m.as_written.a||m.as_written.b):m.as_written.text),
+      el('div',{class:'mute'},[fv(m.dose),fv(m.duration)].filter(Boolean).join(' · ')));
+    if(m.as_written.state==='unresolved')row.append(el('div',{class:'mute'},'The readers did not agree on this line. '+UNRES));
+    else if(m.dda==='not_found')row.append(el('div',{class:'mute'},'Not found on the DDA list: shown as written.'));
+    box.append(row);
+  }
+  return box;
+}
+const STATUS={waiting:'Original kept · waiting to be read',reading:'Being read…',paused:'Waiting: the reading limit for this month is reached',failed:'Could not be read. The original is kept.',ready:'Read · ready to check'};
 function paperCard(p){
   const card=el('div',{class:'card'});
   const img=el('img',{class:'crop',alt:'The original photo, as taken',loading:'lazy',src:'/api/papers/'+p.id+'/original'});
   card.append(el('div',{},el('span',{class:'chip'},'Photo')),img,
-    el('div',{class:'t',style:'margin-top:6px'},'Original kept · waiting to be read'),
-    el('div',{class:'mute'},'Added '+fmt(p.added)),el('div',{class:'mute'},Math.round(p.bytes/1024)+' KB'),
+    el('div',{class:'t',style:'margin-top:6px'},STATUS[p.status]||p.status));
+  if(p.status==='ready'&&p.reading){
+    const s=p.reading.summary;
+    card.append(el('div',{class:'mute'},s.agreed+' agreed by both readers · '+s.confirm+' for you to check · '+s.unresolved+' unresolved'));
+    if(p.reading.oneReader)card.append(el('div',{class:'mute'},'Only one reader answered, so nothing is marked as agreed.'));
+    const body=el('div',{style:'display:none'},readingView(p.reading));
+    card.append(el('button',{class:'orig',type:'button',onclick:e=>{const o=body.style.display==='none';body.style.display=o?'':'none';e.target.textContent=o?'Hide what the readers found':'See what the readers found'}},'See what the readers found'),body);
+  }
+  card.append(el('div',{class:'mute'},'Added '+fmt(p.added)),el('div',{class:'mute'},Math.round(p.bytes/1024)+' KB'),
     el('div',{class:'mute',style:'font-size:12px;word-break:break-all'},'SHA-256 '+p.sha256));
   return card;
 }
@@ -227,7 +263,8 @@ function paint(){
   const hc=$('homeCards');hc.replaceChildren();
   if(n){
     const live=SH.filter(s=>s.state==='live').length;
-    hc.append(el('button',{class:'card',style:'width:100%;text-align:left;font-weight:400;color:var(--ink)',onclick:()=>tab('papers')},el('b',{},n+' paper'+(n>1?'s':'')),el('div',{class:'mute'},'Tap to see them')));
+    const ready=(REC.papers||[]).filter(p=>p.status==='ready').length;
+    hc.append(el('button',{class:'card',style:'width:100%;text-align:left;font-weight:400;color:var(--ink)',onclick:()=>tab('papers')},el('b',{},n+' paper'+(n>1?'s':'')),el('div',{class:'mute'},ready?ready+' ready to check':'Tap to see them')));
     hc.append(el('button',{class:'card',style:'width:100%;text-align:left;font-weight:400;color:var(--ink)',onclick:()=>tab('share')},el('b',{},live?live+' active share'+(live>1?'s':''):'Nothing is being shared'),el('div',{class:'mute'},live?'Tap to see who looked':'Only you can see your papers')));
   }
   const pl=$('papers');pl.replaceChildren();
