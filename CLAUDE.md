@@ -8,7 +8,7 @@
 
 - **No advice.** Show what the paper says: value, unit, the printed range and any flag the lab printed. Never interpret, never add lines about what a result means, never invent a range, never raise an alarm. A critical value is shown exactly as the lab printed it.
 - **The image is the record.** Extracted values are an index; every value links to the region of the original it came from. Originals are never overwritten.
-- **Evidence over guessing.** Two independent readers must agree before a value is pre-ticked; everything else is flagged and shown as "Unresolved. Original document available." (never blank, never guessed). Dates are always typed by the patient; a value with a decimal point always needs its own tap. A medicine name not on the DDA registered list is shown as written and flagged, never mapped to a likely drug.
+- **Evidence over guessing.** Two independent readers must agree before a value is pre-ticked; everything else is flagged and shown as "Unresolved. Original document available." (never blank, never guessed). A date is filled in only when both readers agree, and then needs its own tap; otherwise the patient types it (decided 25 Nov 2026). A value with a decimal point always needs its own tap. A medicine name not on the DDA registered list is shown as written and flagged, never mapped to a likely drug.
 - **The patient confirms.** Nothing reaches a doctor until the patient (or a named clinician) has confirmed it.
 - **The patient controls access.** Shares last 15 minutes, carry a watermark, offer no download, are logged where the patient sees them, and can be stopped at any time without a PIN.
 - **No secrets in the repository.** API keys live on the server only.

@@ -152,7 +152,7 @@ $('labelSave').onclick=async()=>{try{REC=await post('/api/record/label',{label:$
 $('trySample').onclick=async()=>{try{REC=await post('/api/record/sample');paint();paintForm()}catch(e){alert(e.message)}};
 function resultRows(d){
   const box=el('div',{class:'res-list'});
-  for(const m of d.medicines||[]){const row=el('div',{class:'res'});row.append(el('div',{class:'t'},m.as_written),el('div',{class:'mute'},[m.dose,m.duration].filter(Boolean).join(' · ')));const rl=regLine(m.register);if(rl)row.append(rl);box.append(row)}
+  for(const m of d.medicines||[]){const row=el('div',{class:'res'});medRows(row,m.as_written,m.register,m.dose,m.duration);box.append(row)}
   for(const r of d.results){
     const row=el('div',{class:'res'});
     row.append(el('div',{class:'t'},r.test),el('div',{class:'v'},r.value+' ',el('span',{class:'u'},r.unit||''),r.flag?el('span',{class:'flag',title:'printed on the paper'},r.flag):''));
@@ -214,8 +214,20 @@ const UNRES='Unresolved. Original document available.';
 function regLine(reg){
   if(!reg)return null;
   if(reg.mixed)return el('div',{class:'mute reg'},'On the DDA register: several products share this name ('+reg.products.map(p=>p.registered).slice(0,3).join('; ')+').');
-  const p=reg.products[0],gen=p.generics.map(g=>g.toLowerCase()).join(' + ');
-  return el('div',{class:'mute reg'},'On the DDA register: '+[p.registered,gen+(reg.strengthMatched&&p.strength?' '+p.strength:''),p.form,p.manufacturer].filter(Boolean).join(' · ')+(p.valid?'':' · registration lapsed'));
+  const p=reg.products[0];
+  return el('div',{class:'mute reg'},'On the DDA register: '+[p.registered,p.manufacturer].filter(Boolean).join(' · ')+(p.valid?'':' · registration lapsed'));
+}
+// One medicine line, as it is shown everywhere: the medicine (without the form word in front), its form, the generic from the
+// DDA register (exact name match only), how often and how long. The line as written stays whole in the record and on the photo.
+function labelled(label,value,cls){return el('div',{class:cls||'mute'},el('span',{},label),': '+value)}
+function medRows(row,asWritten,reg,dose,duration){
+  const sp=medline.split(asWritten),form=medline.form(reg,sp),gen=medline.generic(reg);
+  row.append(el('div',{class:'t'},sp.name||asWritten));
+  if(form)row.append(el('div',{class:'mute'},el('span',{},'Form'),': ',el('span',{},form)));
+  if(gen)row.append(labelled('Generic (DDA register)',gen,'reg'));
+  if(dose)row.append(labelled('How often',dose));
+  if(duration)row.append(labelled('How long',duration));
+  const rl=regLine(reg);if(rl)row.append(rl);
 }
 function fv(f){if(!f||f.state==='empty')return '';return f.state==='unresolved'?UNRES:f.text}
 function readingView(r){
@@ -235,37 +247,59 @@ function readingView(r){
   }
   for(const m of r.medicines){
     const row=el('div',{class:'res'});
-    row.append(el('div',{class:'t'},m.as_written.state==='unresolved'?(m.as_written.a||m.as_written.b):m.as_written.text),
-      el('div',{class:'mute'},[fv(m.dose),fv(m.duration)].filter(Boolean).join(' · ')));
+    medRows(row,m.as_written.state==='unresolved'?(m.as_written.a||m.as_written.b):m.as_written.text,m.register,fv(m.dose),fv(m.duration));
     if(m.as_written.state==='unresolved')row.append(el('div',{class:'mute'},'The readers did not agree on this line. '+UNRES));
     if(m.as_written.byRegister)row.append(el('div',{class:'mute'},'The readers did not agree, but this copy is on the DDA register exactly. Check it against the paper.'));
-    const rl=regLine(m.register);if(rl)row.append(rl);
-    else if(m.as_written.state!=='unresolved'&&m.dda==='not_found')row.append(el('div',{class:'mute'},'Not found on the DDA register: shown as written.'));
+    if(!m.register&&m.as_written.state!=='unresolved'&&m.dda==='not_found')row.append(el('div',{class:'mute'},'Not found on the DDA register: shown as written.'));
     box.append(row);
   }
   return box;
 }
 // ---- M3: check against the paper, then add to my record ----
-// Agreed: filled in and ticked (the patient can still change it). A date: always typed. A value with a decimal point: needs
-// its own tick. Unresolved: typed from the paper, or left Unresolved. There is no "confirm all".
+// Agreed: filled in and ticked (the patient can still change it). A date: filled in only when both readers agree, and it
+// needs its own tick (decided 25 Nov 2026); otherwise she types it. A value with a decimal point: needs its own tick.
+// Unresolved: typed from the paper, or left Unresolved. There is no "confirm all".
 function checkField(label,f,opt={}){
   const wrap=el('div',{class:'chk'});
   const st=f?f.state:'empty';
-  const inp=el('input',{type:'text',value:opt.typed?'':(st==='agreed'||st==='confirm'?f.text:''),maxlength:'200','aria-label':label});
+  const inp=el('input',{type:'text',value:st==='agreed'||st==='confirm'?f.text:'',maxlength:'200','aria-label':label});
   const tick=el('input',{type:'checkbox'});if(st==='agreed')tick.checked=true;
   const leave=el('input',{type:'checkbox'});
   const note=el('div',{class:'mute'});
   wrap.append(el('div',{class:'t'},label),inp);
-  if(opt.typed){inp.placeholder='Type it exactly as printed';note.textContent='Dates are always typed by you, as printed on the paper (any calendar).'}
+  if(opt.date&&st==='confirm')note.textContent='Both readers read this date the same. Check it against the paper.';
+  else if(opt.date){inp.placeholder='Type it exactly as printed';note.textContent='The readers did not agree on the date. Type it yourself, exactly as printed (any calendar).'}
   else if(st==='agreed')note.textContent='Both readers read this the same.';
   else if(st==='confirm')note.textContent='Has a decimal point: check it against the paper yourself.';
   else if(st==='unresolved'){inp.placeholder='Unresolved. Original document available.';note.textContent='The readers did not agree. Type it from the paper, or leave it Unresolved.'}
   wrap.append(note);
-  if(!opt.typed&&(st==='agreed'||st==='confirm'))wrap.append(el('label',{class:'opt'},tick,el('span',{},'Matches the paper')));
-  if(!opt.typed&&st==='unresolved')wrap.append(el('label',{class:'opt'},leave,el('span',{},'Leave it Unresolved')));
+  if(st==='agreed'||st==='confirm')wrap.append(el('label',{class:'opt'},tick,el('span',{},'Matches the paper')));
+  if(!opt.date&&st==='unresolved')wrap.append(el('label',{class:'opt'},leave,el('span',{},'Leave it Unresolved')));
   inp.addEventListener('input',()=>{if(st==='agreed'||st==='confirm')tick.checked=false;if(inp.value)leave.checked=false});
   return{node:wrap,get:()=>({value:inp.value.trim(),ok:tick.checked,unresolved:leave.checked}),
-    done:()=>opt.typed?!!inp.value.trim():st==='confirm'?tick.checked:st==='unresolved'?(!!inp.value.trim()||leave.checked):true,mark:on=>wrap.classList.toggle('need',on)};
+    done:()=>opt.date&&st!=='confirm'?!!inp.value.trim():st==='confirm'?tick.checked&&!!inp.value.trim():st==='unresolved'?(!!inp.value.trim()||leave.checked):true,mark:on=>wrap.classList.toggle('need',on)};
+}
+// How often: chosen from the usual ways it is written (shown exactly as written), or typed under "Other".
+function doseField(f){
+  const st=f?f.state:'empty',now=st==='agreed'?f.text:st==='unresolved'?(f.a||''):'';
+  const wrap=el('div',{class:'chk'}),sel=el('select',{'aria-label':'How often'});
+  sel.append(el('option',{value:''},'Choose from the paper'));
+  medline.DOSES.forEach(d=>sel.append(el('option',{value:d},d)));
+  sel.append(el('option',{value:'other'},'Other (type it as written)'),el('option',{value:'none'},'Not written on the paper'));
+  const other=el('input',{type:'text',maxlength:'60',placeholder:'As written on the paper','aria-label':'How often, as written'});
+  const tick=el('input',{type:'checkbox'}),leave=el('input',{type:'checkbox'}),note=el('div',{class:'mute'});
+  if(st==='agreed'){const o=medline.doseOption(now);if(o)sel.value=o;else{sel.value='other';other.value=now}tick.checked=true;note.textContent='Both readers read this the same.'}
+  else if(st==='unresolved')note.textContent='The readers did not agree. Choose it from the paper, or leave it Unresolved.';
+  else sel.value='none';
+  const show=()=>{other.style.display=sel.value==='other'?'':'none'};show();
+  wrap.append(el('div',{class:'t'},'How often'),sel,other,note);
+  if(st==='agreed')wrap.append(el('label',{class:'opt'},tick,el('span',{},'Matches the paper')));
+  if(st==='unresolved')wrap.append(el('label',{class:'opt'},leave,el('span',{},'Leave it Unresolved')));
+  sel.addEventListener('change',()=>{show();tick.checked=false;if(sel.value)leave.checked=false});
+  other.addEventListener('input',()=>{tick.checked=false;if(other.value)leave.checked=false});
+  const value=()=>sel.value==='other'?other.value.trim():sel.value==='none'?'':sel.value;
+  return{node:wrap,get:()=>({value:value(),ok:true,none:sel.value==='none',unresolved:leave.checked}),
+    done:()=>sel.value==='none'||!!value()||(st==='unresolved'&&leave.checked),mark:on=>wrap.classList.toggle('need',on)};
 }
 function openCheck(p){
   const r=p.reading,v=$('checkView');v.replaceChildren();tab('check');
@@ -276,7 +310,7 @@ function openCheck(p){
   v.append(el('div',{class:'card'},img,el('div',{class:'mute'},'Tap the photo to see it larger.')));
   img.onclick=()=>window.open('/api/papers/'+p.id+'/original','_blank','noopener');
   const top=el('div',{class:'card'});v.append(top);
-  const date=add(top,'Date on the paper',r.date,{typed:true});
+  const date=add(top,'Date on the paper',r.date,{date:true});
   const fac=add(top,'Clinic, hospital or lab',r.facility);const doc=add(top,'Doctor',r.clinician);
   const rows=[],meds=[];
   if(r.results.length){v.append(el('h2',{},'Results'));}
@@ -289,8 +323,17 @@ function openCheck(p){
   r.medicines.forEach(m=>{const c=el('div',{class:'card'});v.append(c);
     const row={removed:false,f:{}};
     const rm=el('button',{class:'orig',type:'button',onclick:()=>{row.removed=!row.removed;c.classList.toggle('off',row.removed);rm.textContent=row.removed?'Put this line back':'This line is not on the paper'}},'This line is not on the paper');
-    row.f.as_written=add(c,'Medicine, as written',m.as_written);row.f.dose=add(c,'Dose',m.dose);row.f.duration=add(c,'Duration',m.duration);
+    const sp=medline.split(m.as_written.text||m.as_written.a||m.as_written.b||'');
+    const nf={...m.as_written,text:medline.split(m.as_written.text).name,a:m.as_written.a&&medline.split(m.as_written.a).name};
+    const name=add(c,'Medicine',nf);row.name=name;
+    row.f.as_written={get:()=>{const g=name.get();return{...g,value:g.value?(sp.prefix?sp.prefix+' ':'')+g.value:''}}};
+    const form=medline.form(m.register,sp),gen=medline.generic(m.register);
+    if(form)c.append(el('div',{class:'mute'},el('span',{},'Form'),': ',el('span',{},form),sp.prefix?' ('+sp.prefix+')':''));
+    if(gen)c.append(labelled('Generic (DDA register)',gen,'reg'));
     const rl=regLine(m.register);if(rl)c.append(rl);else if(m.dda==='not_found')c.append(el('div',{class:'mute'},'Not found on the DDA register: kept as written.'));
+    const dose=doseField(m.dose);c.append(dose.node);fields.push(dose);row.f.dose=dose;
+    // how long: only when the paper says it (most prescriptions for long-term medicines do not)
+    row.f.duration=m.duration&&m.duration.state!=='empty'?add(c,'How long (as written)',m.duration):{get:()=>({value:''})};
     if(m.as_written.byRegister)c.append(el('div',{class:'mute'},'The readers did not agree, but this copy is on the DDA register exactly. Check it against the paper.'));
     c.append(rm);meds.push(row)});
   const err=el('div',{class:'mute',style:'color:#a01212;margin-top:6px'});
@@ -298,12 +341,12 @@ function openCheck(p){
   v.append(go,err,el('p',{class:'mute'},'Abhilekh keeps what the paper says. It gives no advice.'));
   go.onclick=async()=>{
     let missing=0;
-    const live=f=>!rows.concat(meds).some(r=>r.removed&&Object.values(r.f).includes(f));
+    const live=f=>!rows.concat(meds).some(r=>r.removed&&(Object.values(r.f).includes(f)||r.name===f));
     for(const f of fields){const need=live(f)&&!f.done();f.mark(need);if(need)missing++}
     if(missing){err.textContent=missing+' line'+(missing>1?'s':'')+' still to check. They are marked in yellow.';const n=v.querySelector('.need');if(n)n.scrollIntoView({block:'center'});return}
     err.textContent='';go.disabled=true;
     const pack=row=>row.removed?{removed:true}:Object.fromEntries(Object.entries(row.f).map(([k,c])=>[k,c.get()]));
-    try{REC=await post('/api/papers/'+p.id+'/confirm',{date:date.get().value,facility:fac.get().value,clinician:doc.get().value,results:rows.map(pack),medicines:meds.map(pack)});
+    try{REC=await post('/api/papers/'+p.id+'/confirm',{date:date.get(),facility:fac.get().value,clinician:doc.get().value,results:rows.map(pack),medicines:meds.map(pack)});
       paint();paintForm();tab('papers')}
     catch(e){err.textContent=e.message;go.disabled=false}
   };

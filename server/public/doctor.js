@@ -33,8 +33,13 @@ document.addEventListener('dragstart',e=>e.preventDefault());
       if(r.img){const im=el('img',{class:'crop',src:r.img,alt:'Region of the original page for '+r.test,style:'display:none',draggable:'false'});row.append(el('button',{class:'orig',onclick:()=>{im.style.display=im.style.display==='none'?'block':'none'}},'See the original'),im)}
       else row.append(el('div',{class:'mute'},'Original region not found; see the whole page.'));
       c.append(row)});
-    for(const m of d.medicines||[]){const row=el('div',{class:'res'});row.append(el('div',{class:'t'},m.as_written),el('div',{class:'mute'},[m.dose,m.duration].filter(Boolean).join(' · ')));
-      const r=m.register;if(r&&!r.mixed){const p=r.products[0];row.append(el('div',{class:'mute'},'DDA register: '+[p.generics.map(g=>g.toLowerCase()).join(' + ')+(r.strengthMatched&&p.strength?' '+p.strength:''),p.form,p.manufacturer].filter(Boolean).join(' · ')+(p.valid?'':' · registration lapsed')))}
+    for(const m of d.medicines||[]){const row=el('div',{class:'res'});const r=m.register,sp=medline.split(m.as_written),form=medline.form(r,sp),gen=medline.generic(r);
+      row.append(el('div',{class:'t'},sp.name||m.as_written),el('div',{class:'mute'},'As written: '+m.as_written));
+      if(form)row.append(el('div',{class:'mute'},'Form: '+form));
+      if(gen)row.append(el('div',{class:'mute'},'Generic (DDA register): '+gen));
+      if(m.dose)row.append(el('div',{class:'mute'},'How often: '+m.dose));
+      if(m.duration)row.append(el('div',{class:'mute'},'How long: '+m.duration));
+      if(r&&!r.mixed){const p=r.products[0];row.append(el('div',{class:'mute'},'DDA register: '+[p.registered,p.manufacturer].filter(Boolean).join(' · ')+(p.valid?'':' · registration lapsed')))}
       else if(r&&r.mixed)row.append(el('div',{class:'mute'},'DDA register: several products share this name'));
       c.append(row)}
     if(d.origin==='photo'){ // the whole original, under the same watermark; asked for, not loaded by itself
