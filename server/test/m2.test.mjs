@@ -115,3 +115,14 @@ test('Vision reader: sends the image with the key, returns word boxes and lines'
   assert.equal(r.data.words.length, 2);
   assert.deepEqual(r.data.lines, ['TSH  6.8']);
 });
+
+test('prompt v2: the whole copy of the page is kept next to the check-screen fields, every field checked against Vision', async () => {
+  const full = { schema: 'abhilekh.page.v2', issuer: { name: 'Namuna Lab (SAMPLE)' }, patient_as_written: { name: 'Aama Sample' }, other_text: ['Date: 2083-08-09'] };
+  const { app, paper, done } = await setup({ claude: async () => ({ data: A, full, usd: 0.03, model: 'claude' }), vision });
+  app.reading.resume(); await done();
+  const c = paper.reading.copy;
+  assert.equal(c.data.issuer.name, 'Namuna Lab (SAMPLE)');           // kept exactly as the reader copied it
+  assert.equal(c.states['issuer.name'], 'agreed');
+  assert.equal(c.states['patient_as_written.name'], 'one_reader');
+  assert.equal(paper.reading.facility.state, 'agreed');              // the check-screen fields work as before
+});

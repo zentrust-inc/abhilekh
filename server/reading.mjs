@@ -78,6 +78,8 @@ export function createReading({ store, save, keep, readers, rules, register = nu
           if (usd > pageCapUsd) logger.error('Reading: one page cost US$' + usd.toFixed(3) + ', above the page limit');
           if (a.status === 'rejected') throw new Error('the Claude reader failed: ' + String(a.reason?.message).slice(0, 120) + (b.status === 'rejected' ? ' / Vision: ' + String(b.reason?.message).slice(0, 80) : ''));
           p.reading = withRegister(compare(a.value.data, b.status === 'fulfilled' ? b.value.data : null, copy.scale));
+          // the whole copy of the page (prompt v2), every field checked against Vision's lines; shown later screen by screen
+          if (a.value.full && rules.checkCopy) p.reading.copy = rules.checkCopy(a.value.full, b.status === 'fulfilled' ? b.value.data.lines || [] : null);
           p.reading.at = new Date(now()).toISOString();
           p.reading.usd = Math.round(usd * 10000) / 10000;
           p.reading.readers = [a, b].map(r => r.status === 'fulfilled' ? r.value.model : 'failed');

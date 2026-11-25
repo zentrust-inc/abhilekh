@@ -28,7 +28,8 @@ const READER = existsSync(join(dirname(fileURLToPath(import.meta.url)), 'reader'
 const { loose, norm, mustConfirmValue, confirmsDose } = await import(READER + 'normalise.mjs');
 const { loadList, checkMedicine, namePart } = await import(READER + 'medicine-check.mjs');
 const { valueRegion, rangeRegion, dateRegion } = await import(READER + 'regions.mjs');
-const RULES = { loose, norm, mustConfirmValue, confirmsDose, checkMedicine, namePart, valueRegion, rangeRegion, dateRegion, ddaIndex: loadList(fileURLToPath(new URL(READER + 'dda/nlem-2021.json', import.meta.url))) };
+const { checkCopy } = await import(READER + 'copy.mjs');
+const RULES = { checkCopy, loose, norm, mustConfirmValue, confirmsDose, checkMedicine, namePart, valueRegion, rangeRegion, dateRegion, ddaIndex: loadList(fileURLToPath(new URL(READER + 'dda/nlem-2021.json', import.meta.url))) };
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PUBLIC = join(HERE, 'public');
