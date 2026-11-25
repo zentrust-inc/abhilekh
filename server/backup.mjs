@@ -12,7 +12,7 @@
 // and checks that the file is a readable store first (see test/backup.test.mjs).
 import { readFileSync, writeFileSync, renameSync, existsSync, mkdirSync, readdirSync, unlinkSync, copyFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { createSign } from 'node:crypto';
+import { createDrive } from './drive.mjs';
 
 const DAY = 24 * 60 * 60 * 1000;
 const NAME = /^store-(\d{4}-\d{2}-\d{2})\.json$/;
@@ -69,33 +69,9 @@ export function restoreBackup({ backupPath, storePath }) {
   copyFileSync(backupPath, storePath);
 }
 
-// Google Drive uploader. Zero dependencies: a service-account JWT (RS256, node:crypto) is exchanged for an
-// access token, then the file is sent with a multipart upload. supportsAllDrives=true because a service account
-// has no storage of its own: the folder must be in a shared drive (Workspace), where the files count against
-// the organisation's pooled storage.
-const b64url = b => Buffer.from(b).toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+// Google Drive uploader for the backups: the copy goes into the shared drive as store-YYYY-MM-DD.json.
 export function googleDriveUploader({ credentials, folderId, fetchImpl = globalThis.fetch, now = () => Date.now() }) {
-  if (!credentials?.client_email || !credentials?.private_key) throw new Error('GOOGLE_BACKUP_SA_JSON is not a service account key.');
   if (!folderId) throw new Error('GOOGLE_BACKUP_FOLDER_ID is missing.');
-  const tokenUri = credentials.token_uri || 'https://oauth2.googleapis.com/token';
-  let cached = null;
-  async function token() {
-    const t = Math.floor(now() / 1000);
-    if (cached && cached.exp - 60 > t) return cached.token;
-    const head = b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
-    const claim = b64url(JSON.stringify({ iss: credentials.client_email, scope: 'https://www.googleapis.com/auth/drive', aud: tokenUri, iat: t, exp: t + 3600 }));
-    const sig = b64url(createSign('RSA-SHA256').update(head + '.' + claim).sign(credentials.private_key));
-    const r = await fetchImpl(tokenUri, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: head + '.' + claim + '.' + sig }).toString() });
-    if (r.status !== 200) throw new Error('Google token answered ' + r.status);
-    const j = await r.json();
-    cached = { token: j.access_token, exp: t + (j.expires_in || 3600) };
-    return cached.token;
-  }
-  return async function upload(name, body) {
-    const boundary = 'abhilekh' + Math.random().toString(36).slice(2);
-    const multipart = '--' + boundary + '\r\ncontent-type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify({ name, parents: [folderId], mimeType: 'application/json' }) +
-      '\r\n--' + boundary + '\r\ncontent-type: application/json\r\n\r\n' + body + '\r\n--' + boundary + '--';
-    const r = await fetchImpl('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true&fields=id', { method: 'POST', headers: { authorization: 'Bearer ' + await token(), 'content-type': 'multipart/related; boundary=' + boundary }, body: multipart });
-    if (r.status !== 200) throw new Error('Google Drive upload answered ' + r.status);
-  };
+  const drive = createDrive({ credentials, fetchImpl, now });
+  return async (name, body) => { await drive.upload({ name, mime: 'application/json', body, parent: folderId }); };
 }

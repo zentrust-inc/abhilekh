@@ -51,7 +51,7 @@
 <div class="banner" id="paused" style="display:none"></div>
 <section id="tab-home" class="tab">
   <div class="lang" role="group" aria-label="Language"><button type="button" data-lang="en" class="on">English</button><button type="button" data-lang="ne">नेपाली</button></div>
-  <div class="top"><div><h1 id="homeTitle">Hello</h1><button class="orig" id="labelBtn" type="button">Add a name for this record</button></div>
+  <div class="top"><div><h1 id="homeTitle">Hello</h1><button class="orig" id="labelBtn" type="button">Add a name for this record</button> · <button class="orig" id="personBtn" type="button">Family</button></div>
     <button class="acct" id="acctBtn" type="button" aria-label="Account" aria-expanded="false">&#9776;</button></div>
   <div id="labelBox" style="display:none" class="card"><label class="mute" for="labelIn" style="display:block">A name for this record (only you and the doctors you share with see it)</label>
     <input type="text" id="labelIn" maxlength="40" placeholder="e.g. Papers of Aama"><div class="row"><button class="go" id="labelSave" type="button" style="margin-top:0">Save</button><button class="sec" id="labelCancel" type="button">Cancel</button></div></div>
@@ -59,8 +59,32 @@
     <p class="mute" style="margin:4px 0 8px">Sign in and share with your fingerprint or face instead of typing a PIN. Your device does the check; Abhilekh never sees it.</p>
     <button class="go" id="pkNudgeBtn" type="button" style="margin-top:0">Turn on fingerprint or face</button></div>
   <div class="tiles">
-    <div class="tile off" aria-disabled="true"><div class="big">&#128247;</div><b>Photograph a paper</b><span class="mute">Coming in the next step</span></div>
+    <button class="tile" id="tilePhoto" type="button"><div class="big">&#128247;</div><b>Photograph a paper</b><span class="mute" id="tilePhotoSub">Kept exactly as taken</span></button>
     <button class="tile" id="tileShow" type="button"><div class="big">&#128241;</div><b>Show a doctor</b><span class="mute" id="tileShowSub"></span></button>
+  </div>
+  <div class="card" id="addPaper" style="display:none">
+    <b>Add a paper</b>
+    <p class="mute" style="margin:4px 0 8px">The photo is kept exactly as taken: never straightened, cropped or changed. Abhilekh does not read it yet; reading comes next.</p>
+    <p class="chip" style="margin:0 0 8px">For now, photograph only SAMPLE papers.</p>
+    <input type="file" id="camIn" accept="image/*" capture="environment" style="display:none">
+    <input type="file" id="galIn" accept="image/*" style="display:none">
+    <div class="row"><button class="go" id="camBtn" type="button" style="margin-top:0">Take a photo</button><button class="sec" id="galBtn" type="button">Choose from the phone</button></div>
+    <div class="mute" id="addMsg" style="margin-top:6px"></div>
+  </div>
+  <div id="peopleBox" class="card" style="display:none">
+    <b>Whose papers?</b>
+    <p class="mute" style="margin:4px 0 8px">One account can keep the papers of your family, each person separately. Opening another person's papers asks for your PIN.</p>
+    <div id="peopleList"></div>
+    <div id="switchBox" style="display:none">
+      <button class="go" id="switchPk" type="button" style="display:none">Open with fingerprint or face</button>
+      <label class="mute" for="switchPin" style="display:block;margin-top:8px">Your PIN, to open these papers</label>
+      <input type="password" id="switchPin" inputmode="numeric" maxlength="6" autocomplete="current-password">
+      <button class="go" id="switchGo" type="button">Open</button>
+    </div>
+    <label class="mute" for="newPerson" style="display:block;margin-top:10px">Add a family member</label>
+    <input type="text" id="newPerson" maxlength="40" placeholder="e.g. Aama">
+    <div class="row"><button class="go" id="addPerson" type="button" style="margin-top:0">Add</button><button class="sec" id="peopleClose" type="button">Close</button></div>
+    <div class="mute" id="peopleErr" style="margin-top:6px;color:#a01212"></div>
   </div>
   <div id="firstUse" class="card" style="display:none">
     <b>How it will work</b>

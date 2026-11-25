@@ -14,7 +14,7 @@ Plans, not results: this is a plan under test, run only on invented SAMPLE Â· à¤
 
 ## Run
 
-    cd server && npm test          # 77 tests, node:test, no packages to install
+    cd server && npm test          # 84 tests, node:test, no packages to install
     PORT=8080 DATA_DIR=./data node server.mjs
 
 `TEST_MODE=1` also allows a 1-minute share so expiry can be watched on a live URL, and, when no SMS token is set,
@@ -74,6 +74,30 @@ service. That is the first thing to check after the resource exists.
 `python3 prototype/share/build.py <qrcode.js>` also writes `server/data/sample-record.json` (same invented L21 and L22
 pages and crops as the share prototype). `server/public/qrcode.js` is qrcode-generator 2.0.4 (MIT), licence header kept.
 
+## Family and photos (build plan M1)
+
+**Family.** One account can hold up to 6 people ("Me", "Aama"...), each with their own papers and shares. Adding a person
+needs no PIN (the new record is empty) and opens that person. Opening another person's papers asks for the PIN or
+fingerprint/face, so on a shared phone one person's papers do not open another's. The person in view is kept per
+session. Records made before M1 became the account's first person, name and papers kept. A share belongs to the
+person it was made for; the doctor sees only that person's papers.
+
+**Photos.** "Photograph a paper" (camera or gallery) sends the photo as taken: JPEG, PNG, WebP or HEIC, up to 15 MB.
+The server keeps exactly those bytes (never straightened, cropped, re-encoded or overwritten), records their SHA-256,
+and checks the hash again every time the original is served. The same photo twice is kept once. Only the person it
+belongs to, signed in, can open the original. A photo is "waiting to be read": it is not read yet (M2) and cannot be
+shared, because only papers the patient has confirmed reach a doctor.
+
+Where originals are kept (`originals.mjs`): with `GOOGLE_BACKUP_SA_JSON` and `GOOGLE_BACKUP_FOLDER_ID` set, in the Google
+shared drive, folder `originals` (made once), each file named by its SHA-256 only, so no name or paper is visible in
+Drive. Without them (tests, local runs): `DATA_DIR/originals`.
+
+Adding photos is **off** unless the Azure app setting `PHOTOS_ENABLED=1` is set (or `TEST_MODE=1`). Planning stage:
+SAMPLE papers only until real papers are decided; the page says so beside the camera button.
+
+The upload is the one POST that is not JSON: raw image bytes with the header `X-Abhilekh-Upload: 1`, which a cross-site
+form cannot send.
+
 ## Backups (backup.mjs)
 
 Once at start-up and then every 24 hours, `store.json` is checked (a broken file is never copied) and copied to
@@ -96,9 +120,8 @@ the backup is a readable store and keeps the old file as `store.json.before-rest
 
 ## What it does not do yet
 
-- **No photos yet.** Each account has its own record, but it can hold only the invented SAMPLE papers. Taking and
-  keeping a photo of a paper is build plan M1.
-- **Storage is one JSON file** (atomic writes, daily backups). Fine for a demo; photos will go to Azure Blob Storage.
+- **Photos are kept, not read.** Reading them with the two readers is M2; confirming them in the app is M3.
+- **Storage is one JSON file** (atomic writes, daily backups) for records; photos go to the Google shared drive.
 - **Unknown links** return 404 and are not logged (no share to log against); more than 30 misses a minute from one address are slowed down. The limiter is per process and per address, not a defence against a determined attacker.
 - Links are 14 characters from 31 letters and digits (about 69 bits), not guessable in practice.
 - English and Nepali (the Nepali wording still needs a native speaker's review); the QR code is drawn but not yet scanned by a phone; not tested with real people.
