@@ -6,13 +6,13 @@ A patient-controlled portable health record for Nepal, run as a social enterpris
 
 Abhilekh keeps the record and shows what the paper says. It gives no advice: no interpretation, no added lines about results, no alarms.
 
-**Status: planning stage.** A share app runs at app.abhilekh.org with invented SAMPLE · नमूना papers only. Taking a photo of a real paper is not built yet. Hosting is Microsoft Azure.
+**Status: planning stage.** A share app runs at app.abhilekh.org with invented SAMPLE · नमूना papers only. Photos of papers can be kept (exactly as taken, in a Google shared drive) but are not read yet, and adding photos is switched off in production until real papers are decided. Hosting is Microsoft Azure; originals and backups are in Google Drive.
 
 ## What is here
 
 | Path | What it is |
 |---|---|
-| `server/` | The app at app.abhilekh.org: sign-in (SMS, email or Google, then a PIN; fingerprint or face as an option), one record per patient, 15-minute shares with a log, the doctor's view. See `server/README.md` |
+| `server/` | The app at app.abhilekh.org: sign-in (SMS, email or Google, then a PIN; fingerprint or face as an option), family records (several people per account), photos kept as taken, 15-minute shares with a log, the doctor's view. See `server/README.md` |
 | `reader/` | The two readers (reused from Chautari), the agreement rule, value regions, DDA medicine check, scorer. Runs on test sets; not yet called by the app |
 | `prototype/` | Stand-alone pages: `confirm/` (checking values against the paper), `flow/`, `share/` |
 | `samples/` | Fictional test sets v1–v3: clean scans and phone photos with answer keys and scores |

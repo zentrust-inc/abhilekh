@@ -18,7 +18,7 @@
 - Planning stage: describe plans, never results; label sample data.
 - One home for each thing. Product docs and the status log live in Google Drive › Kakani-3 › Abhilekh; code and test sets live here. Never keep a second copy.
 - The product baseline is PRD v2.1 (24 Nov 2026); the build order is the app build plan v1 (25 Nov 2026). Both are in Drive.
-- Hosting is Microsoft Azure. Never claim that data stays in Nepal.
+- Hosting is Microsoft Azure; originals (paper photos) and backups are in a Google shared drive. Never claim that data stays in Nepal.
 - Reuse the Chautari reader (zentrust-inc/chautari, `reader/`) rather than writing a new one.
 - Changes go through pull requests; the owner (Dr. Shrestha) reviews and merges.
 - At the end of every working session, add one dated entry at the top of the Abhilekh status log in Drive.

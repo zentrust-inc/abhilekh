@@ -4,31 +4,43 @@
 // What it does: stores shares of confirmed SAMPLE records, serves the doctor's view only while a share is live,
 // logs every open and every refused open, lets the patient stop a share.
 // Sign-in (auth.mjs): Nepal mobile number (one SMS code), email address (one code by email) or Google, then a 6-digit PIN; the PIN is asked again to create or stop a
-// share. Every share belongs to the account that made it. Every account has its own record; it starts empty, and the patient can add the invented SAMPLE papers to it.
+// share. Every share belongs to the account that made it.
+// Family (build plan M1): one account can hold several people ("Me", "Aama"). Each person has their own papers; the person in
+// view is kept per session, and changing it needs the PIN (or fingerprint/face), so a shared phone does not open someone else's papers.
+// Photos (M1): "Add a paper" keeps the photo exactly as taken (SHA-256, never changed or overwritten) in the originals store.
+// A photo is not read yet and cannot be shared: only papers the patient has confirmed reach a doctor.
 import http from 'node:http';
 import { readFileSync, writeFileSync, renameSync, existsSync, mkdirSync } from 'node:fs';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, createHash } from 'node:crypto';
 import { dirname, join, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createAuth } from './auth.mjs';
 import { akashSender, memorySender, noSender } from './sms.mjs';
 import { acsMailSender, memoryMail, noMail } from './mail.mjs';
 import { createBackup, googleDriveUploader } from './backup.mjs';
+import { createDrive } from './drive.mjs';
+import { localOriginals, driveOriginals, EXT } from './originals.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PUBLIC = join(HERE, 'public');
 const ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789'; // 31 letters/digits, no look-alikes
 const ALLOWED_MINUTES = [15]; // PRD v2.1 FR-064A: a share lasts 15 minutes. Never "forever". (TEST_MODE also allows 1 minute.)
+const MAX_PEOPLE = 6;
+const MAX_PHOTO = 15 * 1024 * 1024; // 15 MB: a phone photo, with room to spare
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
 
-export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-record.json'), testMode = false, seedSample = false, now = () => Date.now(), sms = memorySender(), mail = memoryMail(), google = null, rp = null, secureCookies = true, authLimits } = {}) {
+export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-record.json'), testMode = false, seedSample = false, photos = false, originals = null, now = () => Date.now(), sms = memorySender(), mail = memoryMail(), google = null, rp = null, secureCookies = true, authLimits } = {}) {
   const record = JSON.parse(readFileSync(recordPath, 'utf8'));
   let store = { shares: [] };
   if (storePath) {
     mkdirSync(dirname(storePath), { recursive: true });
     if (existsSync(storePath)) store = JSON.parse(readFileSync(storePath, 'utf8'));
   }
-  store.records = store.records || {}; // one record per account: { label, docs: [] }. Nobody else's papers are ever visible.
+  store.records = store.records || {}; // one record per account: { people: [{ id, name, docs, papers }] }. Nobody else's papers are ever visible.
+  const pid = () => 'p' + randomBytes(6).toString('hex');
+  // Records made before M1 were { label, docs }: they become the account's first person, papers and name kept.
+  for (const [k, r] of Object.entries(store.records)) if (!Array.isArray(r.people)) store.records[k] = { people: [{ id: pid(), name: r.label || '', docs: r.docs || [], papers: [] }] };
+  const keep = originals || localOriginals(join(storePath ? dirname(storePath) : join(HERE, 'data'), 'originals'));
   const save = () => {
     if (!storePath) return;
     const tmp = storePath + '.tmp';
@@ -49,6 +61,12 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
     res.writeHead(code, { 'content-type': type, 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer', 'x-frame-options': 'DENY' });
     res.end(typeof body === 'string' || Buffer.isBuffer(body) ? body : JSON.stringify(body));
   };
+  const readRaw = (req, max) => new Promise((resolve, reject) => {
+    let n = 0, over = false; const chunks = [];
+    req.on('data', c => { n += c.length; if (n > max) over = true; else chunks.push(c); });
+    req.on('end', () => resolve(over ? null : Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
   const readJson = req => new Promise((resolve, reject) => {
     let n = 0; const chunks = [];
     req.on('data', c => { n += c.length; if (n > 20000) { reject(new Error('too large')); req.destroy(); } else chunks.push(c); });
@@ -68,7 +86,8 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
       // Azure App Service puts the caller's address first in x-forwarded-for (with a :port).
       const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim().replace(/:\d+$/, '');
       // Every POST must be JSON: a plain cross-site form cannot send it (with SameSite=Strict cookies, against CSRF).
-      if (req.method === 'POST' && !String(req.headers['content-type'] || '').startsWith('application/json')) return send(res, 415, { error: 'Send JSON.' });
+      // The photo upload is the one exception: raw image bytes, and it must carry the X-Abhilekh-Upload header (a cross-site form cannot).
+      if (req.method === 'POST' && !String(req.headers['content-type'] || '').startsWith('application/json') && path !== '/api/papers') return send(res, 415, { error: 'Send JSON.' });
       if (req.method === 'GET' && path === '/healthz') return send(res, 200, { ok: true });
       if (req.method === 'GET' && path === '/') return file(res, 'patient.html');
       if (req.method === 'GET' && (path === '/style.css' || path === '/qrcode.js' || path === '/doctor.js' || path === '/patient.js' || path === '/i18n.js')) return file(res, path.slice(1));
@@ -80,8 +99,12 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
       const cur = path.startsWith('/api/') && !path.startsWith('/api/s/') ? auth.current(req) : null;
       if (path.startsWith('/api/') && !path.startsWith('/api/s/') && !cur) return send(res, 401, { error: 'Sign in first.' });
       const mineOnly = s => s.ownerId === cur.account.id;
-      const mine = () => (store.records[cur.account.id] = store.records[cur.account.id] || { label: '', docs: seedSample ? record.docs.map(d => ({ ...JSON.parse(JSON.stringify(d)), origin: 'sample' })) : [] }); // seedSample: tests only
-      const summary = () => { const r = mine(); return { label: r.label, docs: r.docs.map(d => ({ id: d.id, title: d.title, facility: d.facility, date: d.date_as_written, origin: d.origin || 'sample', results: d.results.map(({ img, ...r }) => r) })), testMode, minutes: ALLOWED_MINUTES }; };
+      const sampleDocs = () => record.docs.map(d => ({ ...JSON.parse(JSON.stringify(d)), origin: 'sample' }));
+      const acct = () => (store.records[cur.account.id] = store.records[cur.account.id] || { people: [{ id: pid(), name: '', docs: seedSample ? sampleDocs() : [], papers: [] }] }); // seedSample: tests only
+      const mine = () => { const r = acct(); return r.people.find(p => p.id === cur.session.personId) || r.people[0]; }; // the person in view on this session
+      const forPerson = s => mineOnly(s) && (s.personId ? s.personId === mine().id : mine() === acct().people[0]); // shares made before M1 belong to the first person
+      const paperOut = p => ({ id: p.id, sha256: p.sha256, mime: p.mime, bytes: p.bytes, added: p.added, status: p.status });
+      const summary = () => { const r = mine(); return { label: r.name, person: r.id, people: acct().people.map(p => ({ id: p.id, name: p.name, papers: p.docs.length + p.papers.length })), docs: r.docs.map(d => ({ id: d.id, title: d.title, facility: d.facility, date: d.date_as_written, origin: d.origin || 'sample', results: d.results.map(({ img, ...r }) => r) })), papers: r.papers.map(paperOut).reverse(), photos: photos || testMode, testMode, minutes: ALLOWED_MINUTES }; };
       if (req.method === 'GET' && path === '/api/record') return send(res, 200, summary());
       if (req.method === 'POST' && path === '/api/record/sample') { // copy the invented SAMPLE papers into THIS account only; asking twice adds nothing
         const r = mine();
@@ -90,10 +113,57 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
       }
       if (req.method === 'POST' && path === '/api/record/label') {
         const b = await readJson(req);
-        mine().label = String(b.label || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+        mine().name = String(b.label || '').replace(/\s+/g, ' ').trim().slice(0, 40);
         save(); return send(res, 200, summary());
       }
-      if (req.method === 'GET' && path === '/api/shares') return send(res, 200, { shares: store.shares.filter(mineOnly).map(publicShare).reverse() });
+      // --- family: one account, several people. Adding needs no PIN (a new record is empty); changing who is in view does. ---
+      if (req.method === 'POST' && path === '/api/people') {
+        const b = await readJson(req);
+        const name = String(b.name || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+        if (!name) return send(res, 400, { error: 'Type a name for this person.' });
+        if (acct().people.length >= MAX_PEOPLE) return send(res, 400, { error: 'One account can hold up to 6 people.' });
+        const p = { id: pid(), name, docs: [], papers: [] };
+        acct().people.push(p); cur.session.personId = p.id; save();
+        return send(res, 201, summary());
+      }
+      if (req.method === 'POST' && path === '/api/people/switch') {
+        const b = await readJson(req);
+        const p = acct().people.find(x => x.id === b.person);
+        if (!p) return send(res, 404, { error: 'No such person.' });
+        if (p === mine()) return send(res, 200, summary());
+        const pin = auth.confirm(cur.account, b);
+        if (!pin.ok) return send(res, pin.status, pin);
+        cur.session.personId = p.id; save();
+        return send(res, 200, summary());
+      }
+      // --- photos: the original is kept exactly as sent; nothing is read or shared yet ---
+      if (req.method === 'POST' && path === '/api/papers') {
+        if (!(photos || testMode)) return send(res, 403, { error: 'Adding photos is not switched on yet.' });
+        if (req.headers['x-abhilekh-upload'] !== '1') return send(res, 400, { error: 'Bad request.' }); // a cross-site form cannot set this header
+        const mime = String(req.headers['content-type'] || '').split(';')[0].trim().toLowerCase();
+        if (!EXT[mime]) return send(res, 415, { error: 'Send a photo (JPEG, PNG, WebP or HEIC).' });
+        const buf = await readRaw(req, MAX_PHOTO);
+        if (!buf) return send(res, 413, { error: 'This photo is larger than 15 MB.' });
+        if (buf.length < 100) return send(res, 400, { error: 'This photo is empty.' });
+        const sha256 = createHash('sha256').update(buf).digest('hex');
+        const r = mine();
+        if (r.papers.some(x => x.sha256 === sha256)) return send(res, 200, { ...summary(), already: true }); // the same photo twice: kept once
+        let ref;
+        try { ref = await keep.put(sha256, mime, buf); } catch (e) { console.error('Original not kept: ' + e.message); return send(res, 503, { error: 'The photo could not be kept just now. Nothing was added. Try again in a minute.' }); }
+        r.papers.push({ id: pid(), sha256, mime, bytes: buf.length, ref, added: new Date(now()).toISOString(), status: 'waiting' });
+        save(); return send(res, 201, summary());
+      }
+      let mp = path.match(/^\/api\/papers\/(p[0-9a-f]+)\/original$/);
+      if (req.method === 'GET' && mp) {
+        const p = mine().papers.find(x => x.id === mp[1]); // only the person in view, on their own account
+        if (!p) return send(res, 404, { error: 'No such paper.' });
+        let buf;
+        try { buf = await keep.get(p.ref); } catch (e) { console.error('Original not read: ' + e.message); return send(res, 503, { error: 'The original could not be fetched just now.' }); }
+        if (createHash('sha256').update(buf).digest('hex') !== p.sha256) { console.error('Original changed: ' + p.id); return send(res, 500, { error: 'This original does not match what was kept.' }); }
+        res.writeHead(200, { 'content-type': p.mime, 'content-length': buf.length, 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff', 'content-disposition': 'inline', 'referrer-policy': 'no-referrer' });
+        return res.end(buf);
+      }
+      if (req.method === 'GET' && path === '/api/shares') return send(res, 200, { shares: store.shares.filter(forPerson).map(publicShare).reverse() });
       if (req.method === 'POST' && path === '/api/shares') {
         const b = await readJson(req);
         const pin = auth.confirm(cur.account, b);
@@ -106,7 +176,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
         if (!(ALLOWED_MINUTES.includes(minutes) || (testMode && minutes === 1))) return send(res, 400, { error: 'A share lasts 15 minutes.' });
         const who = String(b.who || '').slice(0, 80);
         const t = now();
-        const s = { id: token(), ownerId: cur.account.id, docs, who, created: new Date(t).toISOString(), expires: new Date(t + minutes * 60000).toISOString(), minutes, revokedAt: null, log: [] };
+        const s = { id: token(), ownerId: cur.account.id, personId: mine().id, docs, who, created: new Date(t).toISOString(), expires: new Date(t + minutes * 60000).toISOString(), minutes, revokedAt: null, log: [] };
         log(s, 'You created this share' + (who ? ' for ' + who : '') + '.');
         store.shares.push(s); save();
         return send(res, 201, publicShare(s));
@@ -131,8 +201,10 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
           return send(res, 410, { state: st });
         }
         log(s, 'Opened on a doctor\'s phone.'); save();
-        // The owner's own papers. (Shares made before records were per patient point at the same ids in the shared SAMPLE file.)
-        const own = (store.records[s.ownerId] || { docs: [] }).docs;
+        // The papers of the person it was made for. (Shares made before M1 have no person: any of the owner's people;
+        // shares made before records were per patient point at the same ids in the shared SAMPLE file.)
+        const ppl = (store.records[s.ownerId] || { people: [] }).people;
+        const own = (s.personId ? ppl.filter(p => p.id === s.personId) : ppl).flatMap(p => p.docs);
         const docs = s.docs.map(id => own.find(d => d.id === id) || record.docs.find(d => d.id === id)).filter(Boolean);
         return send(res, 200, { state: 'live', expires: s.expires, docs });
       }
@@ -157,7 +229,16 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const google = process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? { clientId: process.env.GOOGLE_CLIENT_ID, clientSecret: process.env.GOOGLE_CLIENT_SECRET, redirectUri: publicUrl + '/api/auth/google/callback', fetchImpl: fetch } : null;
   const rp = { id: new URL(publicUrl).hostname, origin: new URL(publicUrl).origin }; // passkeys belong to this site only
   console.log('SMS sender: ' + sms.name + '; mail sender: ' + mail.name + '; Google sign-in: ' + (google ? 'on' : 'off') + '; passkeys: ' + rp.id);
-  const app = createApp({ storePath: join(dataDir, 'store.json'), testMode, sms, mail, google, rp, secureCookies: process.env.INSECURE_COOKIES !== '1' });
+  // Originals (paper photos): the Google shared drive when the Google settings are set, else the app's own disk.
+  // Adding photos stays off until PHOTOS_ENABLED=1 (planning stage: SAMPLE papers only until real papers are decided).
+  let originals = null;
+  if (process.env.GOOGLE_BACKUP_SA_JSON && process.env.GOOGLE_BACKUP_FOLDER_ID) {
+    try { originals = driveOriginals(createDrive({ credentials: JSON.parse(process.env.GOOGLE_BACKUP_SA_JSON) }), process.env.GOOGLE_BACKUP_FOLDER_ID); }
+    catch (e) { console.error('Originals: Google Drive settings are not usable: ' + e.message); }
+  }
+  const photos = process.env.PHOTOS_ENABLED === '1';
+  console.log('Photos: ' + (photos || testMode ? 'on' : 'off (PHOTOS_ENABLED)') + '; originals kept in ' + (originals ? 'Google Drive' : join(dataDir, 'originals')));
+  const app = createApp({ storePath: join(dataDir, 'store.json'), testMode, photos, originals, sms, mail, google, rp, secureCookies: process.env.INSECURE_COOKIES !== '1' });
   // Daily backup of store.json: local copies in DATA_DIR/backups, plus Google Drive when both Google settings are set.
   let uploader = null;
   if (process.env.GOOGLE_BACKUP_SA_JSON && process.env.GOOGLE_BACKUP_FOLDER_ID) {

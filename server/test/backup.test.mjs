@@ -49,8 +49,8 @@ test('with Google settings the copy also goes to Google Drive (shared drive); a 
   // the upload goes into the folder, works in shared drives, and is named by date
   assert.match(calls[1].url, /upload\/drive\/v3\/files\?uploadType=multipart&supportsAllDrives=true/);
   assert.equal(calls[1].o.headers.authorization, 'Bearer tok');
-  assert.match(calls[1].o.body, /"name":"store-2026-11-25\.json","parents":\["FOLDER123"\]/);
-  assert.match(calls[1].o.body, /\{"shares":\[\]\}/);
+  assert.match(String(calls[1].o.body), /"name":"store-2026-11-25\.json","parents":\["FOLDER123"\]/);
+  assert.match(String(calls[1].o.body), /\{"shares":\[\]\}/);
   await b.run(); assert.equal(calls.filter(c => c.url.includes('token')).length, 1); // token reused within the hour
   const bad = createBackup({ storePath: f.store, dir: f.dir, uploader: googleDriveUploader({ credentials, folderId: 'F', fetchImpl: async () => ({ status: 403 }) }), now: () => t + DAY, logger: quiet });
   assert.equal((await bad.run()).remote, 'failed');
@@ -71,7 +71,7 @@ test('restore test: a backup brings back every record and share, and the app sta
   assert.ok(existsSync(f.store + '.before-restore')); // what was there before is kept, never thrown away
   const app2 = createApp({ storePath: f.store });
   assert.equal(app2.store().shares[0].id, 'abc');
-  assert.equal(app2.store().records.u1.label, 'Aama');
+  assert.equal(app2.store().records.u1.people[0].name, 'Aama'); // pre-M1 records become the first person
   assert.throws(() => { writeFileSync(join(f.dir, 'bad.json'), 'nope'); restoreBackup({ backupPath: join(f.dir, 'bad.json'), storePath: f.store }); });
   assert.equal(JSON.parse(readFileSync(f.store, 'utf8')).shares[0].id, 'abc'); // a bad backup changes nothing
 });

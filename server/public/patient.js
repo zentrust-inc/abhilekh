@@ -160,12 +160,61 @@ function resultRows(d){
   }
   return box;
 }
+// ---- family: whose papers are in view; changing person asks for the PIN (or fingerprint/face) ----
+let TARGET=null;
+function paintPeople(){
+  const many=(REC.people||[]).length>1;
+  $('personBtn').textContent=many?'Switch person':'Add a family member';
+  const pl=$('peopleList');pl.replaceChildren();
+  for(const p of REC.people||[]){
+    const on=p.id===REC.person;
+    pl.append(el('button',{type:'button',class:'opt-person'+(on?' on':'')+(TARGET===p.id?' pick':''),onclick:()=>{if(on)return;TARGET=p.id;$('peopleErr').textContent='';$('switchBox').style.display='';
+      $('switchPk').style.display=(ME&&ME.passkeys>0&&PK_ON&&PK_OK)?'':'none';paintPeople();PADS.switch&&PADS.switch.reset()}},
+      el('b',{},p.name||'(no name yet)'),el('span',{class:'mute'},' · '),el('span',{class:'mute'},on?'open now':p.papers+' paper'+(p.papers===1?'':'s'))));
+  }
+}
+async function switchTo(proof){
+  $('peopleErr').textContent='';
+  try{REC=await post('/api/people/switch',{person:TARGET,...proof});TARGET=null;$('switchBox').style.display='none';$('peopleBox').style.display='none';paintForm();await load()}
+  catch(e){$('peopleErr').textContent=e.message}
+}
+$('personBtn').onclick=()=>{const o=$('peopleBox').style.display==='none';$('peopleBox').style.display=o?'':'none';TARGET=null;$('switchBox').style.display='none';$('peopleErr').textContent='';paintPeople();if(o)$('peopleBox').scrollIntoView({block:'nearest'})};
+$('peopleClose').onclick=()=>{$('peopleBox').style.display='none';TARGET=null};
+$('switchGo').onclick=()=>switchTo({pin:$('switchPin').value});
+$('switchPk').onclick=async()=>{try{await switchTo(await confirmAuth(''))}catch(e){$('peopleErr').textContent=e.message}};
+$('addPerson').onclick=async()=>{$('peopleErr').textContent='';
+  try{REC=await post('/api/people',{name:$('newPerson').value});$('newPerson').value='';$('peopleBox').style.display='none';paintForm();await load()}catch(e){$('peopleErr').textContent=e.message}};
+// ---- photos: sent as taken; the server keeps the original and its SHA-256 ----
+$('tilePhoto').onclick=()=>{const o=$('addPaper').style.display==='none';$('addPaper').style.display=o?'':'none';$('addMsg').textContent=''};
+$('camBtn').onclick=()=>$('camIn').click();
+$('galBtn').onclick=()=>$('galIn').click();
+async function sendPhoto(f){
+  const m=$('addMsg');m.style.color='';if(!f)return;
+  if(f.size>15*1024*1024){m.style.color='#a01212';m.textContent='This photo is larger than 15 MB.';return}
+  m.textContent='Keeping the original…';
+  try{const r=await api('/api/papers',{method:'POST',headers:{'content-type':f.type||'image/jpeg','x-abhilekh-upload':'1'},body:f});
+    REC=r;paint();paintForm();m.style.color='#1d6b4a';m.textContent=r.already?'This photo is already kept.':'Original kept. It will be read in the next step.'}
+  catch(e){m.style.color='#a01212';m.textContent=e.message}
+}
+$('camIn').onchange=e=>{sendPhoto(e.target.files[0]);e.target.value=''};
+$('galIn').onchange=e=>{sendPhoto(e.target.files[0]);e.target.value=''};
+function paperCard(p){
+  const card=el('div',{class:'card'});
+  const img=el('img',{class:'crop',alt:'The original photo, as taken',loading:'lazy',src:'/api/papers/'+p.id+'/original'});
+  card.append(el('div',{},el('span',{class:'chip'},'Photo')),img,
+    el('div',{class:'t',style:'margin-top:6px'},'Original kept · waiting to be read'),
+    el('div',{class:'mute'},'Added '+fmt(p.added)),el('div',{class:'mute'},Math.round(p.bytes/1024)+' KB'),
+    el('div',{class:'mute',style:'font-size:12px;word-break:break-all'},'SHA-256 '+p.sha256));
+  return card;
+}
 function paint(){
-  const n=REC.docs.length;
+  paintPeople();
+  $('tilePhoto').disabled=!REC.photos;$('tilePhotoSub').textContent=REC.photos?'Kept exactly as taken':'Coming soon';
+  const n=REC.docs.length+(REC.papers||[]).length;
   $('homeTitle').textContent=REC.label?'Papers of '+REC.label.replace(/^papers of\s+/i,''):'Hello';
   $('labelBtn').textContent=REC.label?'Change name':'Add a name for this record';
   $('firstUse').style.display=n?'none':'';
-  $('tileShow').disabled=!n;$('tileShowSub').textContent=n?'Choose papers, set the time':'Add a paper first';
+  $('tileShow').disabled=!REC.docs.length;$('tileShowSub').textContent=REC.docs.length?'Choose papers, set the time':'Add a checked paper first';
   const hc=$('homeCards');hc.replaceChildren();
   if(n){
     const live=SH.filter(s=>s.state==='live').length;
@@ -174,6 +223,7 @@ function paint(){
   }
   const pl=$('papers');pl.replaceChildren();
   if(!n)pl.append(el('div',{class:'card mute'},'No papers yet. Add a SAMPLE paper from Home.'));
+  for(const p of REC.papers||[])pl.append(paperCard(p));
   for(const d of REC.docs){
     const card=el('div',{class:'card'});
     const body=el('div',{style:'display:none'},resultRows(d));
@@ -254,6 +304,7 @@ pinpad('setpin',['pin1','pin2'],['Choose a 6-digit PIN','Type the same PIN again
   $('pinBtn').click();autoReset(p,1200)},{hide:['pinBtn']});
 pinpad('pk',['pkPin'],['Your PIN, to turn it on'],p=>{$('pkOn').click();autoReset(p)},{hide:['pkOn']});
 pinpad('share',['sharePin'],['Your PIN, to confirm'],()=>{});
+pinpad('switch',['switchPin'],['Your PIN, to open these papers'],p=>{$('switchGo').click();autoReset(p)},{hide:['switchGo']});
 pinpad('change',['oldPin','newPin1','newPin2'],['Your current PIN','Choose a new 6-digit PIN','Type the new PIN again'],p=>{
   if($('newPin1').value!==$('newPin2').value){$('newPin1').value=$('newPin2').value='';p.goto(1);p.error('The two new PINs are not the same. Type the new PIN again.');return}
   $('pinChange').click();autoReset(p,1200)},{hide:['pinChange']});
