@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url';
 import { createAuth } from './auth.mjs';
 import { akashSender, memorySender, noSender } from './sms.mjs';
 import { acsMailSender, memoryMail, noMail } from './mail.mjs';
-import { createBackup, googleDriveUploader } from './backup.mjs';
+import { createBackup, googleDriveUploader, moveToDrive, moveArchivedPhotos } from './backup.mjs';
 import { createDrive } from './drive.mjs';
 import { localOriginals, driveOriginals, EXT } from './originals.mjs';
 import { createReading, cropsOf } from './reading.mjs';
@@ -45,7 +45,7 @@ const KIND_TITLE = { lab_report: 'Lab report', prescription: 'Prescription', oth
 const MAX_PHOTO = 15 * 1024 * 1024; // 15 MB: a phone photo, with room to spare
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
 
-export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-record.json'), testMode = false, seedSample = false, photos = false, originals = null, readers = null, readingLimits = {}, registerIndex = null, now = () => Date.now(), sms = memorySender(), mail = memoryMail(), google = null, rp = null, secureCookies = true, authLimits } = {}) {
+export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-record.json'), testMode = false, seedSample = false, photos = false, originals = null, readers = null, readingLimits = {}, registerIndex = null, now = () => Date.now(), sms = memorySender(), mail = memoryMail(), google = null, rp = null, secureCookies = true, authLimits, onSave = null } = {}) {
   const record = JSON.parse(readFileSync(recordPath, 'utf8'));
   let store = { shares: [] };
   if (storePath) {
@@ -62,6 +62,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
     const tmp = storePath + '.tmp';
     writeFileSync(tmp, JSON.stringify(store));
     renameSync(tmp, storePath); // atomic: never a half-written file
+    if (onSave) try { onSave(); } catch (e) { console.error('After save: ' + e.message); } // the live copy to Drive (backup.mjs)
   };
   // M2: photos are read by the two readers (Claude, Google Vision) when both are set up; otherwise they wait.
   const register = createRegister({ index: registerIndex, namePart: RULES.namePart });
@@ -346,15 +347,30 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
   console.log('Reading: ' + (readers ? 'on (Claude + Google Vision; US$0.10 a page, US$20 a month)' : 'off (ANTHROPIC_API_KEY and VISION_API_KEY are both needed)'));
   console.log('Photos: ' + (photos || testMode ? 'on' : 'off (PHOTOS_ENABLED)') + '; originals kept in ' + (originals ? 'Google Drive' : join(dataDir, 'originals')));
-  const app = createApp({ storePath: join(dataDir, 'store.json'), testMode, photos, originals, readers, sms, mail, google, rp, secureCookies: process.env.INSECURE_COOKIES !== '1' });
+  let backup = null; // set below; every save tells it the store changed
+  const app = createApp({ storePath: join(dataDir, 'store.json'), testMode, photos, originals, readers, sms, mail, google, rp, secureCookies: process.env.INSECURE_COOKIES !== '1', onSave: () => backup?.changed() });
   // Daily backup of store.json: local copies in DATA_DIR/backups, plus Google Drive when both Google settings are set.
   let uploader = null;
   if (process.env.GOOGLE_BACKUP_SA_JSON && process.env.GOOGLE_BACKUP_FOLDER_ID) {
     try { uploader = googleDriveUploader({ credentials: JSON.parse(process.env.GOOGLE_BACKUP_SA_JSON), folderId: process.env.GOOGLE_BACKUP_FOLDER_ID }); }
     catch (e) { console.error('Backups: Google Drive settings are not usable: ' + e.message); }
   }
-  console.log('Backups: daily to ' + join(dataDir, 'backups') + (uploader ? ' and Google Drive' : '; no second place set (GOOGLE_BACKUP_SA_JSON, GOOGLE_BACKUP_FOLDER_ID)'));
-  createBackup({ storePath: join(dataDir, 'store.json'), dir: join(dataDir, 'backups'), uploader }).start();
+  console.log('Backups: ' + (uploader ? 'live copy to Google Drive within a minute of every change; daily snapshots to ' + join(dataDir, 'backups') + ' and Google Drive'
+    : 'daily snapshots to ' + join(dataDir, 'backups') + ' only; no second place set (GOOGLE_BACKUP_SA_JSON, GOOGLE_BACKUP_FOLDER_ID)'));
+  backup = createBackup({ storePath: join(dataDir, 'store.json'), dir: join(dataDir, 'backups'), uploader });
+  backup.start();
+  // Archives left on this disk (test papers) belong only in the shared drive: move them, deleting here only when Drive confirms.
+  // Their photos go first (within the shared drive, originals -> test-papers/photos), while the archive is still here to say which.
+  if (uploader) (async () => {
+    try {
+      const drive = createDrive({ credentials: JSON.parse(process.env.GOOGLE_BACKUP_SA_JSON) });
+      const p = await moveArchivedPhotos({ dir: join(dataDir, 'test-papers'), drive, rootFolderId: process.env.GOOGLE_BACKUP_FOLDER_ID, folderName: 'test-papers', liveStore: app.store() });
+      if (p.moved || p.skipped || p.failed) console.log('Test-paper photos to test-papers/photos: ' + p.moved + ' moved, ' + p.skipped + ' still used by an account, ' + p.failed + ' failed');
+      if (p.failed) return console.error('Test papers kept here until every photo is moved.');
+      const r = await moveToDrive({ dir: join(dataDir, 'test-papers'), uploader, folderName: 'test-papers' });
+      if (r.moved || r.kept) console.log('Test papers to Google Drive: ' + r.moved + ' moved, ' + r.kept + ' kept here');
+    } catch (e) { console.error('Test papers not moved: ' + e.message); }
+  })();
   const port = Number(process.env.PORT || 8080);
   http.createServer(app.handler).listen(port, () => console.log('Abhilekh server on port ' + port));
   if (app.reading) app.reading.resume(); // read what is waiting, including photos added before reading was switched on
