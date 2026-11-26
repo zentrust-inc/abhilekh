@@ -35,6 +35,10 @@ button{font:inherit;font-weight:600;border-radius:8px;padding:10px 14px;border:0
 .tile.off,.tile:disabled{border-color:var(--line);background:#f1f1f1;color:#777;cursor:not-allowed}
 .steps{margin:8px 0 0;padding-left:20px}.steps li{margin:4px 0}
 .nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:#fff;border-top:1px solid var(--line);max-width:430px;margin:0 auto;z-index:20}
+/* Help and deleting */
+.qhelp{width:26px;height:26px;min-height:0;padding:0;margin-left:8px;border-radius:50%;font-size:15px;font-weight:700;background:#fff;color:var(--accent);border:1px solid var(--line);vertical-align:middle}
+.faq details{border-bottom:1px solid var(--line);padding:8px 0}.faq summary{font-weight:600;cursor:pointer}.faq p{margin:6px 0 0}.faq ul{padding-left:20px}
+.go.danger{background:#a01212;border-color:#a01212}
 /* Enlarged photo: fills the screen above the tab bar, which stays visible and works */
 .viewer{position:fixed;left:0;right:0;top:0;bottom:57px;max-width:430px;margin:0 auto;background:#fff;z-index:15;padding:12px;display:flex;flex-direction:column;gap:6px}
 .viewer .pane{flex:1;overflow:auto;-webkit-overflow-scrolling:touch}

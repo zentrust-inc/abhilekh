@@ -416,5 +416,16 @@ export function createAuth({ store, save, now = () => Date.now(), sms, mail = no
     return send(res, 404, { error: 'not found' }), true;
   }
 
-  return { route, current, checkPin, confirm, holdUntil, tickets };
+  // Delete an account (the patient asked, and confirmed with PIN or fingerprint/face): the account with its PIN hash,
+  // devices and passkeys, every session, any pending code and the code-rate log for its phone or email. Cookies cleared.
+  function removeAccount(res, a) {
+    store.accounts = store.accounts.filter(x => x.id !== a.id);
+    store.sessions = store.sessions.filter(s => s.accountId !== a.id);
+    store.codes = store.codes.filter(c => c.key !== a.key);
+    store.smsLog = store.smsLog.filter(x => x.key !== a.key);
+    save();
+    res.setHeader('set-cookie', [cookie('abh_s', '', 0), cookie('abh_d', '', 0)]);
+  }
+
+  return { route, current, checkPin, confirm, holdUntil, tickets, removeAccount };
 }

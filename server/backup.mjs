@@ -5,7 +5,8 @@
 //   1. Live copy: after any change, at most once a minute, the store is written to Drive as store-live.json (the same
 //      file, replaced in place). Losing the Azure disk loses at most the last minute.
 //   2. Snapshots: once a day (and at start-up) a dated copy store-YYYY-MM-DD-HHMM.json (UTC) goes to DATA_DIR/backups
-//      (newest KEEP copies kept there) and, as a NEW file, to Drive, where nothing is ever deleted (100 TB).
+//      and, as a NEW file, to Drive. Snapshots older than 30 days are removed in both places (decided 26 Nov 2026), so
+//      a paper or account the patient deletes is gone from every copy within 30 days.
 //   3. Archives: files left in DATA_DIR/test-papers are moved to the shared drive folder "test-papers"; the Azure copy
 //      is deleted only after Drive reports the same MD5 and size. First, the photos those files point to are moved
 //      within the shared drive from "originals" to "test-papers/photos" (same file ids), unless a live account uses them.
@@ -25,6 +26,9 @@ const NAME = /^store-(\d{4}-\d{2}-\d{2})(-\d{4})?\.json$/; // older copies have 
 export const LIVE_NAME = 'store-live.json';
 
 // store-2026-11-26-0924.json: date and time (UTC), so two copies on one day never share a name.
+// When a snapshot was taken, from its name (UTC). Older names without a time count as 00:00.
+export function snapshotTime(name) { const m = NAME.exec(name); if (!m) return null; const hm = m[2] ? m[2].slice(1) : '0000'; return Date.parse(m[1] + 'T' + hm.slice(0, 2) + ':' + hm.slice(2) + ':00Z'); }
+
 export function backupName(t) { const s = new Date(t).toISOString(); return 'store-' + s.slice(0, 10) + '-' + s.slice(11, 13) + s.slice(14, 16) + '.json'; }
 
 // A store must parse and have the shape the server expects; a broken file is never copied or restored.
@@ -52,11 +56,13 @@ export function createBackup({ storePath, dir, keepDays = 30, uploader = null, s
     const tmp = join(dir, name + '.tmp');
     writeFileSync(tmp, text);
     renameSync(tmp, join(dir, name));
-    const all = readdirSync(dir).filter(f => NAME.test(f)).sort();
-    for (const f of all.slice(0, Math.max(0, all.length - keepDays))) unlinkSync(join(dir, f));
-    let remote = 'skipped';
+    // snapshots older than keepDays are removed, here and in Drive, so a deleted paper is gone from every copy in time
+    const cutoff = now() - keepDays * DAY;
+    for (const f of readdirSync(dir).filter(f => NAME.test(f) && snapshotTime(f) <= cutoff)) unlinkSync(join(dir, f));
+    let remote = 'skipped', pruned = 0;
     try { remote = await upload(name, text); } catch (e) { logger.error('Backup upload failed: ' + e.message); remote = 'failed'; }
-    return { ok: true, name, remote, kept: Math.min(all.length, keepDays) };
+    if (uploader?.prune) try { pruned = await uploader.prune(cutoff); } catch (e) { logger.error('Old snapshots in Drive not removed: ' + e.message); }
+    return { ok: true, name, remote, kept: readdirSync(dir).filter(f => NAME.test(f)).length, ...(uploader?.prune ? { prunedInDrive: pruned } : {}) };
   }
 
   // ---- the live copy in Drive: after a change, at most once per syncMs ----
@@ -160,6 +166,16 @@ export function googleDriveUploader({ credentials, folderId, fetchImpl = globalT
     if (liveId) return drive.update(liveId, { mime: 'application/json', body });
     const r = await drive.uploadChecked({ name: LIVE_NAME, mime: 'application/json', body, parent: folderId });
     liveId = r.id; return r;
+  };
+  // Dated snapshots (store-YYYY-MM-DD[-HHMM].json) taken at or before cutoff, in the backup folder only. Never
+  // store-live.json, never another folder. Returns how many were removed.
+  up.prune = async cutoff => {
+    let n = 0;
+    for (const f of await drive.list('store-', folderId)) {
+      const t = snapshotTime(f.name);
+      if (t !== null && t <= cutoff) { await drive.remove(f.id); n++; }
+    }
+    return n;
   };
   up.archive = async (folderName, name, buf) => {
     const parent = await drive.folder(folderName, folderId);

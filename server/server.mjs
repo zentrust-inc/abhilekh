@@ -45,7 +45,7 @@ const KIND_TITLE = { lab_report: 'Lab report', prescription: 'Prescription', oth
 const MAX_PHOTO = 15 * 1024 * 1024; // 15 MB: a phone photo, with room to spare
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
 
-export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-record.json'), testMode = false, seedSample = false, photos = false, originals = null, readers = null, readingLimits = {}, registerIndex = null, now = () => Date.now(), sms = memorySender(), mail = memoryMail(), google = null, rp = null, secureCookies = true, authLimits, onSave = null } = {}) {
+export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-record.json'), testMode = false, seedSample = false, photos = false, originals = null, readers = null, readingLimits = {}, registerIndex = null, now = () => Date.now(), sms = memorySender(), mail = memoryMail(), google = null, rp = null, secureCookies = true, authLimits, onSave = null, helpWhatsapp = null } = {}) {
   const record = JSON.parse(readFileSync(recordPath, 'utf8'));
   let store = { shares: [] };
   if (storePath) {
@@ -112,7 +112,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
       if (req.method === 'POST' && !String(req.headers['content-type'] || '').startsWith('application/json') && path !== '/api/papers') return send(res, 415, { error: 'Send JSON.' });
       if (req.method === 'GET' && path === '/healthz') return send(res, 200, { ok: true });
       if (req.method === 'GET' && path === '/') return file(res, 'patient.html');
-      if (req.method === 'GET' && (path === '/style.css' || path === '/qrcode.js' || path === '/doctor.js' || path === '/patient.js' || path === '/i18n.js' || path === '/medline.js')) return file(res, path.slice(1));
+      if (req.method === 'GET' && (path === '/style.css' || path === '/help.js' || path === '/qrcode.js' || path === '/doctor.js' || path === '/patient.js' || path === '/i18n.js' || path === '/medline.js')) return file(res, path.slice(1));
       if (req.method === 'GET' && /^\/s\/[a-z0-9]+$/.test(path)) return file(res, 'doctor.html'); // the shell shows nothing; data comes from /api/s/:id
 
       if (await auth.route(req, res, path, { ip, send, readJson })) return;
@@ -126,7 +126,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
       const mine = () => { const r = acct(); return r.people.find(p => p.id === cur.session.personId) || r.people[0]; }; // the person in view on this session
       const forPerson = s => mineOnly(s) && (s.personId ? s.personId === mine().id : mine() === acct().people[0]); // shares made before M1 belong to the first person
       const paperOut = p => ({ id: p.id, sha256: p.sha256, mime: p.mime, bytes: p.bytes, added: p.added, status: p.status, reading: p.reading ? { ...p.reading, usd: undefined } : null });
-      const summary = () => { const r = mine(); return { label: r.name, person: r.id, people: acct().people.map(p => ({ id: p.id, name: p.name, papers: p.docs.length + p.papers.length })), docs: r.docs.map(d => ({ id: d.id, title: d.title, facility: d.facility, date: d.date_as_written, origin: d.origin || 'sample', paper: d.paperId || null, results: d.results.map(({ img, ...r }) => r), medicines: d.medicines || [] })).reverse(), papers: r.papers.map(paperOut).reverse(), photos: photos || testMode, testMode, minutes: ALLOWED_MINUTES }; };
+      const summary = () => { const r = mine(); return { label: r.name, person: r.id, people: acct().people.map(p => ({ id: p.id, name: p.name, papers: p.docs.length + p.papers.length })), docs: r.docs.map(d => ({ id: d.id, title: d.title, facility: d.facility, date: d.date_as_written, origin: d.origin || 'sample', paper: d.paperId || null, results: d.results.map(({ img, ...r }) => r), medicines: d.medicines || [] })).reverse(), papers: r.papers.map(paperOut).reverse(), photos: photos || testMode, testMode, minutes: ALLOWED_MINUTES, help: { whatsapp: helpWhatsapp } }; };
       if (req.method === 'GET' && path === '/api/record') return send(res, 200, summary());
       if (req.method === 'POST' && path === '/api/record/sample') { // copy the invented SAMPLE papers into THIS account only; asking twice adds nothing
         const r = mine();
@@ -186,6 +186,57 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
         res.writeHead(200, { 'content-type': p.mime, 'content-length': buf.length, 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff', 'content-disposition': 'inline', 'referrer-policy': 'no-referrer' });
         return res.end(buf);
       }
+      // --- Deleting (decided 26 Nov 2026). The patient deletes a paper or her whole account, confirmed with her PIN or
+      // fingerprint/face. Gone at once from the app, and from store-live.json in Google Drive within a minute; the photo
+      // is deleted in the shared drive (or put in its trash, which Google empties after 30 days); dated snapshots older
+      // than 30 days are removed (backup.mjs). So every copy is gone within 30 days. Nothing is kept about what it was.
+      const refUsed = ref => Object.values(store.records).some(r => (r.people || []).some(p => (p.papers || []).some(x => x.ref === ref)));
+      const dropShares = ids => {
+        if (!ids.size) return;
+        for (const s of store.shares.filter(mineOnly)) s.docs = s.docs.filter(d => !ids.has(d));
+        store.shares = store.shares.filter(s => !(mineOnly(s) && !s.docs.length)); // a share with nothing left in it goes too
+      };
+      const removePhoto = async ref => {
+        if (!ref || refUsed(ref)) return 'kept';
+        try { return await keep.remove(ref); } catch (e) { console.error('Original not removed: ' + e.message); return 'failed'; }
+      };
+      async function dropPaper(r, p) {
+        const gone = new Set(r.docs.filter(d => d.paperId === p.id).map(d => d.id));
+        r.docs = r.docs.filter(d => d.paperId !== p.id);
+        r.papers = r.papers.filter(x => x !== p);
+        dropShares(gone);
+        return removePhoto(p.ref);
+      }
+      mp = path.match(/^\/api\/(papers|docs)\/([A-Za-z0-9_-]{1,40})\/delete$/);
+      if (req.method === 'POST' && mp) {
+        const b = await readJson(req);
+        const ok = auth.confirm(cur.account, b);
+        if (!ok.ok) return send(res, ok.status, ok);
+        const r = mine();
+        const doc = mp[1] === 'docs' ? r.docs.find(d => d.id === mp[2]) : null;
+        const p = mp[1] === 'papers' ? r.papers.find(x => x.id === mp[2]) : doc?.paperId ? r.papers.find(x => x.id === doc.paperId) : null;
+        if (!p && !doc) return send(res, 404, { error: 'No such paper.' });
+        let photo = 'none';
+        if (p) photo = await dropPaper(r, p);
+        else { r.docs = r.docs.filter(d => d !== doc); dropShares(new Set([doc.id])); } // an entry with no photo (a SAMPLE page)
+        save();
+        return send(res, 200, { ...summary(), deleted: true, photo });
+      }
+      if (req.method === 'POST' && path === '/api/account/delete') {
+        const b = await readJson(req);
+        if (b.confirm !== 'DELETE') return send(res, 400, { error: 'Type DELETE to confirm.' });
+        const ok = auth.confirm(cur.account, b);
+        if (!ok.ok) return send(res, ok.status, ok);
+        const rec = store.records[cur.account.id] || { people: [] };
+        const refs = rec.people.flatMap(p => (p.papers || []).map(x => x.ref)).filter(Boolean);
+        delete store.records[cur.account.id];
+        store.shares = store.shares.filter(s => s.ownerId !== cur.account.id);
+        const photos = { deleted: 0, trashed: 0, failed: 0, kept: 0 };
+        for (const ref of refs) photos[await removePhoto(ref)]++;
+        auth.removeAccount(res, cur.account); // saves; clears the sign-in cookies
+        return send(res, 200, { deleted: true, photos });
+      }
+
       // --- Spec v1.0 record (data only; the screens come later). The person in view, on their own account. ---
       // GET  /api/papers/:id/model   the copy per path (agreement, pre-fill, state), what blocks it, and its items once clear
       // POST /api/papers/:id/events  { events: [{ path, action, value?, bulk? }] } appended to the paper's log, all or none
@@ -348,7 +399,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   console.log('Reading: ' + (readers ? 'on (Claude + Google Vision; US$0.10 a page, US$20 a month)' : 'off (ANTHROPIC_API_KEY and VISION_API_KEY are both needed)'));
   console.log('Photos: ' + (photos || testMode ? 'on' : 'off (PHOTOS_ENABLED)') + '; originals kept in ' + (originals ? 'Google Drive' : join(dataDir, 'originals')));
   let backup = null; // set below; every save tells it the store changed
-  const app = createApp({ storePath: join(dataDir, 'store.json'), testMode, photos, originals, readers, sms, mail, google, rp, secureCookies: process.env.INSECURE_COOKIES !== '1', onSave: () => backup?.changed() });
+  const app = createApp({ storePath: join(dataDir, 'store.json'), testMode, photos, originals, readers, sms, mail, google, rp, secureCookies: process.env.INSECURE_COOKIES !== '1', onSave: () => backup?.changed(),
+    helpWhatsapp: (process.env.HELP_WHATSAPP || '').replace(/\D/g, '') || null }); // Help › Contact us; hidden until set
   // Daily backup of store.json: local copies in DATA_DIR/backups, plus Google Drive when both Google settings are set.
   let uploader = null;
   if (process.env.GOOGLE_BACKUP_SA_JSON && process.env.GOOGLE_BACKUP_FOLDER_ID) {

@@ -148,7 +148,7 @@ function tab(name){
 }
 document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
 $('tileShow').onclick=()=>tab('share');
-const VIEWS={list:['vList','Menu'],pk:['vPk','Fingerprint or face'],pin:['vPin','Change PIN']};
+const VIEWS={list:['vList','Menu'],pk:['vPk','Fingerprint or face'],pin:['vPin','Change PIN'],help:['vHelp','Help'],del:['vDel','Delete my account']};
 function openMenu(v){$('ov').style.display='';for(const k in VIEWS)$(VIEWS[k][0]).style.display=k===v?'':'none';$('sheetTitle').textContent=VIEWS[v][1];$('acctBtn').setAttribute('aria-expanded',true);pkErr();$('pinMsg').textContent='';if(v==='pk'&&$('pkAdd').style.display!=='none')$('pkPin').focus()}
 function closeMenu(){$('ov').style.display='none';$('acctBtn').setAttribute('aria-expanded',false)}
 $('acctBtn').onclick=()=>openMenu('list');
@@ -156,6 +156,43 @@ $('sheetClose').onclick=closeMenu;
 $('ov').onclick=e=>{if(e.target===$('ov'))closeMenu()};
 document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>openMenu('list'));
 $('rowPk').onclick=()=>openMenu('pk');$('rowPin').onclick=()=>openMenu('pin');
+// ---- Help (26 Nov 2026): questions and answers, photo tips, contact; the words live in help.js ----
+function renderHelp(){
+  const H=window.HELP||{faq:[],tips:[]},b=$('helpBody');b.replaceChildren();
+  b.append(el('h2',{},'Questions and answers'));
+  for(const f of H.faq)b.append(el('details',{id:'faq-'+f.id},el('summary',{},f.q),...f.a.map(x=>el('p',{class:'mute'},x))));
+  b.append(el('h2',{id:'faq-tips',style:'margin-top:14px'},'How to take a good photo'),el('ul',{class:'mute'},...H.tips.map(t=>el('li',{},t))));
+  const wa=REC&&REC.help&&REC.help.whatsapp;
+  if(wa)b.append(el('h2',{style:'margin-top:14px'},'Contact us'),el('a',{class:'go',href:'https://wa.me/'+wa,target:'_blank',rel:'noopener',style:'display:block;text-align:center;text-decoration:none'},'Write to us on WhatsApp'));
+}
+function openHelp(id){
+  renderHelp();openMenu('help');
+  const d=id&&document.getElementById('faq-'+id);
+  if(d){if(d.tagName==='DETAILS')d.open=true;setTimeout(()=>d.scrollIntoView({block:'start'}),0)}
+}
+$('rowHelp').onclick=()=>openHelp();$('rowDel').onclick=()=>{$('delErr').textContent='';$('delWord').value=$('delPin').value='';openMenu('del')};
+document.querySelectorAll('[data-help]').forEach(b=>b.onclick=()=>openHelp(b.dataset.help));
+$('delGo').onclick=async()=>{
+  const err=$('delErr');err.textContent='';
+  if($('delWord').value.trim().toUpperCase()!=='DELETE'){err.textContent='Type DELETE to confirm.';return}
+  $('delGo').disabled=true;
+  try{await post('/api/account/delete',{pin:$('delPin').value,confirm:'DELETE'});location.reload()}
+  catch(e){err.textContent=e.message;$('delGo').disabled=false}
+};
+// Delete one paper (or a SAMPLE page): an inline box with the PIN; nothing happens without it.
+function deleteBox(url,label){
+  const pin=el('input',{type:'password',inputmode:'numeric',maxlength:'6',autocomplete:'current-password','aria-label':'Your PIN, to confirm'});
+  const err=el('div',{class:'mute',style:'margin-top:6px;color:#a01212'});
+  const box=el('div',{style:'display:none;margin-top:8px'},
+    el('p',{class:'mute',style:'margin:0 0 6px'},'It is gone from the app at once, and from every copy within 30 days. This cannot be undone.'),
+    el('label',{class:'mute',style:'display:block'},'Your PIN, to confirm'),pin,
+    el('div',{class:'row'},el('button',{class:'go danger',type:'button',style:'margin-top:6px',onclick:async e=>{
+      e.target.disabled=true;err.textContent='';
+      try{REC=await post(url,{pin:pin.value});paint();paintForm();await load()}catch(x){err.textContent=x.message;e.target.disabled=false}}},label),
+      el('button',{class:'sec',type:'button',style:'margin-top:6px',onclick:()=>{box.style.display='none';open.style.display=''}},'Cancel')),err);
+  const open=el('button',{class:'orig',type:'button',style:'color:#a01212',onclick:()=>{box.style.display='';open.style.display='none';pin.focus()}},label);
+  return [open,box];
+}
 $('pkNudgeBtn').onclick=()=>openMenu('pk');
 $('pinChange').onclick=async()=>{const m=$('pinMsg');m.style.color='#a01212';m.textContent='';
   if($('newPin1').value!==$('newPin2').value){m.textContent='The two new PINs are not the same.';return}
@@ -318,7 +355,7 @@ function doseField(f){
 function openCheck(p){
   const r=p.reading,v=$('checkView');v.replaceChildren();tab('check');
   const fields=[];const add=(box,label,f,opt)=>{const c=checkField(label,f,opt);box.append(c.node);fields.push(c);return c};
-  v.append(el('button',{class:'orig',type:'button',onclick:()=>tab('papers')},'\u2039 ',el('span',{},'Back to my papers')),el('h1',{},'Check against the paper'),
+  v.append(el('button',{class:'orig',type:'button',onclick:()=>tab('papers')},'\u2039 ',el('span',{},'Back to my papers')),el('h1',{},'Check against the paper',el('button',{class:'qhelp',type:'button','aria-label':'Help',onclick:()=>openHelp('check')},'?')),
     el('p',{class:'sub'},'Look at the paper and at each line below. Nothing reaches a doctor until you add it to your record.'));
   const img=el('img',{class:'crop',alt:'The original photo, as taken',src:'/api/papers/'+p.id+'/original'});
   v.append(el('div',{class:'card'},img,el('div',{class:'mute'},'Tap the photo to see it larger.')));
@@ -382,6 +419,7 @@ function paperCard(p){
   }
   card.append(el('div',{class:'mute'},'Added '+fmt(p.added)),el('div',{class:'mute'},Math.round(p.bytes/1024)+' KB'),
     el('div',{class:'mute',style:'font-size:12px;word-break:break-all'},'SHA-256 '+p.sha256));
+  card.append(el('div',{},...deleteBox('/api/papers/'+p.id+'/delete','Delete this paper')));
   return card;
 }
 function paint(){
@@ -406,7 +444,9 @@ function paint(){
     const card=el('div',{class:'card'});
     const body=el('div',{style:'display:none'},resultRows(d));
     card.append(el('div',{},d.origin==='sample'?el('span',{class:'chip'},'SAMPLE'):el('span',{class:'chip'},'Checked by you')),el('div',{class:'t',style:'margin-top:6px'},d.title),el('div',{class:'mute'},d.facility+' · '+d.date),
-      el('button',{class:'orig',type:'button',onclick:e=>{const o=body.style.display==='none';body.style.display=o?'':'none';e.target.textContent=o?'Hide what it says':'See what it says'}},'See what it says'),body);
+      el('button',{class:'orig',type:'button',onclick:e=>{const o=body.style.display==='none';body.style.display=o?'':'none';e.target.textContent=o?'Hide what it says':'See what it says'}},'See what it says'),
+      d.paper?el('span',{},' · ',el('button',{class:'orig',type:'button',onclick:()=>viewPhoto(d.paper)},'See the photo')):'',body,
+      el('div',{},...deleteBox('/api/docs/'+d.id+'/delete',d.origin==='sample'?'Remove this SAMPLE page':'Delete this paper')));
     pl.append(card);
   }
 }
