@@ -148,7 +148,7 @@ function tab(name){
 }
 document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
 $('tileShow').onclick=()=>tab('share');
-const VIEWS={list:['vList','Menu'],pk:['vPk','Fingerprint or face'],pin:['vPin','Change PIN'],help:['vHelp','Help'],dl:['vDl','Download my record'],del:['vDel','Delete my account']};
+const VIEWS={list:['vList','Menu'],pk:['vPk','Fingerprint or face'],pin:['vPin','Change PIN'],help:['vHelp','Help'],me:['vMe','My details'],dl:['vDl','Download my record'],del:['vDel','Delete my account']};
 function openMenu(v){$('ov').style.display='';for(const k in VIEWS)$(VIEWS[k][0]).style.display=k===v?'':'none';$('sheetTitle').textContent=VIEWS[v][1];$('acctBtn').setAttribute('aria-expanded',true);pkErr();$('pinMsg').textContent='';if(v==='pk'&&$('pkAdd').style.display!=='none')$('pkPin').focus()}
 function closeMenu(){$('ov').style.display='none';$('acctBtn').setAttribute('aria-expanded',false)}
 $('acctBtn').onclick=()=>openMenu('list');
@@ -171,6 +171,27 @@ function openHelp(id){
   if(d){if(d.tagName==='DETAILS')d.open=true;setTimeout(()=>d.scrollIntoView({block:'start'}),0)}
 }
 $('rowHelp').onclick=()=>openHelp();$('rowDel').onclick=()=>{$('delErr').textContent='';$('delWord').value=$('delPin').value='';openMenu('del')};
+// ---- My details (26 Nov 2026): identity only, as typed. The date of birth is shown as typed, never as a computed age.
+const DET=()=>(REC&&REC.details)||{};
+const hasDet=()=>{const d=DET();return !!(d.dob||d.age||d.sex)};
+const SEX={female:'Female',male:'Male',other:'Other'};
+let meCal=null;
+const paintCal=()=>document.querySelectorAll('[data-cal]').forEach(b=>{b.classList.toggle('on',b.dataset.cal===meCal);b.setAttribute('aria-checked',b.dataset.cal===meCal)});
+document.querySelectorAll('[data-cal]').forEach(b=>b.onclick=()=>{meCal=b.dataset.cal;paintCal()});
+function detLines(d){const out=[];
+  if(d.dob)out.push('Date of birth: '+d.dob+' '+d.calendar);
+  if(d.age)out.push('Age '+d.age+', as told on '+d.age_told_on);
+  if(d.sex)out.push('Sex: '+SEX[d.sex]);
+  return out}
+function paintMe(){const d=DET();$('meDob').value=d.dob||'';$('meAge').value=d.age||'';$('meSex').value=d.sex||'';meCal=d.calendar||null;paintCal();
+  const l=detLines(d);$('meNow').replaceChildren(...(l.length?l.map(x=>el('div',{},x)):[el('div',{},'Nothing added yet.')]))}
+$('rowMe').onclick=()=>{$('meErr').textContent='';paintMe();openMenu('me')};
+$('meSave').onclick=async()=>{
+  const err=$('meErr');err.textContent='';$('meSave').disabled=true;
+  try{REC=await post('/api/person/details',{dob:$('meDob').value,calendar:meCal,age:$('meAge').value,sex:$('meSex').value});paintMe();paint();paintForm();err.style.color='';err.textContent='Saved.'}
+  catch(e){err.style.color='#a01212';err.textContent=e.message}
+  finally{$('meSave').disabled=false}
+};
 $('rowDl').onclick=()=>{$('dlErr').textContent='';openMenu('dl')};
 // ---- Download my record (26 Nov 2026): the patient's own copy, word for word, with every photo. The phone's
 // "Save as PDF" makes the PDF (Nepali script prints correctly). The stamp is on every page and stays in English.
@@ -192,6 +213,7 @@ function printView(x){
   const val=v=>v===null||v===''?'Not written on the paper':v;
   d.append(el('h1',{},'Health record'),el('p',{class:'pname'},x.person.name||''),
     el('p',{class:'mute'},'This copy shows what each paper says. It gives no advice. The photo of each paper is the record.'));
+  if(x.details_told){d.append(el('h2',{},'My details'),el('p',{class:'mute'},'Told by the patient · not from a paper'),...detLines(x.details_told).map(t=>el('div',{},t)))}
   d.append(el('h2',{},'Allergies'),el('p',{class:'mute'},'Told by the patient · not from a paper'));
   if(!x.allergies_told.length)d.append(el('p',{class:'mute'},'None added.'));
   for(const a of x.allergies_told)d.append(el('div',{class:'res'},el('div',{class:'t'},a.substance),a.reaction?el('div',{},a.reaction):''));
@@ -509,7 +531,7 @@ function paint(){
 function paintForm(){
   const n=REC.docs.length;
   $('docs').replaceChildren();
-  const told=STATED().length;$('toldPick').style.display=told?'':'none';
+  const told=STATED().length;$('toldPick').style.display=told?'':'none';$('mePick').style.display=hasDet()?'':'none';
   $('noPapers').style.display=n||told?'none':'';$('create').disabled=!(n||told);
   REC.docs.forEach(d=>{const cb=el('input',{type:'checkbox',id:'d-'+d.id,checked:''});$('docs').append(el('label',{class:'opt',for:'d-'+d.id},cb,el('span',{},d.title,el('br'),el('span',{class:'mute'},d.facility+' · '+d.date))))});
 }
@@ -521,7 +543,7 @@ async function setup(){
     const docs=REC.docs.filter(d=>$('d-'+d.id)&&$('d-'+d.id).checked).map(d=>d.id);
     if(!docs.length){$('makeErr').textContent='Choose at least one report to share.';return}
     $('makeErr').textContent='';
-    try{await post('/api/shares',{docs,stated:$('toldShare').checked&&STATED().length>0,who:$('who').value.trim(),minutes:+$('dur').value,...await confirmAuth($('sharePin').value)});$('who').value='';$('sharePin').value='';await load()}catch(e){$('makeErr').textContent=e.message;if(/Cancelled|PIN/.test(e.message)){PINMODE=true;shareMode()}}
+    try{await post('/api/shares',{docs,stated:$('toldShare').checked&&STATED().length>0,details:$('meShare').checked&&hasDet(),who:$('who').value.trim(),minutes:+$('dur').value,...await confirmAuth($('sharePin').value)});$('who').value='';$('sharePin').value='';await load()}catch(e){$('makeErr').textContent=e.message;if(/Cancelled|PIN/.test(e.message)){PINMODE=true;shareMode()}}
   };
   paint();paintForm();
   await load();setInterval(()=>{if($('app').style.display!=='none')load()},10000); // pick up opens made on the doctor's phone

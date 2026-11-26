@@ -73,7 +73,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
   const token = () => Array.from(randomBytes(14), b => ALPHABET[b % 31]).join('');
   const stateOf = s => (s.revokedAt ? 'revoked' : now() >= Date.parse(s.expires) ? 'expired' : 'live');
   const log = (s, t) => { s.log.push({ at: new Date(now()).toISOString(), t }); };
-  const publicShare = s => ({ id: s.id, docs: s.docs, stated: !!s.stated, who: s.who, created: s.created, expires: s.expires, minutes: s.minutes, revokedAt: s.revokedAt || null, state: stateOf(s), log: s.log });
+  const publicShare = s => ({ id: s.id, docs: s.docs, stated: !!s.stated, details: !!s.details, who: s.who, created: s.created, expires: s.expires, minutes: s.minutes, revokedAt: s.revokedAt || null, state: stateOf(s), log: s.log });
 
   // refused guesses of unknown tokens: slow down anyone trying to find a live link
   const misses = new Map();
@@ -126,7 +126,11 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
       const mine = () => { const r = acct(); return r.people.find(p => p.id === cur.session.personId) || r.people[0]; }; // the person in view on this session
       const forPerson = s => mineOnly(s) && (s.personId ? s.personId === mine().id : mine() === acct().people[0]); // shares made before M1 belong to the first person
       const paperOut = p => ({ id: p.id, sha256: p.sha256, mime: p.mime, bytes: p.bytes, added: p.added, status: p.status, reading: p.reading ? { ...p.reading, usd: undefined } : null });
-      const summary = () => { const r = mine(); return { label: r.name, person: r.id, people: acct().people.map(p => ({ id: p.id, name: p.name, papers: p.docs.length + p.papers.length })), docs: r.docs.map(d => ({ id: d.id, title: d.title, facility: d.facility, date: d.date_as_written, origin: d.origin || 'sample', paper: d.paperId || null, results: d.results.map(({ img, ...r }) => r), medicines: d.medicines || [] })).reverse(), papers: r.papers.map(paperOut).reverse(), stated: { allergies: (r.stated && r.stated.allergies) || [] }, photos: photos || testMode, testMode, minutes: ALLOWED_MINUTES, help: { whatsapp: helpWhatsapp } }; };
+      // My details (decided 26 Nov 2026): identity only, as the patient typed it. The date of birth is never turned into
+      // an age; an age typed instead of a date keeps the day it was typed. Never reconciled with what a paper prints.
+      const detailsOf = r => { const d = r.details || {}; return { dob: d.dob || null, calendar: d.calendar || null, age: d.age || null, age_told_on: d.age_told_on || null, sex: d.sex || null, updated: d.updated || null }; };
+      const hasDetails = r => { const d = detailsOf(r); return !!(d.dob || d.age || d.sex); };
+      const summary = () => { const r = mine(); return { label: r.name, person: r.id, people: acct().people.map(p => ({ id: p.id, name: p.name, papers: p.docs.length + p.papers.length })), docs: r.docs.map(d => ({ id: d.id, title: d.title, facility: d.facility, date: d.date_as_written, origin: d.origin || 'sample', paper: d.paperId || null, results: d.results.map(({ img, ...r }) => r), medicines: d.medicines || [] })).reverse(), papers: r.papers.map(paperOut).reverse(), stated: { allergies: (r.stated && r.stated.allergies) || [] }, details: detailsOf(r), photos: photos || testMode, testMode, minutes: ALLOWED_MINUTES, help: { whatsapp: helpWhatsapp } }; };
       if (req.method === 'GET' && path === '/api/record') return send(res, 200, summary());
       if (req.method === 'POST' && path === '/api/record/sample') { // copy the invented SAMPLE papers into THIS account only; asking twice adds nothing
         const r = mine();
@@ -205,8 +209,26 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
           format: 'abhilekh.export.v1', made_at: made,
           stamp: 'Copy made by the patient on ' + made.slice(0, 10) + ' · from Abhilekh · Not institution-verified',
           person: { name: r.name || null },
+          details_told: hasDetails(r) ? { ...detailsOf(r), source: 'Told by the patient · not from a paper' } : null,
           allergies_told: ((r.stated && r.stated.allergies) || []).map(({ substance, reaction, added }) => ({ substance, reaction, added, source: 'Told by the patient · not from a paper' })),
           papers: [...checked, ...unchecked] });
+      }
+
+      // --- My details (decided 26 Nov 2026): date of birth as typed (BS or AD, said by the patient), or an age as typed with
+      // the day it was typed; sex. No PIN (like adding an allergy). Sending all three empty clears them.
+      if (req.method === 'POST' && path === '/api/person/details') {
+        const b = await readJson(req);
+        const clean = (v, n) => String(v ?? '').replace(/[\u0000-\u001f\u007f]/g, '').replace(/\s+/g, ' ').trim().slice(0, n);
+        const dob = clean(b.dob, 30), age = clean(b.age, 12), calendar = clean(b.calendar, 2).toUpperCase(), sex = clean(b.sex, 10).toLowerCase();
+        const digit = /[0-9\u0966-\u096f]/;
+        if (dob && !digit.test(dob)) return send(res, 400, { error: 'Type the date of birth with its numbers, as you know it.' });
+        if (dob && !['BS', 'AD'].includes(calendar)) return send(res, 400, { error: 'Choose BS or AD for the date of birth.' });
+        if (!dob && age && !digit.test(age)) return send(res, 400, { error: 'Type the age in numbers.' });
+        if (sex && !['female', 'male', 'other'].includes(sex)) return send(res, 400, { error: 'Bad request.' });
+        const r = mine(), old = r.details || {}, today = new Date(now()).toISOString().slice(0, 10);
+        r.details = dob || age || sex ? { dob: dob || null, calendar: dob ? calendar : null, age: dob ? null : (age || null),
+          age_told_on: dob || !age ? null : (age === old.age && old.age_told_on ? old.age_told_on : today), sex: sex || null, updated: new Date(now()).toISOString() } : undefined;
+        save(); return send(res, 200, summary());
       }
 
       // --- Told by the patient (decided 26 Nov 2026): allergies only. Kept apart from what papers say, shown everywhere as
@@ -358,12 +380,13 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
         if (hold) return send(res, 403, { error: 'New shares are paused until ' + new Date(hold).toISOString() + ', 24 hours after your PIN was reset with a new code. You can still stop shares.', sharesPausedUntil: new Date(hold).toISOString() });
         const docs = Array.isArray(b.docs) ? [...new Set(b.docs)].filter(id => mine().docs.some(d => d.id === id)) : [];
         const stated = !!b.stated && !!(mine().stated && mine().stated.allergies.length); // allergies told by the patient, if she chose them
-        if (!docs.length && !stated) return send(res, 400, { error: 'Choose at least one report to share.' });
+        const details = !!b.details && hasDetails(mine()); // date of birth / age and sex as typed, if she chose them
+        if (!docs.length && !stated && !details) return send(res, 400, { error: 'Choose at least one report to share.' });
         const minutes = Number(b.minutes);
         if (!(ALLOWED_MINUTES.includes(minutes) || (testMode && minutes === 1))) return send(res, 400, { error: 'A share lasts 15 minutes.' });
         const who = String(b.who || '').slice(0, 80);
         const t = now();
-        const s = { id: token(), ownerId: cur.account.id, personId: mine().id, docs, stated, who, created: new Date(t).toISOString(), expires: new Date(t + minutes * 60000).toISOString(), minutes, revokedAt: null, log: [] };
+        const s = { id: token(), ownerId: cur.account.id, personId: mine().id, docs, stated, details, who, created: new Date(t).toISOString(), expires: new Date(t + minutes * 60000).toISOString(), minutes, revokedAt: null, log: [] };
         log(s, 'You created this share' + (who ? ' for ' + who : '') + '.');
         store.shares.push(s); save();
         return send(res, 201, publicShare(s));
@@ -411,7 +434,8 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
         // Allergies told by the patient: only if she chose them for this share; always labelled as not from a paper.
         const person = s.personId ? ppl.find(p => p.id === s.personId) : ppl[0];
         const told = s.stated && person && person.stated ? person.stated.allergies.map(({ substance, reaction, added }) => ({ substance, reaction, added })) : [];
-        return send(res, 200, { state: 'live', expires: s.expires, docs, stated: told.length ? { label: 'Told by the patient · not from a paper', allergies: told } : null });
+        const det = s.details && person && hasDetails(person) ? (({ dob, calendar, age, age_told_on, sex }) => ({ label: 'Told by the patient · not from a paper', dob, calendar, age, age_told_on, sex }))(detailsOf(person)) : null;
+        return send(res, 200, { state: 'live', expires: s.expires, docs, stated: told.length ? { label: 'Told by the patient · not from a paper', allergies: told } : null, details: det });
       }
       send(res, 404, { error: 'not found' });
     } catch (e) {

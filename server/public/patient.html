@@ -119,6 +119,7 @@
   <h2>New share</h2>
   <div id="noPapers" class="mute" style="display:none">Add a paper first. There is nothing to share yet.</div>
   <div id="docs"></div>
+  <label class="opt" id="mePick" for="meShare" style="display:none"><input type="checkbox" id="meShare" checked><span>My details<br><span class="mute">Date of birth and sex, shown as told by you</span></span></label>
   <label class="opt" id="toldPick" for="toldShare" style="display:none"><input type="checkbox" id="toldShare" checked><span>Allergies you told Abhilekh<br><span class="mute">Shown as told by you, not from a paper</span></span></label>
   <label class="mute" for="who" style="display:block;margin-top:8px">Who is it for? (only for your own list, optional)</label>
   <input type="text" id="who" maxlength="80" placeholder="e.g. Dr. Namuna, Example Clinic">
@@ -141,6 +142,7 @@
     <div id="vList">
       <div class="lang" role="group" aria-label="Language"><button type="button" data-lang="en" class="on">English</button><button type="button" data-lang="ne">नेपाली</button></div>
       <p class="mute" style="margin:0 0 10px"><span id="who-am-i"></span></p>
+      <button class="menurow" id="rowMe" type="button">My details <span>&#8250;</span></button>
       <button class="menurow" id="rowPk" type="button" style="display:none">Fingerprint or face <span>&#8250;</span></button>
       <button class="menurow" id="rowPin" type="button">Change PIN <span>&#8250;</span></button>
       <button class="menurow" id="rowDl" type="button">Download my record <span>&#8250;</span></button>
@@ -151,6 +153,22 @@
     <div id="vHelp" style="display:none">
       <button class="orig" type="button" data-back style="margin-bottom:6px">&#8249; Back</button>
       <div id="helpBody" class="faq"></div>
+    </div>
+    <div id="vMe" style="display:none">
+      <button class="orig" type="button" data-back style="margin-bottom:6px">&#8249; Back</button>
+      <div>
+        <p class="mute" style="margin:0 0 8px">Told by you, not from a paper. Abhilekh keeps them as you type them and never works out an age from them. A doctor sees them only if you include them in a share.</p>
+        <div class="mute" id="meNow" style="margin-bottom:8px"></div>
+        <label class="mute" for="meDob" style="display:block">Date of birth, as you know it</label>
+        <input type="text" id="meDob" maxlength="30" autocomplete="off" placeholder="e.g. 2041-04-12">
+        <div class="lang" role="radiogroup" aria-label="Calendar" style="margin-top:6px"><button type="button" data-cal="BS">BS (बि.सं.)</button><button type="button" data-cal="AD">AD (ई.सं.)</button></div>
+        <label class="mute" for="meAge" style="display:block;margin-top:8px">Age, only if you do not know the date of birth</label>
+        <input type="text" id="meAge" maxlength="12" inputmode="numeric" autocomplete="off">
+        <label class="mute" for="meSex" style="display:block;margin-top:8px">Sex (optional)</label>
+        <select id="meSex"><option value="">Not said</option><option value="female">Female</option><option value="male">Male</option><option value="other">Other</option></select>
+        <button class="go" id="meSave" type="button">Save</button>
+        <div class="mute" id="meErr" style="margin-top:6px;color:#a01212"></div>
+      </div>
     </div>
     <div id="vDl" style="display:none">
       <button class="orig" type="button" data-back style="margin-bottom:6px">&#8249; Back</button>
