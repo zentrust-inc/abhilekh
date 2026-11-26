@@ -35,15 +35,12 @@ async function start() {
   return { base, signUp, anon, close: () => { srv.closeAllConnections(); srv.close(); } };
 }
 
-test('download needs the PIN and holds exactly what the record holds, labelled, with no photos inside', async () => {
+test('download needs no PIN and holds exactly what the record holds, labelled, with no photos inside', async () => {
   const s = await start();
   try {
     const me = await s.signUp('9800000001');
-    assert.notEqual((await me('/api/record/export', 'POST', {})).status, 200);
-    const bad = await me('/api/record/export', 'POST', { pin: '000000' });
-    assert.notEqual(bad.status, 200);
     await me('/api/stated/allergies', 'POST', { substance: 'Penicillin', reaction: 'Rash' });
-    const r = await me('/api/record/export', 'POST', { pin: PIN });
+    const r = await me('/api/record/export', 'POST', {});
     assert.equal(r.status, 200);
     const x = r.json;
     assert.equal(x.format, 'abhilekh.export.v1');

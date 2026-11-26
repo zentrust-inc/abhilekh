@@ -171,14 +171,14 @@ function openHelp(id){
   if(d){if(d.tagName==='DETAILS')d.open=true;setTimeout(()=>d.scrollIntoView({block:'start'}),0)}
 }
 $('rowHelp').onclick=()=>openHelp();$('rowDel').onclick=()=>{$('delErr').textContent='';$('delWord').value=$('delPin').value='';openMenu('del')};
-$('rowDl').onclick=()=>{$('dlErr').textContent='';$('dlPin').value='';openMenu('dl');$('dlPin').focus()};
+$('rowDl').onclick=()=>{$('dlErr').textContent='';openMenu('dl')};
 // ---- Download my record (26 Nov 2026): the patient's own copy, word for word, with every photo. The phone's
 // "Save as PDF" makes the PDF (Nepali script prints correctly). The stamp is on every page and stays in English.
 $('dlGo').onclick=async()=>{
   const err=$('dlErr');err.textContent='';$('dlGo').disabled=true;
-  try{const x=await post('/api/record/export',{pin:$('dlPin').value});closeMenu();printView(x)}
+  try{const x=await post('/api/record/export');closeMenu();printView(x)}
   catch(e){err.textContent=e.message}
-  finally{$('dlGo').disabled=false;$('dlPin').value=''}
+  finally{$('dlGo').disabled=false}
 };
 function printView(x){
   const d=$('printDoc');d.replaceChildren();if(d.parentNode!==document.body)document.body.append(d); // outside the app, so only the copy shows

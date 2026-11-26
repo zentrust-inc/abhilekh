@@ -186,14 +186,12 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
         res.writeHead(200, { 'content-type': p.mime, 'content-length': buf.length, 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff', 'content-disposition': 'inline', 'referrer-policy': 'no-referrer' });
         return res.end(buf);
       }
-      // --- Download my record (decided 26 Nov 2026): the patient's own copy of the person in view, behind the PIN. Exactly
+      // --- Download my record (decided 26 Nov 2026; no PIN, owner's decision): the patient's own copy of the person in
+      // view (opening another person's papers already asks for the PIN). Exactly
       // what the record holds, word for word: checked papers (and SAMPLE pages, labelled), papers not checked yet (photo
       // only), and allergies told by the patient (labelled). Nothing derived is added (no register details, no crops).
       // The phone turns it into a PDF ("Save as PDF") so Nepali script prints correctly; every page carries the stamp.
       if (req.method === 'POST' && path === '/api/record/export') {
-        const b = await readJson(req);
-        const ok = auth.confirm(cur.account, b);
-        if (!ok.ok) return send(res, ok.status, ok);
         const r = mine(), made = new Date(now()).toISOString();
         const photo = id => { const p = r.papers.find(x => x.id === id); return p ? { paper: p.id, sha256: p.sha256, mime: p.mime } : null; };
         const checked = r.docs.map(d => ({

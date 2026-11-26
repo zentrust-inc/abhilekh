@@ -437,7 +437,7 @@ const NE={
 "Printed flag":"छापिएको चिनो",
 "Papers not checked yet":"अझै नजाँचिएका कागजात",
 "Only the photo. Nothing has been read from these papers.":"फोटो मात्र। यी कागजबाट केही पढिएको छैन।",
-"Yes. Open the menu (top right) and choose Download my record. After your PIN, Abhilekh makes a copy of everything in the record, word for word, with every photo.":"सक्नुहुन्छ। मेनु (माथि दायाँ) खोलेर “मेरो अभिलेख डाउनलोड गर्नुहोस्” छान्नुहोस्। पिन हालेपछि अभिलेखले सबै कुराको शब्दशः प्रतिलिपि, हरेक फोटोसहित बनाउँछ।",
+"Yes. Open the menu (top right), choose Download my record, then Make my copy. Abhilekh makes a copy of everything in the record, word for word, with every photo.":"सक्नुहुन्छ। मेनु (माथि दायाँ) खोलेर “मेरो अभिलेख डाउनलोड गर्नुहोस्”, त्यसपछि “मेरो प्रतिलिपि बनाउनुहोस्” छान्नुहोस्। अभिलेखले सबै कुराको शब्दशः प्रतिलिपि, हरेक फोटोसहित बनाउँछ।",
 "Tap Save as PDF or print, then choose Save as PDF to keep it on your phone. Download the data file keeps the same record as a file other apps can read.":"फोनमा राख्न “PDF मा सेभ वा प्रिन्ट गर्नुहोस्” थिचेर “Save as PDF” छान्नुहोस्। “डाटा फाइल डाउनलोड गर्नुहोस्” ले उही अभिलेखलाई अरू एपले पढ्न सक्ने फाइलको रूपमा राख्छ।",
 "Every page says it is a copy made by you, not by a hospital or lab.":"हरेक पानामा यो अस्पताल वा ल्याबले होइन, तपाईंले बनाएको प्रतिलिपि हो भनेर लेखिन्छ।"
 };
