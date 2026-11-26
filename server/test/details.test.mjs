@@ -35,33 +35,48 @@ async function start() {
   return { signUp, anon, close: () => { srv.closeAllConnections(); srv.close(); } };
 }
 
-test('the date of birth is kept exactly as typed, with its calendar, and never turned into an age', async () => {
+test('the date of birth is kept exactly as picked, with its calendar, and never turned into an age', async () => {
   const s = await start();
   try {
     const me = await s.signUp('9841000401');
-    assert.equal((await me('/api/person/details', 'POST', { dob: '2041-04-12' })).status, 400);          // BS or AD must be said
-    assert.equal((await me('/api/person/details', 'POST', { dob: 'baisakh', calendar: 'BS' })).status, 400); // needs its numbers
-    const r = await me('/api/person/details', 'POST', { dob: '  २०४१  बैशाख १२ ', calendar: 'bs', age: '42', sex: 'female' }); // an age sent anyway is ignored
+    assert.equal((await me('/api/person/details', 'POST', { dob: '2041-04-12' })).status, 400);              // BS or AD must be said
+    assert.equal((await me('/api/person/details', 'POST', { dob: '2041 baisakh', calendar: 'BS' })).status, 400); // only a picked date
+    assert.equal((await me('/api/person/details', 'POST', { dob: '2041-02-32', calendar: 'BS' })).status, 400); // Jestha 2041 has 31 days
+    assert.equal((await me('/api/person/details', 'POST', { dob: '1982-12-30', calendar: 'BS' })).status, 400); // more than 100 years back
+    assert.equal((await me('/api/person/details', 'POST', { dob: '2090-01-01', calendar: 'BS' })).status, 400); // in the future
+    assert.equal((await me('/api/person/details', 'POST', { dob: '1985-02-29', calendar: 'AD' })).status, 400); // no such AD day
+    assert.equal((await me('/api/person/details', 'POST', { dob: '1983-01-01', calendar: 'BS' })).status, 200); // 100 years back is fine
+    assert.equal((await me('/api/person/details', 'POST', { dob: '1989-07-30', calendar: 'BS' })).status, 200); // a split year: the longer month is offered
+    const r = await me('/api/person/details', 'POST', { dob: '2041-04-12', calendar: 'bs', age: '42', sex: 'female' }); // an age sent anyway is ignored
     assert.equal(r.status, 200);
     const d = r.json.details;
-    assert.equal(d.dob, '२०४१ बैशाख १२');
-    assert.equal(d.calendar, 'BS');
+    assert.deepEqual([d.dob, d.calendar, d.sex], ['2041-04-12', 'BS', 'female']);
     assert.equal('age' in d, false);      // no age is ever kept
-    assert.equal(d.sex, 'female');
     assert.ok(!/\b(years?|yrs|old)\b/i.test(JSON.stringify(r.json)), 'no age is computed anywhere');
   } finally { s.close(); }
 });
 
-test('a year alone is accepted; clearing removes everything', async () => {
+test('clearing removes everything', async () => {
   const s = await start();
   try {
     const me = await s.signUp('9841000402');
-    const r = await me('/api/person/details', 'POST', { dob: '2010', calendar: 'BS' });
-    assert.equal(r.json.details.dob, '2010');
+    await me('/api/person/details', 'POST', { dob: '1990-02-28', calendar: 'AD' });
     assert.equal((await me('/api/person/details', 'POST', { sex: 'unknown' })).status, 400);
     const c = await me('/api/person/details', 'POST', {});
     assert.deepEqual(c.json.details, { dob: null, calendar: null, sex: null, updated: null });
   } finally { s.close(); }
+});
+
+test('the picker table matches the pinned calendar, except the split years where it offers the longer month', async () => {
+  const { readFileSync } = await import('node:fs');
+  const t = JSON.parse(readFileSync(new URL('../public/bs-months.json', import.meta.url), 'utf8'));
+  const csv = readFileSync(new URL('../../derived/calendar_bs.csv', import.meta.url), 'utf8').trim().split('\n').slice(1).map(l => l.split(',').map(Number));
+  const pinned = Object.fromEntries(csv.map(([y, ...m]) => [y, m]));
+  assert.deepEqual(Object.keys(t.months).map(Number), Array.from({ length: 108 }, (_, i) => 1983 + i));
+  for (const [y, m] of Object.entries(t.months)) {
+    if (t.split_years.includes(+y)) { assert.equal(m.every((d, i) => d >= pinned[y][i]), true); assert.equal(m.reduce((a, b) => a + b) - pinned[y].reduce((a, b) => a + b), 1); }
+    else assert.deepEqual(m, pinned[y], 'BS ' + y);
+  }
 });
 
 test('the doctor sees the details only when the patient included them, labelled as not from a paper', async () => {

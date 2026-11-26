@@ -38,12 +38,30 @@ const RULES = { checkCopy, loose, norm, mustConfirmValue, confirmsDose, checkMed
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PUBLIC = join(HERE, 'public');
+// Date of birth (decided 26 Nov 2026): picked from Year, Month, Day lists. BS month lengths for BS 1983-2090 come from
+// public/bs-months.json (made by derived/make_bs_months.py); AD dates are checked by the AD calendar. Up to 100 years
+// back, never in the future. Stored as picked (YYYY-MM-DD with BS or AD); never converted, never turned into an age.
+const BSM = JSON.parse(readFileSync(join(PUBLIC, 'bs-months.json'), 'utf8'));
+export function checkDob(dob, calendar, today) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dob || ''); if (!m) return false;
+  const [y, mo, d] = [+m[1], +m[2], +m[3]], t = today.toISOString().slice(0, 10);
+  if (mo < 1 || mo > 12 || d < 1) return false;
+  if (calendar === 'AD') {
+    const x = new Date(Date.UTC(y, mo - 1, d));
+    return x.getUTCMonth() === mo - 1 && x.getUTCDate() === d && dob <= t && y >= +t.slice(0, 4) - 100;
+  }
+  if (calendar !== 'BS') return false;
+  const ml = BSM.months[String(y)]; if (!ml || d > ml[mo - 1]) return false;
+  const start = new Date(BSM.first_baisakh_ad[String(y)] + 'T00:00:00Z');
+  const daysIn = ml.slice(0, mo - 1).reduce((a, b) => a + b, 0) + d - 1;
+  return new Date(start.getTime() + daysIn * 864e5).toISOString().slice(0, 10) <= t; // only to refuse a future date; never stored
+}
 const ALPHABET = 'abcdefghjkmnpqrstuvwxyz23456789'; // 31 letters/digits, no look-alikes
 const ALLOWED_MINUTES = [15]; // PRD v2.1 FR-064A: a share lasts 15 minutes. Never "forever". (TEST_MODE also allows 1 minute.)
 const MAX_PEOPLE = 6;
 const KIND_TITLE = { lab_report: 'Lab report', prescription: 'Prescription', other: 'Paper' };
 const MAX_PHOTO = 15 * 1024 * 1024; // 15 MB: a phone photo, with room to spare
-const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
+const TYPES = { '.json': 'application/json; charset=utf-8', '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
 
 export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-record.json'), testMode = false, seedSample = false, photos = false, originals = null, readers = null, readingLimits = {}, registerIndex = null, now = () => Date.now(), sms = memorySender(), mail = memoryMail(), google = null, rp = null, secureCookies = true, authLimits, onSave = null, helpWhatsapp = null } = {}) {
   const record = JSON.parse(readFileSync(recordPath, 'utf8'));
@@ -112,7 +130,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
       if (req.method === 'POST' && !String(req.headers['content-type'] || '').startsWith('application/json') && path !== '/api/papers') return send(res, 415, { error: 'Send JSON.' });
       if (req.method === 'GET' && path === '/healthz') return send(res, 200, { ok: true });
       if (req.method === 'GET' && path === '/') return file(res, 'patient.html');
-      if (req.method === 'GET' && (path === '/style.css' || path === '/help.js' || path === '/qrcode.js' || path === '/doctor.js' || path === '/patient.js' || path === '/i18n.js' || path === '/medline.js')) return file(res, path.slice(1));
+      if (req.method === 'GET' && (path === '/style.css' || path === '/help.js' || path === '/qrcode.js' || path === '/doctor.js' || path === '/patient.js' || path === '/i18n.js' || path === '/medline.js' || path === '/bs-months.json')) return file(res, path.slice(1));
       if (req.method === 'GET' && /^\/s\/[a-z0-9]+$/.test(path)) return file(res, 'doctor.html'); // the shell shows nothing; data comes from /api/s/:id
 
       if (await auth.route(req, res, path, { ip, send, readJson })) return;
@@ -214,15 +232,13 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
           papers: [...checked, ...unchecked] });
       }
 
-      // --- My details (decided 26 Nov 2026): date of birth as typed (BS or AD, said by the patient; a year alone is fine)
-      // and sex. No age. No PIN (like adding an allergy). Sending both empty clears them.
+      // --- My details (decided 26 Nov 2026): date of birth as picked (BS or AD, YYYY-MM-DD) and sex. No age. No PIN (like adding an allergy). Sending both empty clears them.
       if (req.method === 'POST' && path === '/api/person/details') {
         const b = await readJson(req);
         const clean = (v, n) => String(v ?? '').replace(/[\u0000-\u001f\u007f]/g, '').replace(/\s+/g, ' ').trim().slice(0, n);
         const dob = clean(b.dob, 30), calendar = clean(b.calendar, 2).toUpperCase(), sex = clean(b.sex, 10).toLowerCase();
-        const digit = /[0-9\u0966-\u096f]/;
-        if (dob && !digit.test(dob)) return send(res, 400, { error: 'Type the date of birth with its numbers, as you know it.' });
         if (dob && !['BS', 'AD'].includes(calendar)) return send(res, 400, { error: 'Choose BS or AD for the date of birth.' });
+        if (dob && !checkDob(dob, calendar, new Date(now()))) return send(res, 400, { error: 'Choose the year, month and day of your date of birth.' });
         if (sex && !['female', 'male', 'other'].includes(sex)) return send(res, 400, { error: 'Bad request.' });
         const r = mine();
         r.details = dob || sex ? { dob: dob || null, calendar: dob ? calendar : null, sex: sex || null, updated: new Date(now()).toISOString() } : undefined;

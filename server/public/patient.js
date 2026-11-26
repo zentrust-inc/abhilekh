@@ -175,19 +175,42 @@ $('rowHelp').onclick=()=>openHelp();$('rowDel').onclick=()=>{$('delErr').textCon
 const DET=()=>(REC&&REC.details)||{};
 const hasDet=()=>{const d=DET();return !!(d.dob||d.sex)};
 const SEX={female:'Female',male:'Male',other:'Other'};
-let meCal=null;
+// Date of birth from Year, Month, Day lists: BS days from the checked BS table (bs-months.json, BS 1983-2090), AD days
+// from the AD calendar. Up to 100 years back, never in the future. Saved as picked; never converted, never an age.
+let meCal=null,BSM=null;
+const BS_MONTHS=['Baisakh बैशाख','Jestha जेठ','Asar असार','Shrawan साउन','Bhadra भदौ','Asoj असोज','Kartik कात्तिक','Mangsir मंसिर','Poush पुस','Magh माघ','Falgun फागुन','Chaitra चैत'];
+const AD_MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const pad=n=>String(n).padStart(2,'0');
+const todayAD=()=>new Date().toISOString().slice(0,10);
+function bsToday(){const t=todayAD();let y=null;for(const k in BSM.first_baisakh_ad)if(BSM.first_baisakh_ad[k]<=t)y=+k;
+  let left=Math.round((Date.parse(t)-Date.parse(BSM.first_baisakh_ad[y]))/864e5),m=0;while(left>=BSM.months[y][m]){left-=BSM.months[y][m];m++}return[y,m+1,left+1]}
+function nowParts(){if(meCal==='AD'){const t=todayAD();return[+t.slice(0,4),+t.slice(5,7),+t.slice(8,10)]}return bsToday()}
+function monthLen(y,m){return meCal==='AD'?new Date(Date.UTC(y,m,0)).getUTCDate():BSM.months[y][m-1]}
+function opts(sel,list,keep){const v=keep??sel.value;sel.replaceChildren(el('option',{value:''},sel.getAttribute('aria-label')),...list.map(([val,txt])=>el('option',{value:val},txt)));if(list.some(([x])=>String(x)===String(v)))sel.value=v}
+function fillDob(keep){
+  if(!meCal){$('meDobPick').style.display='none';return}
+  $('meDobPick').style.display='';const[ty,tm,td]=nowParts(),Y=$('meY'),M=$('meM'),D=$('meD');
+  const lo=meCal==='AD'?ty-100:1983,ys=[];for(let y=ty;y>=lo;y--)ys.push([y,String(y)]);opts(Y,ys,keep&&keep[0]);
+  const y=+Y.value,names=meCal==='AD'?AD_MONTHS:BS_MONTHS,ms=[];if(y)for(let m=1;m<=12&&!(y===ty&&m>tm);m++)ms.push([m,names[m-1]]);opts(M,ms,keep&&keep[1]);
+  const m=+M.value,ds=[];if(y&&m){const n=monthLen(y,m);for(let d=1;d<=n&&!(y===ty&&m===tm&&d>td);d++)ds.push([d,String(d)])}opts(D,ds,keep&&keep[2]);
+}
+async function bsReady(){if(!BSM)BSM=await (await fetch('/bs-months.json')).json()}
 const paintCal=()=>document.querySelectorAll('[data-cal]').forEach(b=>{b.classList.toggle('on',b.dataset.cal===meCal);b.setAttribute('aria-checked',b.dataset.cal===meCal)});
-document.querySelectorAll('[data-cal]').forEach(b=>b.onclick=()=>{meCal=b.dataset.cal;paintCal()});
+document.querySelectorAll('[data-cal]').forEach(b=>b.onclick=async()=>{if(meCal!==b.dataset.cal){meCal=b.dataset.cal;await bsReady();paintCal();fillDob([null,null,null])}});
+['meY','meM'].forEach(i=>$(i).onchange=()=>fillDob());
+const dobValue=()=>{const y=$('meY').value,m=$('meM').value,d=$('meD').value;return meCal&&y&&m&&d?y+'-'+pad(m)+'-'+pad(d):''};
 function detLines(d){const out=[];
   if(d.dob)out.push('Date of birth: '+d.dob+' '+d.calendar);
   if(d.sex)out.push('Sex: '+SEX[d.sex]);
   return out}
-function paintMe(){const d=DET();$('meDob').value=d.dob||'';$('meSex').value=d.sex||'';meCal=d.calendar||null;paintCal();
+async function paintMe(){const d=DET();$('meSex').value=d.sex||'';meCal=d.calendar||null;await bsReady();paintCal();
+  fillDob(d.dob?d.dob.split('-').map(Number):[null,null,null]);
   const l=detLines(d);$('meNow').replaceChildren(...(l.length?l.map(x=>el('div',{},x)):[el('div',{},'Nothing added yet.')]))}
 $('rowMe').onclick=()=>{$('meErr').textContent='';paintMe();openMenu('me')};
 $('meSave').onclick=async()=>{
   const err=$('meErr');err.textContent='';$('meSave').disabled=true;
-  try{REC=await post('/api/person/details',{dob:$('meDob').value,calendar:meCal,sex:$('meSex').value});paintMe();paint();paintForm();err.style.color='';err.textContent='Saved.'}
+  try{if(meCal&&!dobValue()&&($('meY').value||$('meM').value))throw new Error('Choose the year, month and day of your date of birth.');
+    REC=await post('/api/person/details',{dob:dobValue(),calendar:meCal,sex:$('meSex').value});paintMe();paint();paintForm();err.style.color='';err.textContent='Saved.'}
   catch(e){err.style.color='#a01212';err.textContent=e.message}
   finally{$('meSave').disabled=false}
 };
