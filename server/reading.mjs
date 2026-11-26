@@ -42,7 +42,7 @@ export function readingCopy(buf, mime) {
   return { buf: Buffer.from(jpeg.encode({ data: out, width: w, height: h }, 85).data), mime: 'image/jpeg', scale: f };
 }
 
-export function createReading({ store, save, keep, readers, rules, register = null, now = () => Date.now(), monthCapUsd = 20, pageCapUsd = 0.10, logger = console }) {
+export function createReading({ store, save, keep, readers, rules, register = null, record = null, now = () => Date.now(), monthCapUsd = 20, pageCapUsd = 0.10, logger = console }) {
   const { mustConfirmValue, checkMedicine, namePart, ddaIndex, loose, norm, confirmsDose, valueRegion, rangeRegion, dateRegion } = rules;
   const queue = [];
   let running = false;
@@ -77,12 +77,16 @@ export function createReading({ store, save, keep, readers, rules, register = nu
           store.reading.spend[month()] = spent() + usd;
           if (usd > pageCapUsd) logger.error('Reading: one page cost US$' + usd.toFixed(3) + ', above the page limit');
           if (a.status === 'rejected') throw new Error('the Claude reader failed: ' + String(a.reason?.message).slice(0, 120) + (b.status === 'rejected' ? ' / Vision: ' + String(b.reason?.message).slice(0, 80) : ''));
+          const oldCopy = p.reading?.copy || null; // kept only to reconcile decisions already made on the earlier reading
           p.reading = withRegister(compare(a.value.data, b.status === 'fulfilled' ? b.value.data : null, copy.scale));
           // the whole copy of the page (prompt v2), every field checked against Vision's lines; shown later screen by screen
           if (a.value.full && rules.checkCopy) p.reading.copy = rules.checkCopy(a.value.full, b.status === 'fulfilled' ? b.value.data.lines || [] : null);
+          // Vision's lines are kept with the reading for the coverage check (spec v1.0, C4); none when Vision failed.
+          if (b.status === 'fulfilled' && Array.isArray(b.value.data?.lines)) p.reading.vision_lines = b.value.data.lines;
           p.reading.at = new Date(now()).toISOString();
           p.reading.usd = Math.round(usd * 10000) / 10000;
           p.reading.readers = [a, b].map(r => r.status === 'fulfilled' ? r.value.model : 'failed');
+          if (record && oldCopy && p.reading.copy) record.reconcile(p, oldCopy); // decided paths whose text changed are reopened
           p.status = 'ready'; delete p.error;
           logger.log('Read ' + p.id + ': ' + p.reading.summary.fields + ' fields, ' + p.reading.summary.agreed + ' agreed, US$' + usd.toFixed(3));
         } catch (e) {

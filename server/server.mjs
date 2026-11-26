@@ -22,6 +22,7 @@ import { createDrive } from './drive.mjs';
 import { localOriginals, driveOriginals, EXT } from './originals.mjs';
 import { createReading, cropsOf } from './reading.mjs';
 import { createRegister } from './register.mjs';
+import { createRecordModel } from './record.mjs';
 // The reader lives in reader/ (one home, reused from Chautari). In the repository it is ../reader; on the server it is
 // deployed next to this file as ./reader.
 const READER = existsSync(join(dirname(fileURLToPath(import.meta.url)), 'reader')) ? './reader/' : '../reader/';
@@ -29,6 +30,10 @@ const { loose, norm, mustConfirmValue, confirmsDose } = await import(READER + 'n
 const { loadList, checkMedicine, namePart } = await import(READER + 'medicine-check.mjs');
 const { valueRegion, rangeRegion, dateRegion } = await import(READER + 'regions.mjs');
 const { checkCopy } = await import(READER + 'copy.mjs');
+// Spec v1.0 checklist (reader/checklist.mjs reads ../schema/checklist.json). Loaded so that a deployment without it
+// still runs: only the record endpoints answer 503 until schema/ is deployed next to reader/.
+let CHECKLIST = null;
+try { CHECKLIST = await import(READER + 'checklist.mjs'); } catch (e) { console.error('Checklist rules not loaded: ' + e.message); }
 const RULES = { checkCopy, loose, norm, mustConfirmValue, confirmsDose, checkMedicine, namePart, valueRegion, rangeRegion, dateRegion, ddaIndex: loadList(fileURLToPath(new URL(READER + 'dda/nlem-2021.json', import.meta.url))) };
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -60,7 +65,9 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
   };
   // M2: photos are read by the two readers (Claude, Google Vision) when both are set up; otherwise they wait.
   const register = createRegister({ index: registerIndex, namePart: RULES.namePart });
-  const reading = readers ? createReading({ store, save, keep, readers, rules: RULES, register, now, ...readingLimits }) : null;
+  // Spec v1.0 record model: consensus, the append-only decision log, the gate, items (record.mjs).
+  const model = CHECKLIST ? createRecordModel({ expand: CHECKLIST.expand, gate: CHECKLIST.gate, needsOwnTap: CHECKLIST.needsOwnTap, loose, now }) : null;
+  const reading = readers ? createReading({ store, save, keep, readers, rules: RULES, register, record: model, now, ...readingLimits }) : null;
   const auth = createAuth({ store, save, now, sms, mail, google, rp, testMode, secureCookies, limits: authLimits });
   const token = () => Array.from(randomBytes(14), b => ALPHABET[b % 31]).join('');
   const stateOf = s => (s.revokedAt ? 'revoked' : now() >= Date.parse(s.expires) ? 'expired' : 'live');
@@ -177,6 +184,28 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
         if (createHash('sha256').update(buf).digest('hex') !== p.sha256) { console.error('Original changed: ' + p.id); return send(res, 500, { error: 'This original does not match what was kept.' }); }
         res.writeHead(200, { 'content-type': p.mime, 'content-length': buf.length, 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff', 'content-disposition': 'inline', 'referrer-policy': 'no-referrer' });
         return res.end(buf);
+      }
+      // --- Spec v1.0 record (data only; the screens come later). The person in view, on their own account. ---
+      // GET  /api/papers/:id/model   the copy per path (agreement, pre-fill, state), what blocks it, and its items once clear
+      // POST /api/papers/:id/events  { events: [{ path, action, value?, bulk? }] } appended to the paper's log, all or none
+      mp = path.match(/^\/api\/papers\/(p[0-9a-f]+)\/(model|events)$/);
+      if (mp) {
+        if (!model) return send(res, 503, { error: 'The record rules are not deployed yet.' });
+        const p = mine().papers.find(x => x.id === mp[1]);
+        if (!p) return send(res, 404, { error: 'No such paper.' });
+        const view = () => ({ paper: p.id, status: p.status, model: 'abhilekh.record.v1', copy_at: p.reading?.at || null,
+          fields: Object.values(model.current(p)), gate: model.gateOf(p), items: model.itemsOf(p), log: (p.log || []).length });
+        if (req.method === 'GET' && mp[2] === 'model') return send(res, 200, view());
+        if (req.method === 'POST' && mp[2] === 'events') {
+          if (!p.reading?.copy) return send(res, 409, { error: 'This paper has no full copy yet.' });
+          const b = await readJson(req, 200000);
+          if (!Array.isArray(b.events) || !b.events.length || b.events.length > 2000) return send(res, 400, { error: 'Send a list of events.' });
+          try { model.append(p, b.events, { kind: 'patient', person: mine().id }); }
+          catch (e) { return send(res, e.status || 400, { error: e.status ? e.message : 'Bad request.' }); }
+          save();
+          return send(res, 200, view());
+        }
+        return send(res, 405, { error: 'Not allowed.' });
       }
       // --- M3: the patient checks what the readers found against the paper, then adds it to the record ---
       // Rules (PRD v2.1, date changed 25 Nov 2026): the date is filled in only when both readers agree and then needs its own tick, otherwise typed; a value with a decimal point needs its own tick; an Unresolved field is

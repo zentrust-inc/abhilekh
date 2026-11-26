@@ -119,6 +119,20 @@ Restore: stop the app; copy the chosen backup over `DATA_DIR/store.json` (or cal
 the backup is a readable store and keeps the old file as `store.json.before-restore`); start the app.
 `test/backup.test.mjs` runs this restore end to end.
 
+## Record model (spec v1.0, record.mjs)
+
+Data first; no screen uses it yet. For each paper with a full copy (prompt v2), the model keeps:
+- **Consensus per path**: agreed / one reader / uncertain (from `checkCopy`). Only an agreed value is pre-filled; a date or a value with a decimal point needs its own tick.
+- **One append-only decision log** (`paper.log`): confirmed, corrected, not on the paper, can't read, reopened, row counts, whose paper, paper type, coverage. Never edited or shortened; the last event (by sequence number) wins. All events in one request are checked first and added all or none.
+- **The gate** (`reader/checklist.mjs`, rules in `schema/checklist.json`): required fields per paper type, confirmed row counts, person and type, and every Google Vision line accounted for. Vision's lines are now kept with each reading (`reading.vision_lines`); a paper read before that needs a person to confirm nothing else is written on it.
+- **Items**, built from the log only when the gate is clear, so a correction reaches everything.
+- **Re-read**: decisions whose text did not change stand; the rest are reopened by the system.
+
+API (signed in, the person in view only): `GET /api/papers/:id/model`, `POST /api/papers/:id/events` with `{ events: [{ path, action, value?, bulk? }] }`.
+The existing check screen (`/confirm`) is unchanged.
+
+**Deploying:** copy `schema/` next to `reader/` (the checklist reads `../schema/checklist.json` from the reader folder). Without it the app still runs and only these two endpoints answer 503.
+
 ## What it does not do yet
 
 - **Photos are kept, not read.** Reading them with the two readers is M2; confirming them in the app is M3.
