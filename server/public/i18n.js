@@ -443,7 +443,6 @@ const NE={
 "My details":"मेरो विवरण",
 "Told by you, not from a paper. Abhilekh keeps them as you type them and never works out an age from them. A doctor sees them only if you include them in a share.":"तपाईंले बताएको, कागजबाट होइन। अभिलेखले यसलाई तपाईंले लेखेजस्तै राख्छ र यसबाट कहिल्यै उमेर निकाल्दैन। साझेदारीमा समावेश गर्नुभयो भने मात्र डाक्टरले देख्नुहुन्छ।",
 "Date of birth, as you know it":"जन्म मिति, तपाईंलाई थाहा भएजस्तै",
-"Age, only if you do not know the date of birth":"उमेर, जन्म मिति थाहा नभए मात्र",
 "Sex (optional)":"लिङ्ग (ऐच्छिक)",
 "Not said":"भनिएको छैन",
 "Female":"महिला",
@@ -454,11 +453,11 @@ const NE={
 "Date of birth and sex, shown as told by you":"जन्म मिति र लिङ्ग, तपाईंले बताएजस्तै देखाइन्छ",
 "Type the date of birth with its numbers, as you know it.":"जन्म मिति अङ्कमा, तपाईंलाई थाहा भएजस्तै लेख्नुहोस्।",
 "Choose BS or AD for the date of birth.":"जन्म मितिका लागि बि.सं. वा ई.सं. छान्नुहोस्।",
-"Type the age in numbers.":"उमेर अङ्कमा लेख्नुहोस्।",
 "What are My details?":"मेरो विवरण के हो?",
 "Your date of birth and sex, as you type them, in the menu under My details. They are told by you, not taken from a paper.":"तपाईंको जन्म मिति र लिङ्ग, तपाईंले लेखेजस्तै, मेनुको “मेरो विवरण” मा। यो तपाईंले बताएको हो, कागजबाट लिइएको होइन।",
 "Abhilekh never works out an age from your date of birth. A paper that prints an age keeps that age as printed; the two are shown side by side and never changed to agree.":"अभिलेखले तपाईंको जन्म मितिबाट कहिल्यै उमेर निकाल्दैन। कागजमा छापिएको उमेर जस्तो छ त्यस्तै रहन्छ; दुवै छेउछेउ देखाइन्छन् र मिलाउन कहिल्यै बदलिँदैनन्।",
-"A doctor sees your details only if you include them in a share.":"साझेदारीमा समावेश गर्नुभयो भने मात्र डाक्टरले तपाईंको विवरण देख्नुहुन्छ।"
+"A doctor sees your details only if you include them in a share.":"साझेदारीमा समावेश गर्नुभयो भने मात्र डाक्टरले तपाईंको विवरण देख्नुहुन्छ।",
+"e.g. 2041-04-12, or the year only":"जस्तै 2041-04-12, वा साल मात्र"
 };
 const ASK={"get a code by SMS":"SMS बाट कोड लिनुहोस्","get a code by email":"इमेलबाट कोड लिनुहोस्","sign in with Google again":"फेरि Google बाट साइन इन गर्नुहोस्"};
 const KIND=(k)=>k==='number'?'नम्बर':'ठेगाना';
@@ -466,7 +465,6 @@ const PAT=[
 [/^Told by you on (.+)$/,m=>'तपाईंले बताएको: '+m[1]],
 [/^Papers of (.+)$/,m=>m[1]+' का कागजातहरू'],
 [/^Date of birth: (.+) (BS|AD)$/,m=>'जन्म मिति: '+m[1]+' '+(m[2]==='BS'?'बि.सं.':'ई.सं.')],
-[/^Age (.+), as told on (.+)$/,m=>'उमेर '+m[1]+' ('+m[2]+' मा बताएको)'],
 [/^Sex: (Female|Male|Other)$/,m=>'लिङ्ग: '+({Female:'महिला',Male:'पुरुष',Other:'अन्य'})[m[1]]],
 [/^Added on (.+)$/,m=>m[1]+' मा थपिएको'],
 [/^Date on the paper: (.+)$/,m=>'कागजमा मिति: '+(m[1]==='Not written on the paper'?'कागजमा लेखिएको छैन':m[1])],

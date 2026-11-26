@@ -41,28 +41,26 @@ test('the date of birth is kept exactly as typed, with its calendar, and never t
     const me = await s.signUp('9841000401');
     assert.equal((await me('/api/person/details', 'POST', { dob: '2041-04-12' })).status, 400);          // BS or AD must be said
     assert.equal((await me('/api/person/details', 'POST', { dob: 'baisakh', calendar: 'BS' })).status, 400); // needs its numbers
-    const r = await me('/api/person/details', 'POST', { dob: '  २०४१  बैशाख १२ ', calendar: 'bs', age: '42', sex: 'female' });
+    const r = await me('/api/person/details', 'POST', { dob: '  २०४१  बैशाख १२ ', calendar: 'bs', age: '42', sex: 'female' }); // an age sent anyway is ignored
     assert.equal(r.status, 200);
     const d = r.json.details;
     assert.equal(d.dob, '२०४१ बैशाख १२');
     assert.equal(d.calendar, 'BS');
-    assert.equal(d.age, null);            // a date of birth is given, so no age is kept beside it
+    assert.equal('age' in d, false);      // no age is ever kept
     assert.equal(d.sex, 'female');
     assert.ok(!/\b(years?|yrs|old)\b/i.test(JSON.stringify(r.json)), 'no age is computed anywhere');
   } finally { s.close(); }
 });
 
-test('an age typed instead of a date keeps the day it was typed; clearing removes everything', async () => {
+test('a year alone is accepted; clearing removes everything', async () => {
   const s = await start();
   try {
     const me = await s.signUp('9841000402');
-    const r = await me('/api/person/details', 'POST', { age: '42' });
-    assert.equal(r.json.details.age, '42');
-    assert.match(r.json.details.age_told_on, /^\d{4}-\d{2}-\d{2}$/);
-    assert.equal((await me('/api/person/details', 'POST', { age: 'forty' })).status, 400);
+    const r = await me('/api/person/details', 'POST', { dob: '2010', calendar: 'BS' });
+    assert.equal(r.json.details.dob, '2010');
     assert.equal((await me('/api/person/details', 'POST', { sex: 'unknown' })).status, 400);
     const c = await me('/api/person/details', 'POST', {});
-    assert.deepEqual(c.json.details, { dob: null, calendar: null, age: null, age_told_on: null, sex: null, updated: null });
+    assert.deepEqual(c.json.details, { dob: null, calendar: null, sex: null, updated: null });
   } finally { s.close(); }
 });
 
@@ -79,6 +77,6 @@ test('the doctor sees the details only when the patient included them, labelled 
     const list = (await me('/api/shares')).json.shares;
     assert.equal((await s.anon('/api/s/' + list.find(y => !y.details).id)).json.details, null);
     const seen = (await s.anon('/api/s/' + list.find(y => y.details).id)).json.details;
-    assert.deepEqual(seen, { label: 'Told by the patient · not from a paper', dob: '1984-07-25', calendar: 'AD', age: null, age_told_on: null, sex: 'male' });
+    assert.deepEqual(seen, { label: 'Told by the patient · not from a paper', dob: '1984-07-25', calendar: 'AD', sex: 'male' });
   } finally { s.close(); }
 });

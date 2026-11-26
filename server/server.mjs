@@ -126,10 +126,10 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
       const mine = () => { const r = acct(); return r.people.find(p => p.id === cur.session.personId) || r.people[0]; }; // the person in view on this session
       const forPerson = s => mineOnly(s) && (s.personId ? s.personId === mine().id : mine() === acct().people[0]); // shares made before M1 belong to the first person
       const paperOut = p => ({ id: p.id, sha256: p.sha256, mime: p.mime, bytes: p.bytes, added: p.added, status: p.status, reading: p.reading ? { ...p.reading, usd: undefined } : null });
-      // My details (decided 26 Nov 2026): identity only, as the patient typed it. The date of birth is never turned into
-      // an age; an age typed instead of a date keeps the day it was typed. Never reconciled with what a paper prints.
-      const detailsOf = r => { const d = r.details || {}; return { dob: d.dob || null, calendar: d.calendar || null, age: d.age || null, age_told_on: d.age_told_on || null, sex: d.sex || null, updated: d.updated || null }; };
-      const hasDetails = r => { const d = detailsOf(r); return !!(d.dob || d.age || d.sex); };
+      // My details (decided 26 Nov 2026): identity only, as the patient typed it. Date of birth only, never an age (the
+      // owner's decision: no age is typed and none is computed). Never reconciled with an age a paper prints.
+      const detailsOf = r => { const d = r.details || {}; return { dob: d.dob || null, calendar: d.calendar || null, sex: d.sex || null, updated: d.updated || null }; };
+      const hasDetails = r => { const d = detailsOf(r); return !!(d.dob || d.sex); };
       const summary = () => { const r = mine(); return { label: r.name, person: r.id, people: acct().people.map(p => ({ id: p.id, name: p.name, papers: p.docs.length + p.papers.length })), docs: r.docs.map(d => ({ id: d.id, title: d.title, facility: d.facility, date: d.date_as_written, origin: d.origin || 'sample', paper: d.paperId || null, results: d.results.map(({ img, ...r }) => r), medicines: d.medicines || [] })).reverse(), papers: r.papers.map(paperOut).reverse(), stated: { allergies: (r.stated && r.stated.allergies) || [] }, details: detailsOf(r), photos: photos || testMode, testMode, minutes: ALLOWED_MINUTES, help: { whatsapp: helpWhatsapp } }; };
       if (req.method === 'GET' && path === '/api/record') return send(res, 200, summary());
       if (req.method === 'POST' && path === '/api/record/sample') { // copy the invented SAMPLE papers into THIS account only; asking twice adds nothing
@@ -214,20 +214,18 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
           papers: [...checked, ...unchecked] });
       }
 
-      // --- My details (decided 26 Nov 2026): date of birth as typed (BS or AD, said by the patient), or an age as typed with
-      // the day it was typed; sex. No PIN (like adding an allergy). Sending all three empty clears them.
+      // --- My details (decided 26 Nov 2026): date of birth as typed (BS or AD, said by the patient; a year alone is fine)
+      // and sex. No age. No PIN (like adding an allergy). Sending both empty clears them.
       if (req.method === 'POST' && path === '/api/person/details') {
         const b = await readJson(req);
         const clean = (v, n) => String(v ?? '').replace(/[\u0000-\u001f\u007f]/g, '').replace(/\s+/g, ' ').trim().slice(0, n);
-        const dob = clean(b.dob, 30), age = clean(b.age, 12), calendar = clean(b.calendar, 2).toUpperCase(), sex = clean(b.sex, 10).toLowerCase();
+        const dob = clean(b.dob, 30), calendar = clean(b.calendar, 2).toUpperCase(), sex = clean(b.sex, 10).toLowerCase();
         const digit = /[0-9\u0966-\u096f]/;
         if (dob && !digit.test(dob)) return send(res, 400, { error: 'Type the date of birth with its numbers, as you know it.' });
         if (dob && !['BS', 'AD'].includes(calendar)) return send(res, 400, { error: 'Choose BS or AD for the date of birth.' });
-        if (!dob && age && !digit.test(age)) return send(res, 400, { error: 'Type the age in numbers.' });
         if (sex && !['female', 'male', 'other'].includes(sex)) return send(res, 400, { error: 'Bad request.' });
-        const r = mine(), old = r.details || {}, today = new Date(now()).toISOString().slice(0, 10);
-        r.details = dob || age || sex ? { dob: dob || null, calendar: dob ? calendar : null, age: dob ? null : (age || null),
-          age_told_on: dob || !age ? null : (age === old.age && old.age_told_on ? old.age_told_on : today), sex: sex || null, updated: new Date(now()).toISOString() } : undefined;
+        const r = mine();
+        r.details = dob || sex ? { dob: dob || null, calendar: dob ? calendar : null, sex: sex || null, updated: new Date(now()).toISOString() } : undefined;
         save(); return send(res, 200, summary());
       }
 
@@ -434,7 +432,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
         // Allergies told by the patient: only if she chose them for this share; always labelled as not from a paper.
         const person = s.personId ? ppl.find(p => p.id === s.personId) : ppl[0];
         const told = s.stated && person && person.stated ? person.stated.allergies.map(({ substance, reaction, added }) => ({ substance, reaction, added })) : [];
-        const det = s.details && person && hasDetails(person) ? (({ dob, calendar, age, age_told_on, sex }) => ({ label: 'Told by the patient · not from a paper', dob, calendar, age, age_told_on, sex }))(detailsOf(person)) : null;
+        const det = s.details && person && hasDetails(person) ? (({ dob, calendar, sex }) => ({ label: 'Told by the patient · not from a paper', dob, calendar, sex }))(detailsOf(person)) : null;
         return send(res, 200, { state: 'live', expires: s.expires, docs, stated: told.length ? { label: 'Told by the patient · not from a paper', allergies: told } : null, details: det });
       }
       send(res, 404, { error: 'not found' });

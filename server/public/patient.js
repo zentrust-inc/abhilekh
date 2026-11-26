@@ -173,22 +173,21 @@ function openHelp(id){
 $('rowHelp').onclick=()=>openHelp();$('rowDel').onclick=()=>{$('delErr').textContent='';$('delWord').value=$('delPin').value='';openMenu('del')};
 // ---- My details (26 Nov 2026): identity only, as typed. The date of birth is shown as typed, never as a computed age.
 const DET=()=>(REC&&REC.details)||{};
-const hasDet=()=>{const d=DET();return !!(d.dob||d.age||d.sex)};
+const hasDet=()=>{const d=DET();return !!(d.dob||d.sex)};
 const SEX={female:'Female',male:'Male',other:'Other'};
 let meCal=null;
 const paintCal=()=>document.querySelectorAll('[data-cal]').forEach(b=>{b.classList.toggle('on',b.dataset.cal===meCal);b.setAttribute('aria-checked',b.dataset.cal===meCal)});
 document.querySelectorAll('[data-cal]').forEach(b=>b.onclick=()=>{meCal=b.dataset.cal;paintCal()});
 function detLines(d){const out=[];
   if(d.dob)out.push('Date of birth: '+d.dob+' '+d.calendar);
-  if(d.age)out.push('Age '+d.age+', as told on '+d.age_told_on);
   if(d.sex)out.push('Sex: '+SEX[d.sex]);
   return out}
-function paintMe(){const d=DET();$('meDob').value=d.dob||'';$('meAge').value=d.age||'';$('meSex').value=d.sex||'';meCal=d.calendar||null;paintCal();
+function paintMe(){const d=DET();$('meDob').value=d.dob||'';$('meSex').value=d.sex||'';meCal=d.calendar||null;paintCal();
   const l=detLines(d);$('meNow').replaceChildren(...(l.length?l.map(x=>el('div',{},x)):[el('div',{},'Nothing added yet.')]))}
 $('rowMe').onclick=()=>{$('meErr').textContent='';paintMe();openMenu('me')};
 $('meSave').onclick=async()=>{
   const err=$('meErr');err.textContent='';$('meSave').disabled=true;
-  try{REC=await post('/api/person/details',{dob:$('meDob').value,calendar:meCal,age:$('meAge').value,sex:$('meSex').value});paintMe();paint();paintForm();err.style.color='';err.textContent='Saved.'}
+  try{REC=await post('/api/person/details',{dob:$('meDob').value,calendar:meCal,sex:$('meSex').value});paintMe();paint();paintForm();err.style.color='';err.textContent='Saved.'}
   catch(e){err.style.color='#a01212';err.textContent=e.message}
   finally{$('meSave').disabled=false}
 };
