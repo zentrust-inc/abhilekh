@@ -46,6 +46,11 @@ test('every fixed error message the server can send to the patient has Nepali te
       if (!hasDevanagari(i18n.tr(msg))) missing.push(msg);
     }
   }
+  // the record model's validation messages reach the patient too
+  for (const m of readFileSync(new URL('../record.mjs', import.meta.url), 'utf8').matchAll(/bad\('((?:[^'\\]|\\.)*)'\)/g)) {
+    const msg = m[1].replace(/\\'/g, "'");
+    if (!hasDevanagari(i18n.tr(msg))) missing.push(msg);
+  }
   assert.deepEqual(missing, []);
 });
 

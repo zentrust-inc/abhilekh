@@ -78,8 +78,8 @@ export function gate(copy, decisions = {}, lines = null) {
     if (!STATES.has(states[r.path])) blocking.push({ path: r.path, why: r.present ? 'not confirmed' : 'not read: confirm it is not on the paper, or that it cannot be read' });
   }
   for (const g of groups) {
-    if (counts[g.group] === undefined) blocking.push({ path: 'count:' + g.group, why: g.rows < g.min_rows ? `reader found ${g.rows}; expected at least ${g.min_rows}: confirm the count` : 'count not confirmed' });
-    else if (counts[g.group] !== g.rows) blocking.push({ path: 'count:' + g.group, why: `patient says ${counts[g.group]}, copy has ${g.rows}: re-read or correct` });
+    if (counts[g.group] === undefined) blocking.push({ path: 'count:' + g.group, rows: g.rows, why: g.rows < g.min_rows ? `reader found ${g.rows}; expected at least ${g.min_rows}: confirm the count` : 'count not confirmed' });
+    else if (counts[g.group] !== g.rows) blocking.push({ path: 'count:' + g.group, rows: g.rows, why: `patient says ${counts[g.group]}, copy has ${g.rows}: re-read or correct` });
   }
   const uncovered = lines ? coverage(copy, lines) : [];
   uncovered.forEach(i => blocking.push({ path: 'coverage:' + i, why: 'text on the photo is not in the copy' }));
