@@ -127,7 +127,21 @@ async function enter(){
   if(me.sharesPausedUntil)$('paused').textContent='Your PIN was reset with a new code, so new shares are paused until '+fmt(me.sharesPausedUntil)+'. You can still stop shares.';
   if(!started){started=true;await setup()}else await load();
 }
+// Enlarged photo inside the app (26 Nov 2026): the tab bar stays at the bottom; nothing opens outside Abhilekh.
+function viewPhoto(id){
+  closePhoto();
+  const big=el('img',{class:'big',alt:'The original photo, as taken',src:'/api/papers/'+id+'/original'});
+  const box=el('div',{class:'viewer',id:'viewer',role:'dialog','aria-label':'The original photo, as taken'},
+    el('button',{class:'orig',type:'button',onclick:closePhoto},'\u2039 ',el('span',{},'Back')),
+    el('div',{class:'mute'},'The original photo, as taken. Tap it to zoom in or out.'),
+    el('div',{class:'pane'},big));
+  big.onclick=()=>box.classList.toggle('zoom');
+  document.body.append(box);
+}
+function closePhoto(){const v=document.getElementById('viewer');if(v)v.remove()}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePhoto()});
 function tab(name){
+  closePhoto();
   for(const t of ['home','papers','share','check'])$('tab-'+t).style.display=t===name?'':'none';
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===name));
   scrollTo(0,0);
@@ -308,7 +322,7 @@ function openCheck(p){
     el('p',{class:'sub'},'Look at the paper and at each line below. Nothing reaches a doctor until you add it to your record.'));
   const img=el('img',{class:'crop',alt:'The original photo, as taken',src:'/api/papers/'+p.id+'/original'});
   v.append(el('div',{class:'card'},img,el('div',{class:'mute'},'Tap the photo to see it larger.')));
-  img.onclick=()=>window.open('/api/papers/'+p.id+'/original','_blank','noopener');
+  img.onclick=()=>viewPhoto(p.id);
   const top=el('div',{class:'card'});v.append(top);
   const date=add(top,'Date on the paper',r.date,{date:true});
   const fac=add(top,'Clinic, hospital or lab',r.facility);const doc=add(top,'Doctor',r.clinician);
@@ -355,6 +369,7 @@ const STATUS={confirmed:'Checked and added to your record',waiting:'Original kep
 function paperCard(p){
   const card=el('div',{class:'card'});
   const img=el('img',{class:'crop',alt:'The original photo, as taken',loading:'lazy',src:'/api/papers/'+p.id+'/original'});
+  img.onclick=()=>viewPhoto(p.id);img.style.cursor='zoom-in';
   card.append(el('div',{},el('span',{class:'chip'},'Photo')),img,
     el('div',{class:'t',style:'margin-top:6px'},STATUS[p.status]||p.status));
   if(p.status==='ready'&&p.reading){
