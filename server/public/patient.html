@@ -102,7 +102,7 @@
   <div id="papers"></div>
 </section>
 <section id="tab-share" class="tab" style="display:none">
-<h1>Share with a doctor</h1>
+<h1>Share with a doctor <button class="qhelp" type="button" data-help="share" aria-label="Help">?</button></h1>
 <p class="sub">You choose what a doctor can see and for how long. You can stop a share at any time, and you see every time it is opened.</p>
 <div class="card" id="make">
   <h2>New share</h2>
@@ -130,7 +130,26 @@
       <p class="mute" style="margin:0 0 10px"><span id="who-am-i"></span></p>
       <button class="menurow" id="rowPk" type="button" style="display:none">Fingerprint or face <span>&#8250;</span></button>
       <button class="menurow" id="rowPin" type="button">Change PIN <span>&#8250;</span></button>
+      <button class="menurow" id="rowHelp" type="button">Help and questions <span>&#8250;</span></button>
+      <button class="menurow" id="rowDel" type="button">Delete my account <span>&#8250;</span></button>
       <button class="sec" id="logoutBtn" type="button" style="width:100%;margin-top:4px">Sign out</button>
+    </div>
+    <div id="vHelp" style="display:none">
+      <button class="orig" type="button" data-back style="margin-bottom:6px">&#8249; Back</button>
+      <div id="helpBody" class="faq"></div>
+    </div>
+    <div id="vDel" style="display:none">
+      <button class="orig" type="button" data-back style="margin-bottom:6px">&#8249; Back</button>
+      <div id="delCard">
+        <b>Delete my account</b>
+        <p class="mute" style="margin:4px 0 8px">Everything in this account is deleted: every person, paper, photo and share, and your sign-in. It is gone from the app at once, and from every copy within 30 days. This cannot be undone.</p>
+        <label class="mute" for="delWord" style="display:block">Type DELETE</label>
+        <input type="text" id="delWord" autocomplete="off" autocapitalize="characters" maxlength="10">
+        <label class="mute" for="delPin" style="display:block;margin-top:8px">Your PIN, to confirm</label>
+        <input type="password" id="delPin" inputmode="numeric" maxlength="6" autocomplete="current-password">
+        <button class="go danger" id="delGo" type="button">Delete my account</button>
+        <div class="mute" id="delErr" style="margin-top:6px;color:#a01212"></div>
+      </div>
     </div>
     <div id="vPk" style="display:none">
       <button class="orig" type="button" data-back style="margin-bottom:6px">&#8249; Back</button>
@@ -165,4 +184,4 @@
   <nav class="nav" id="nav"><button type="button" data-tab="home" class="on">Home</button><button type="button" data-tab="papers">My papers</button><button type="button" data-tab="share">Sharing</button></nav>
 </div>
 </div>
-<script src="/qrcode.js"></script><script src="/i18n.js"></script><script src="/medline.js"></script><script src="/patient.js"></script></body></html>
+<script src="/qrcode.js"></script><script src="/help.js"></script><script src="/i18n.js"></script><script src="/medline.js"></script><script src="/patient.js"></script></body></html>

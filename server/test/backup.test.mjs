@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createBackup, restoreBackup, backupName, googleDriveUploader, moveToDrive, moveArchivedPhotos, LIVE_NAME } from '../backup.mjs';
+import { createBackup, restoreBackup, backupName, googleDriveUploader, moveToDrive, moveArchivedPhotos, LIVE_NAME, snapshotTime } from '../backup.mjs';
 import { createHash } from 'node:crypto';
 import { generateKeyPairSync, createVerify } from 'node:crypto';
 import { createApp } from '../server.mjs';
@@ -100,6 +100,7 @@ function fakeDrive() {
       files[id].bytes = bytes;
       return { status: 200, json: async () => ({ id, md5Checksum: md5(bytes), size: String(bytes.length) }) };
     }
+    if (o.method === 'DELETE') { const id = decodeURIComponent(u.pathname.split('/').pop()); delete files[id]; return { status: 204 }; }
     if (o.method === 'POST' && u.pathname === '/drive/v3/files') { // folder
       const meta = JSON.parse(o.body), id = 'd' + (++n); files[id] = { ...meta, folder: true };
       return { status: 200, json: async () => ({ id }) };
@@ -205,4 +206,25 @@ test('test-paper photos move from originals to test-papers/photos, same ids; a p
   where.F2 = ['ORIG'];
   const sticky = { ...drive, async move(id) { return { id }; } };
   assert.equal((await moveArchivedPhotos({ dir, drive: sticky, rootFolderId: 'ROOT', folderName: 'test-papers', liveStore, logger: quiet })).failed, 1);
+});
+
+test('snapshots older than 30 days are removed here and in Drive; store-live.json and other folders never', async () => {
+  const f = fresh(); writeFileSync(f.store, JSON.stringify({ shares: [] }));
+  const D = fakeDrive();
+  const uploader = googleDriveUploader({ credentials: KEY, folderId: 'ROOT', fetchImpl: D.fetchImpl });
+  const put = (name, parent = 'ROOT') => { D.files['x' + name] = { name, parents: [parent], bytes: Buffer.from('{}') }; };
+  for (const n of ['store-2026-10-20.json', 'store-2026-10-26-0900.json', 'store-2026-10-28-0700.json', 'store-2026-11-20-0600.json', LIVE_NAME]) put(n);
+  put('store-2026-10-01.json', 'OTHER');                     // another folder: never touched
+  const { mkdirSync } = await import('node:fs'); mkdirSync(f.dir, { recursive: true });
+  writeFileSync(join(f.dir, 'store-2026-10-25.json'), '{"shares":[]}');
+  writeFileSync(join(f.dir, 'store-2026-11-01-0600.json'), '{"shares":[]}');
+  const t = Date.parse('2026-11-27T08:00:00Z');              // cutoff: 2026-10-28 08:00
+  const b = createBackup({ storePath: f.store, dir: f.dir, uploader, now: () => t, logger: quiet });
+  const r = await b.run();
+  assert.equal(r.prunedInDrive, 3);
+  const names = Object.values(D.files).filter(x => !x.folder).map(x => x.name).sort();
+  assert.deepEqual(names, ['store-2026-10-01.json', 'store-2026-11-20-0600.json', 'store-2026-11-27-0800.json', LIVE_NAME].sort());
+  assert.deepEqual(b.list(), ['store-2026-11-01-0600.json', 'store-2026-11-27-0800.json']);
+  assert.equal(snapshotTime('store-2026-11-26-0924.json'), Date.parse('2026-11-26T09:24:00Z'));
+  assert.equal(snapshotTime(LIVE_NAME), null);
 });

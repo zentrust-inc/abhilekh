@@ -81,6 +81,29 @@ export function createDrive({ credentials, fetchImpl = globalThis.fetch, now = (
     return r.json();
   }
 
+  // Remove a file: deleted at once when the service account may (Manager of the shared drive); otherwise moved to the
+  // shared drive's trash, which Google empties after 30 days. Returns 'deleted' or 'trashed'.
+  async function remove(id) {
+    const auth = { authorization: 'Bearer ' + await token() };
+    const d = await fetchImpl(API + '/' + encodeURIComponent(id) + '?supportsAllDrives=true', { method: 'DELETE', headers: auth });
+    if (d.status === 204 || d.status === 200 || d.status === 404) return 'deleted';
+    const t = await fetchImpl(API + '/' + encodeURIComponent(id) + '?supportsAllDrives=true&fields=id,trashed', { method: 'PATCH', headers: { ...auth, 'content-type': 'application/json' }, body: JSON.stringify({ trashed: true }) });
+    if (t.status !== 200) throw new Error('Google Drive delete answered ' + d.status + ', trash answered ' + t.status);
+    return 'trashed';
+  }
+
+  // Files in a folder whose name starts with prefix: [{ id, name }].
+  async function list(prefix, parent) {
+    const out = []; let page = '';
+    do {
+      const q = "name contains '" + prefix.replace(/'/g, "\\'") + "' and '" + parent + "' in parents and trashed = false";
+      const l = await fetchImpl(API + '?q=' + encodeURIComponent(q) + '&supportsAllDrives=true&includeItemsFromAllDrives=true&fields=nextPageToken,files(id,name)&pageSize=1000' + (page ? '&pageToken=' + encodeURIComponent(page) : ''), { headers: { authorization: 'Bearer ' + await token() } });
+      if (l.status !== 200) throw new Error('Google Drive list answered ' + l.status);
+      const j = await l.json(); out.push(...(j.files || []).filter(f => f.name.startsWith(prefix))); page = j.nextPageToken || '';
+    } while (page);
+    return out;
+  }
+
   async function download(id) {
     const r = await fetchImpl(API + '/' + encodeURIComponent(id) + '?alt=media&supportsAllDrives=true', { headers: { authorization: 'Bearer ' + await token() } });
     if (r.status !== 200) throw new Error('Google Drive download answered ' + r.status);
@@ -109,5 +132,5 @@ export function createDrive({ credentials, fetchImpl = globalThis.fetch, now = (
     return files[0] || null;
   }
 
-  return { token, upload, uploadChecked, update, parents, move, download, folder, latest };
+  return { token, upload, uploadChecked, update, parents, move, remove, list, download, folder, latest };
 }

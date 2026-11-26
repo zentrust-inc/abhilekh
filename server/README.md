@@ -102,13 +102,13 @@ form cannot send.
 ## Backups (backup.mjs)
 
 Decided 26 Nov 2026: the app works on its own disk on Azure (every tap reads and writes `store.json`, and Google Drive
-is not a disk), and **Google Drive holds every copy**. With 100 TB in the shared drive, nothing is deleted there.
+is not a disk), and **Google Drive holds every copy**.
 
 - **Live copy:** after any change, at most once a minute, the store is written to the shared drive as
   `store-live.json` (one file, replaced in place). If the Azure disk is lost, at most the last minute is lost.
 - **Snapshots:** at start-up and every 24 hours, `store-YYYY-MM-DD-HHMM.json` (UTC; older copies have no time) goes to
-  `DATA_DIR/backups` (newest 30 kept there) and, as a new file, to the shared drive (never deleted). A broken store is
-  never copied.
+  `DATA_DIR/backups` and, as a new file, to the shared drive. Snapshots older than 30 days are removed in both places,
+  so whatever a patient deletes is gone from every copy within 30 days. A broken store is never copied.
 - **Test papers:** anything left in `DATA_DIR/test-papers` is moved at start-up to the shared drive folder
   `test-papers`; the copy here is deleted only when Drive reports the same MD5 and size. Before that, the photos those
   files point to are moved inside the shared drive from `originals` to `test-papers/photos` (same file ids, so the
@@ -117,7 +117,7 @@ is not a disk), and **Google Drive holds every copy**. With 100 TB in the shared
 
 Settings (Azure app settings only, never the repository): `GOOGLE_BACKUP_SA_JSON` (the whole JSON key of a Google Cloud
 **service account**; the Drive API must be on in that project) and `GOOGLE_BACKUP_FOLDER_ID` (a folder **inside a shared
-drive**, with the service account as **Content manager**; a service account has no storage of its own). Without them,
+drive**, with the service account as **Content manager**, or **Manager** so that deleted photos and old snapshots are deleted at once instead of going to the trash; a service account has no storage of its own). Without them,
 only the local snapshots are made, and the start-up log says so.
 
 Restore: stop the app; copy `store-live.json` (from Drive) or a snapshot over `DATA_DIR/store.json` (or call
@@ -137,6 +137,22 @@ API (signed in, the person in view only): `GET /api/papers/:id/model`, `POST /ap
 The existing check screen (`/confirm`) is unchanged.
 
 **Deploying:** copy `schema/` next to `reader/` (the checklist reads `../schema/checklist.json` from the reader folder). Without it the app still runs and only these two endpoints answer 503.
+
+## Help and deleting (26 Nov 2026)
+
+**Help** (Menu › Help and questions): 13 questions and answers, photo tips and, when the Azure app setting
+`HELP_WHATSAPP` is set (digits with country code, e.g. `9779800000000`), a "Write to us on WhatsApp" button. The words
+live in `public/help.js` (Nepali in `i18n.js`); `test/help.test.mjs` checks every line has Nepali, that no answer gives
+advice, and that the answers match what the app does (15 minutes, 30 days, not kept in Nepal, 6 people, 24 hours).
+A "?" on the check screen and on Sharing opens the matching answer.
+
+**Deleting** (decided 26 Nov 2026): the patient deletes a paper (My papers › Delete this paper) or her whole account
+(Menu › Delete my account, typing DELETE), confirmed with her PIN or fingerprint/face. At once: gone from the app and
+from every share (a share left empty goes too); the photo is deleted in the shared drive, or put in its trash if the
+service account is not a Manager there (Google empties the trash after 30 days). Within a minute: gone from
+`store-live.json`. Within 30 days: gone from the dated snapshots, which are removed after 30 days. Deleting the account
+also removes its sign-in (phone or email, PIN hash, devices, passkeys, sessions, pending codes). API:
+`POST /api/papers/:id/delete`, `POST /api/docs/:id/delete` and `POST /api/account/delete` (`{ pin, confirm: 'DELETE' }`).
 
 ## What it does not do yet
 
