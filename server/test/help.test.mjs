@@ -29,7 +29,10 @@ test('the new screens have Nepali text', () => {
 
 test('no answer gives medical advice or interprets a result', () => {
   const advice = /\b(should take|you should|normal range|is normal|is high|is low|consult|recommend|safe to|dangerous|stop taking|dose)\b/i;
-  assert.deepEqual(lines.filter(l => advice.test(l)), []);
+  const answers = [...H.faq.flatMap(f => f.a), ...H.tips];       // a question may name the topic; an answer never interprets
+  assert.deepEqual(answers.filter(l => advice.test(l)), []);
+  const normal = H.faq.find(f => f.id === 'normal').a.join(' ');
+  assert.match(normal, /never says what a result means/);
 });
 
 test('the answers say what the app really does', () => {

@@ -444,7 +444,8 @@ function paint(){
     const card=el('div',{class:'card'});
     const body=el('div',{style:'display:none'},resultRows(d));
     card.append(el('div',{},d.origin==='sample'?el('span',{class:'chip'},'SAMPLE'):el('span',{class:'chip'},'Checked by you')),el('div',{class:'t',style:'margin-top:6px'},d.title),el('div',{class:'mute'},d.facility+' · '+d.date),
-      el('button',{class:'orig',type:'button',onclick:e=>{const o=body.style.display==='none';body.style.display=o?'':'none';e.target.textContent=o?'Hide what it says':'See what it says'}},'See what it says'),body,
+      el('button',{class:'orig',type:'button',onclick:e=>{const o=body.style.display==='none';body.style.display=o?'':'none';e.target.textContent=o?'Hide what it says':'See what it says'}},'See what it says'),
+      d.paper?el('span',{},' · ',el('button',{class:'orig',type:'button',onclick:()=>viewPhoto(d.paper)},'See the photo')):'',body,
       el('div',{},...deleteBox('/api/docs/'+d.id+'/delete',d.origin==='sample'?'Remove this SAMPLE page':'Delete this paper')));
     pl.append(card);
   }
