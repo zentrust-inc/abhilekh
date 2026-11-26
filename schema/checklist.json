@@ -1,0 +1,56 @@
+{
+  "version": "1.0",
+  "locked": "2026-11-26",
+  "about": "Required-field checklist per paper type (spec v1.0, C1). Paths are page.v2 paths (reader/copy.mjs); [] means every row, expanded 0-based to match checkCopy() state keys. 'each_row': every row needs a state (confirmed, corrected, not on the paper, can't read). 'if_present': needs a state only if the reader found it. 'system': set from the document, not from the copy. Every row group's count must be confirmed by the patient; min_rows 1 means a count of 0 must be confirmed explicitly.",
+  "type_groups": {
+    "prescription": ["prescription", "opd_note"],
+    "lab_report": ["lab_report"],
+    "discharge": ["discharge_summary"],
+    "imaging": ["imaging_report"],
+    "other": ["notebook_page", "booklet_cover", "referral", "bill", "other"]
+  },
+  "rules": {
+    "all": [
+      { "path": "person.match", "requirement": "system", "label": "Whose paper is this" },
+      { "path": "page.document_type", "requirement": "system", "label": "Type of paper" },
+      { "path": "patient_as_written.name", "requirement": "if_present", "label": "Patient name on the paper" },
+      { "path": "issuer.name", "requirement": "if_present", "label": "Hospital, clinic or lab" },
+      { "path": "dates[].as_written", "requirement": "each_row", "label": "Date as written", "min_rows": 1 },
+      { "path": "clinicians[].name", "requirement": "each_row", "label": "Doctor's name" },
+      { "path": "clinicians[].registration_as_printed", "requirement": "if_present", "label": "Doctor's registration number" }
+    ],
+    "prescription": [
+      { "path": "encounters[].date_as_written", "requirement": "if_present", "label": "Visit date", "min_rows": 1 },
+      { "path": "encounters[].medicines[].name_as_written", "requirement": "each_row", "label": "Medicine" },
+      { "path": "encounters[].medicines[].dose_as_written", "requirement": "each_row", "label": "Dose" },
+      { "path": "encounters[].medicines[].frequency_as_written", "requirement": "each_row", "label": "How often" },
+      { "path": "encounters[].medicines[].duration_as_written", "requirement": "each_row", "label": "For how long" },
+      { "path": "encounters[].diagnosis_or_impression_as_written[]", "requirement": "each_row", "label": "Diagnosis as written" },
+      { "path": "encounters[].follow_up_as_written", "requirement": "if_present", "label": "Follow-up" },
+      { "path": "encounters[].investigations_advised_as_written[]", "requirement": "each_row", "label": "Tests asked for" }
+    ],
+    "lab_report": [
+      { "path": "lab.sections[].rows[].test_as_printed", "requirement": "each_row", "label": "Test", "min_rows": 1 },
+      { "path": "lab.sections[].rows[].result_as_printed", "requirement": "each_row", "label": "Value" },
+      { "path": "lab.sections[].rows[].unit_as_printed", "requirement": "each_row", "label": "Unit" },
+      { "path": "lab.sections[].rows[].reference_range_as_printed", "requirement": "each_row", "label": "Printed range" },
+      { "path": "lab.sections[].rows[].status_or_flag_as_printed", "requirement": "each_row", "label": "Printed flag" }
+    ],
+    "discharge": [
+      { "path": "encounters[].diagnosis_or_impression_as_written[]", "requirement": "each_row", "label": "Diagnosis", "min_rows": 1 },
+      { "path": "encounters[].medicines[].name_as_written", "requirement": "each_row", "label": "Medicine" },
+      { "path": "encounters[].follow_up_as_written", "requirement": "if_present", "label": "Follow-up" }
+    ],
+    "imaging": [
+      { "path": "imaging.impression_as_written[]", "requirement": "each_row", "label": "Impression, copied whole", "min_rows": 1 },
+      { "path": "imaging.measurements[].value_as_written", "requirement": "if_present", "label": "Measurement" }
+    ],
+    "other": [
+      { "path": "other_text[]", "requirement": "each_row", "label": "Text on the paper" }
+    ]
+  },
+  "gaps": [
+    "Discharge 'procedure' has no page.v2 field yet; procedures land in advice_as_written or other_text until reader prompt v3.",
+    "Lab sample and report dates are rows of dates[] with their printed label ('Collected', 'Reported'); their role is assigned in the derived layer."
+  ]
+}
