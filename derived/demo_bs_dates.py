@@ -21,8 +21,8 @@ R = B.DateRole
 # Disputed years only; full reproducible comparison is in verify_calendar.py.
 HOLIDAY_CHECKS = {2075: dt.date(2018, 4, 14), 2079: dt.date(2022, 4, 14), 2084: dt.date(2027, 4, 14)}
 REJECTED = ("khatain.com BS-to-AD chart: disagrees with two independent implementations "
-            "on the same 26 years and is internally inconsistent (364/366/367-day years "
-            "in 28 of 90 spans).")
+            "on the same 26 years and is internally inconsistent (14 of 90 Baisakh-1 "
+            "spans are 364 or 367 days, impossible for any year).")
 
 def rule(title):
     print(f"\n{'=' * 78}\n{title}\n{'=' * 78}")

@@ -25,8 +25,8 @@ DAY PRECISION
     * The pinned table and npm `nepali-date` 0.1.4 agree on 89 of 91 years
       (the 2 differences are at that package's coverage edge).
     * Both disagree with the khatain.com chart on the same 26 years by +/-1
-      day. The chart is internally inconsistent (364/366/367-day years in 28
-      of 90 spans), so it is REJECTED as a reference.
+      day. The chart is internally inconsistent (14 of 90 Baisakh-1 spans
+      are 364 or 367 days, impossible for any year), so it is REJECTED as a reference.
     * Baisakh 1 is a public holiday; its reported AD date matches the pinned
       table on the disputed years (e.g. BS 2075 = 14 Apr 2018,
       BS 2079 = 14 Apr 2022, BS 2084 = 14 Apr 2027).
