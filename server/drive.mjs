@@ -64,6 +64,23 @@ export function createDrive({ credentials, fetchImpl = globalThis.fetch, now = (
     return r.json();
   }
 
+  // The folders a file is in.
+  async function parents(id) {
+    const r = await fetchImpl(API + '/' + encodeURIComponent(id) + '?supportsAllDrives=true&fields=parents', { headers: { authorization: 'Bearer ' + await token() } });
+    if (r.status !== 200) throw new Error('Google Drive file answered ' + r.status);
+    return (await r.json()).parents || [];
+  }
+
+  // Move a file to another folder of the same shared drive. The file keeps its id and its bytes.
+  async function move(id, toFolder) {
+    const from = await parents(id);
+    if (from.includes(toFolder) && from.length === 1) return { id, parents: from, already: true };
+    const q = '?supportsAllDrives=true&fields=id,parents&addParents=' + encodeURIComponent(toFolder) + '&removeParents=' + encodeURIComponent(from.filter(x => x !== toFolder).join(','));
+    const r = await fetchImpl(API + '/' + encodeURIComponent(id) + q, { method: 'PATCH', headers: { authorization: 'Bearer ' + await token(), 'content-type': 'application/json' }, body: '{}' });
+    if (r.status !== 200) throw new Error('Google Drive move answered ' + r.status);
+    return r.json();
+  }
+
   async function download(id) {
     const r = await fetchImpl(API + '/' + encodeURIComponent(id) + '?alt=media&supportsAllDrives=true', { headers: { authorization: 'Bearer ' + await token() } });
     if (r.status !== 200) throw new Error('Google Drive download answered ' + r.status);
@@ -92,5 +109,5 @@ export function createDrive({ credentials, fetchImpl = globalThis.fetch, now = (
     return files[0] || null;
   }
 
-  return { token, upload, uploadChecked, update, download, folder, latest };
+  return { token, upload, uploadChecked, update, parents, move, download, folder, latest };
 }

@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url';
 import { createAuth } from './auth.mjs';
 import { akashSender, memorySender, noSender } from './sms.mjs';
 import { acsMailSender, memoryMail, noMail } from './mail.mjs';
-import { createBackup, googleDriveUploader, moveToDrive } from './backup.mjs';
+import { createBackup, googleDriveUploader, moveToDrive, moveArchivedPhotos } from './backup.mjs';
 import { createDrive } from './drive.mjs';
 import { localOriginals, driveOriginals, EXT } from './originals.mjs';
 import { createReading, cropsOf } from './reading.mjs';
@@ -360,9 +360,17 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   backup = createBackup({ storePath: join(dataDir, 'store.json'), dir: join(dataDir, 'backups'), uploader });
   backup.start();
   // Archives left on this disk (test papers) belong only in the shared drive: move them, deleting here only when Drive confirms.
-  if (uploader) moveToDrive({ dir: join(dataDir, 'test-papers'), uploader, folderName: 'test-papers' })
-    .then(r => { if (r.moved || r.kept) console.log('Test papers to Google Drive: ' + r.moved + ' moved, ' + r.kept + ' kept here'); })
-    .catch(e => console.error('Test papers not moved: ' + e.message));
+  // Their photos go first (within the shared drive, originals -> test-papers/photos), while the archive is still here to say which.
+  if (uploader) (async () => {
+    try {
+      const drive = createDrive({ credentials: JSON.parse(process.env.GOOGLE_BACKUP_SA_JSON) });
+      const p = await moveArchivedPhotos({ dir: join(dataDir, 'test-papers'), drive, rootFolderId: process.env.GOOGLE_BACKUP_FOLDER_ID, folderName: 'test-papers', liveStore: app.store() });
+      if (p.moved || p.skipped || p.failed) console.log('Test-paper photos to test-papers/photos: ' + p.moved + ' moved, ' + p.skipped + ' still used by an account, ' + p.failed + ' failed');
+      if (p.failed) return console.error('Test papers kept here until every photo is moved.');
+      const r = await moveToDrive({ dir: join(dataDir, 'test-papers'), uploader, folderName: 'test-papers' });
+      if (r.moved || r.kept) console.log('Test papers to Google Drive: ' + r.moved + ' moved, ' + r.kept + ' kept here');
+    } catch (e) { console.error('Test papers not moved: ' + e.message); }
+  })();
   const port = Number(process.env.PORT || 8080);
   http.createServer(app.handler).listen(port, () => console.log('Abhilekh server on port ' + port));
   if (app.reading) app.reading.resume(); // read what is waiting, including photos added before reading was switched on

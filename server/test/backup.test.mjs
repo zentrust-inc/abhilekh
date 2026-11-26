@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createBackup, restoreBackup, backupName, googleDriveUploader, moveToDrive, LIVE_NAME } from '../backup.mjs';
+import { createBackup, restoreBackup, backupName, googleDriveUploader, moveToDrive, moveArchivedPhotos, LIVE_NAME } from '../backup.mjs';
 import { createHash } from 'node:crypto';
 import { generateKeyPairSync, createVerify } from 'node:crypto';
 import { createApp } from '../server.mjs';
@@ -181,4 +181,28 @@ test('every save of the app tells the backup the store changed', async () => {
     assert.equal(r.status, 200);
     assert.ok(n >= 1, 'saving the sign-in code must mark the store changed');
   } finally { srv.closeAllConnections(); srv.close(); }
+});
+
+test('test-paper photos move from originals to test-papers/photos, same ids; a photo a live account uses stays', async () => {
+  const f = fresh(); const dir = join(f.d, 'test-papers');
+  const { mkdirSync } = await import('node:fs'); mkdirSync(dir);
+  const paper = ref => ({ id: 'p' + ref, sha256: ref, ref: 'drive:' + ref });
+  writeFileSync(join(dir, 'test-papers-2026-11-26.json'), JSON.stringify({ records: { a: { people: [{ papers: [paper('F1'), paper('F2'), paper('F3')] }] } }, shares: [] }));
+  writeFileSync(join(dir, 'store-before-emptying-2026-11-26.json'), JSON.stringify({ shares: [], records: { a: { people: [{ papers: [paper('F1')] }] } } }));
+  const where = { F1: ['ORIG'], F2: ['ORIG'], F3: ['ORIG'] }, folders = {};
+  const drive = {
+    async folder(name, parent) { return (folders[parent + '/' + name] ||= 'D' + Object.keys(folders).length); },
+    async parents(id) { return where[id]; },
+    async move(id, to) { where[id] = [to]; return { id, parents: where[id] }; },
+  };
+  const liveStore = { shares: [], records: { b: { people: [{ papers: [paper('F3')] }] } } }; // F3 is used by a live account
+  const r = await moveArchivedPhotos({ dir, drive, rootFolderId: 'ROOT', folderName: 'test-papers', liveStore, logger: quiet });
+  assert.deepEqual(r, { moved: 2, skipped: 1, failed: 0 });
+  const target = folders['D0/photos'];
+  assert.deepEqual([where.F1, where.F2, where.F3], [[target], [target], ['ORIG']]);
+  assert.equal(folders['ROOT/test-papers'], 'D0');
+  // a move Drive does not confirm is counted as failed
+  where.F2 = ['ORIG'];
+  const sticky = { ...drive, async move(id) { return { id }; } };
+  assert.equal((await moveArchivedPhotos({ dir, drive: sticky, rootFolderId: 'ROOT', folderName: 'test-papers', liveStore, logger: quiet })).failed, 1);
 });

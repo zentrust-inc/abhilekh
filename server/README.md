@@ -110,8 +110,10 @@ is not a disk), and **Google Drive holds every copy**. With 100 TB in the shared
   `DATA_DIR/backups` (newest 30 kept there) and, as a new file, to the shared drive (never deleted). A broken store is
   never copied.
 - **Test papers:** anything left in `DATA_DIR/test-papers` is moved at start-up to the shared drive folder
-  `test-papers`; the copy here is deleted only when Drive reports the same MD5 and size. Test papers live only in the
-  shared drive (CLAUDE.md).
+  `test-papers`; the copy here is deleted only when Drive reports the same MD5 and size. Before that, the photos those
+  files point to are moved inside the shared drive from `originals` to `test-papers/photos` (same file ids, so the
+  archive's links still work), unless a live account uses them; if any move fails, the files stay here. Test papers
+  live only in the shared drive (CLAUDE.md), and `originals` holds only photos that live accounts use.
 
 Settings (Azure app settings only, never the repository): `GOOGLE_BACKUP_SA_JSON` (the whole JSON key of a Google Cloud
 **service account**; the Drive API must be on in that project) and `GOOGLE_BACKUP_FOLDER_ID` (a folder **inside a shared

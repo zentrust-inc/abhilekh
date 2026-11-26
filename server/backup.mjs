@@ -7,7 +7,8 @@
 //   2. Snapshots: once a day (and at start-up) a dated copy store-YYYY-MM-DD-HHMM.json (UTC) goes to DATA_DIR/backups
 //      (newest KEEP copies kept there) and, as a NEW file, to Drive, where nothing is ever deleted (100 TB).
 //   3. Archives: files left in DATA_DIR/test-papers are moved to the shared drive folder "test-papers"; the Azure copy
-//      is deleted only after Drive reports the same MD5 and size.
+//      is deleted only after Drive reports the same MD5 and size. First, the photos those files point to are moved
+//      within the shared drive from "originals" to "test-papers/photos" (same file ids), unless a live account uses them.
 // Settings (Azure app settings only, never the repository): GOOGLE_BACKUP_SA_JSON (a Google service account key) and
 // GOOGLE_BACKUP_FOLDER_ID (the shared drive, or a folder in it, where that service account is a Content manager).
 // Without them only the local snapshots are made, and the start-up log says so.
@@ -109,6 +110,33 @@ export async function moveToDrive({ dir, uploader, folderName, logger = console 
     } catch (e) { kept++; logger.error('Not moved to Drive: ' + f + ': ' + e.message); }
   }
   return { moved, kept };
+}
+
+// The photos of archived test papers: moved in the shared drive from "originals" to "<folderName>/photos", so that
+// originals holds only photos a live account uses. A Drive move keeps the file id, so the archive's links ("drive:<id>")
+// still open the same photo. A photo any live account still points to is never moved. Each move is checked afterwards.
+export async function moveArchivedPhotos({ dir, drive, rootFolderId, folderName, liveStore, logger = console }) {
+  if (!drive || !existsSync(dir)) return { moved: 0, skipped: 0, failed: 0 };
+  const refsIn = s => Object.values(s?.records || {}).flatMap(r => (r.people || []).flatMap(p => (p.papers || []).map(x => x.ref)))
+    .filter(r => typeof r === 'string' && r.startsWith('drive:')).map(r => r.slice(6));
+  const live = new Set(refsIn(liveStore));
+  const ids = new Set();
+  for (const f of readdirSync(dir)) {
+    if (!f.endsWith('.json')) continue;
+    try { refsIn(JSON.parse(readFileSync(join(dir, f), 'utf8'))).forEach(id => ids.add(id)); } catch { /* not a store-shaped file */ }
+  }
+  if (!ids.size) return { moved: 0, skipped: 0, failed: 0 };
+  const target = await drive.folder('photos', await drive.folder(folderName, rootFolderId));
+  let moved = 0, skipped = 0, failed = 0;
+  for (const id of ids) {
+    if (live.has(id)) { skipped++; continue; }
+    try {
+      await drive.move(id, target);
+      const now = await drive.parents(id);
+      if (now.length === 1 && now[0] === target) moved++; else { failed++; logger.error('Photo move not confirmed: one file'); }
+    } catch (e) { failed++; logger.error('Photo not moved: ' + e.message); }
+  }
+  return { moved, skipped, failed };
 }
 
 // Copy a backup over the live store, only if it is a readable store. The app must be stopped first.
