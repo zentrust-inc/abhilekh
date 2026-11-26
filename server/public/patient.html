@@ -134,6 +134,7 @@
 <div id="shares"></div>
 <p class="mute">The doctor sees only what the paper says: value, unit, printed range and any flag the lab printed. Abhilekh gives no advice.</p>
 </section>
+<div id="printDoc" style="display:none"></div>
 <div id="ov" style="display:none" role="dialog" aria-modal="true" aria-label="Menu">
   <div class="sheet">
     <div class="sheethead"><b id="sheetTitle">Menu</b><button class="orig" id="sheetClose" type="button">Close</button></div>
@@ -142,6 +143,7 @@
       <p class="mute" style="margin:0 0 10px"><span id="who-am-i"></span></p>
       <button class="menurow" id="rowPk" type="button" style="display:none">Fingerprint or face <span>&#8250;</span></button>
       <button class="menurow" id="rowPin" type="button">Change PIN <span>&#8250;</span></button>
+      <button class="menurow" id="rowDl" type="button">Download my record <span>&#8250;</span></button>
       <button class="menurow" id="rowHelp" type="button">Help and questions <span>&#8250;</span></button>
       <button class="menurow" id="rowDel" type="button">Delete my account <span>&#8250;</span></button>
       <button class="sec" id="logoutBtn" type="button" style="width:100%;margin-top:4px">Sign out</button>
@@ -149,6 +151,17 @@
     <div id="vHelp" style="display:none">
       <button class="orig" type="button" data-back style="margin-bottom:6px">&#8249; Back</button>
       <div id="helpBody" class="faq"></div>
+    </div>
+    <div id="vDl" style="display:none">
+      <button class="orig" type="button" data-back style="margin-bottom:6px">&#8249; Back</button>
+      <div>
+        <b>Download my record</b>
+        <p class="mute" style="margin:4px 0 8px">A copy of everything in this record, word for word, with every photo. Every page says it is a copy you made. Save it as a PDF, print it, or keep the data file.</p>
+        <label class="mute" for="dlPin" style="display:block">Your PIN, to confirm</label>
+        <input type="password" id="dlPin" inputmode="numeric" maxlength="6" autocomplete="current-password">
+        <button class="go" id="dlGo" type="button">Make my copy</button>
+        <div class="mute" id="dlErr" style="margin-top:6px;color:#a01212"></div>
+      </div>
     </div>
     <div id="vDel" style="display:none">
       <button class="orig" type="button" data-back style="margin-bottom:6px">&#8249; Back</button>

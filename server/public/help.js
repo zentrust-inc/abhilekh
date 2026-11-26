@@ -71,7 +71,9 @@ window.HELP = {
     { id: "keeppaper", q: "Do I still need to keep the paper?", a: [
       "Keep it if you can. Abhilekh keeps the photo exactly as taken and you can show it at any time, but a hospital or office may still ask for the original paper."] },
     { id: "export", q: "Can I save or print my own record?", a: [
-      "Not yet. You can open every paper and its photo in the app at any time."] },
+      "Yes. Open the menu (top right) and choose Download my record. After your PIN, Abhilekh makes a copy of everything in the record, word for word, with every photo.",
+      "Tap Save as PDF or print, then choose Save as PDF to keep it on your phone. Download the data file keeps the same record as a file other apps can read.",
+      "Every page says it is a copy made by you, not by a hospital or lab."] },
     { id: 'family', q: 'Can I keep papers for my family?', a: [
       'Yes. One account can hold up to 6 people, each with their own papers and shares.',
       'Opening another person’s papers asks for your PIN or fingerprint.'] },
