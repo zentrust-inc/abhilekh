@@ -148,7 +148,7 @@ function tab(name){
 }
 document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
 $('tileShow').onclick=()=>tab('share');
-const VIEWS={list:['vList','Menu'],pk:['vPk','Fingerprint or face'],pin:['vPin','Change PIN'],help:['vHelp','Help'],del:['vDel','Delete my account']};
+const VIEWS={list:['vList','Menu'],pk:['vPk','Fingerprint or face'],pin:['vPin','Change PIN'],help:['vHelp','Help'],dl:['vDl','Download my record'],del:['vDel','Delete my account']};
 function openMenu(v){$('ov').style.display='';for(const k in VIEWS)$(VIEWS[k][0]).style.display=k===v?'':'none';$('sheetTitle').textContent=VIEWS[v][1];$('acctBtn').setAttribute('aria-expanded',true);pkErr();$('pinMsg').textContent='';if(v==='pk'&&$('pkAdd').style.display!=='none')$('pkPin').focus()}
 function closeMenu(){$('ov').style.display='none';$('acctBtn').setAttribute('aria-expanded',false)}
 $('acctBtn').onclick=()=>openMenu('list');
@@ -171,6 +171,48 @@ function openHelp(id){
   if(d){if(d.tagName==='DETAILS')d.open=true;setTimeout(()=>d.scrollIntoView({block:'start'}),0)}
 }
 $('rowHelp').onclick=()=>openHelp();$('rowDel').onclick=()=>{$('delErr').textContent='';$('delWord').value=$('delPin').value='';openMenu('del')};
+$('rowDl').onclick=()=>{$('dlErr').textContent='';openMenu('dl')};
+// ---- Download my record (26 Nov 2026): the patient's own copy, word for word, with every photo. The phone's
+// "Save as PDF" makes the PDF (Nepali script prints correctly). The stamp is on every page and stays in English.
+$('dlGo').onclick=async()=>{
+  const err=$('dlErr');err.textContent='';$('dlGo').disabled=true;
+  try{const x=await post('/api/record/export');closeMenu();printView(x)}
+  catch(e){err.textContent=e.message}
+  finally{$('dlGo').disabled=false}
+};
+function printView(x){
+  const d=$('printDoc');d.replaceChildren();if(d.parentNode!==document.body)document.body.append(d); // outside the app, so only the copy shows
+  const stamp=t=>el('div',{class:'stamp'},t);
+  const save=()=>{const a=el('a',{href:URL.createObjectURL(new Blob([JSON.stringify(x,null,2)],{type:'application/json'})),download:'abhilekh-record-'+x.made_at.slice(0,10)+'.json'});document.body.append(a);a.click();a.remove()};
+  d.append(el('div',{class:'ptools'},el('button',{class:'go',type:'button',onclick:()=>print()},'Save as PDF or print'),
+    el('button',{class:'sec',type:'button',onclick:save},'Download the data file'),
+    el('button',{class:'orig',type:'button',onclick:()=>{d.style.display='none';document.body.classList.remove('printing');d.replaceChildren()}},'Close')),
+    el('p',{class:'mute ptools'},'To make a PDF: tap “Save as PDF or print”, then choose “Save as PDF”.'),
+    stamp(x.stamp));
+  const val=v=>v===null||v===''?'Not written on the paper':v;
+  d.append(el('h1',{},'Health record'),el('p',{class:'pname'},x.person.name||''),
+    el('p',{class:'mute'},'This copy shows what each paper says. It gives no advice. The photo of each paper is the record.'));
+  d.append(el('h2',{},'Allergies'),el('p',{class:'mute'},'Told by the patient · not from a paper'));
+  if(!x.allergies_told.length)d.append(el('p',{class:'mute'},'None added.'));
+  for(const a of x.allergies_told)d.append(el('div',{class:'res'},el('div',{class:'t'},a.substance),a.reaction?el('div',{},a.reaction):''));
+  const checked=x.papers.filter(p=>p.kind!=='not_checked'),rest=x.papers.filter(p=>p.kind==='not_checked');
+  d.append(el('h2',{},'Checked papers'));
+  if(!checked.length)d.append(el('p',{class:'mute'},'None yet.'));
+  for(const p of checked){
+    const s=el('section',{class:'ppaper'},el('h3',{},p.title||'Paper',p.kind==='sample'?el('span',{class:'pill dead',style:'margin-left:6px'},'SAMPLE · नमूना'):''),
+      el('div',{class:'mute'},[p.facility,p.clinician].filter(Boolean).join(' · ')),
+      el('div',{class:'mute'},'Date on the paper: '+(p.date_as_written||'Not written on the paper')));
+    if(p.results.length){const tb=el('table',{class:'ptable'},el('tr',{},...['Test','Value','Unit','Printed range','Printed flag'].map(h=>el('th',{},h))));
+      for(const r of p.results)tb.append(el('tr',{},...[r.test,r.value,r.unit,r.range,r.flag].map(v=>el('td',{},v??''))));s.append(tb)}
+    if(p.medicines.length){const tb=el('table',{class:'ptable'},el('tr',{},...['Medicine, as written','Dose','Duration'].map(h=>el('th',{},h))));
+      for(const m of p.medicines)tb.append(el('tr',{},...[m.as_written,m.dose,m.duration].map(v=>el('td',{},v??''))));s.append(tb)}
+    if(p.photo)s.append(el('img',{class:'pphoto',alt:'The original photo, as taken',src:'/api/papers/'+p.photo.paper+'/original'}));
+    d.append(s);
+  }
+  if(rest.length){d.append(el('h2',{},'Papers not checked yet'),el('p',{class:'mute'},'Only the photo. Nothing has been read from these papers.'));
+    for(const p of rest)d.append(el('section',{class:'ppaper'},el('div',{class:'mute'},'Added on '+fmt(p.added)),el('img',{class:'pphoto',alt:'The original photo, as taken',src:'/api/papers/'+p.photo.paper+'/original'})))}
+  document.body.classList.add('printing');d.style.display='';scrollTo(0,0);
+}
 document.querySelectorAll('[data-help]').forEach(b=>b.onclick=()=>openHelp(b.dataset.help));
 $('delGo').onclick=async()=>{
   const err=$('delErr');err.textContent='';

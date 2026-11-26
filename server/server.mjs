@@ -186,6 +186,29 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
         res.writeHead(200, { 'content-type': p.mime, 'content-length': buf.length, 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff', 'content-disposition': 'inline', 'referrer-policy': 'no-referrer' });
         return res.end(buf);
       }
+      // --- Download my record (decided 26 Nov 2026; no PIN, owner's decision): the patient's own copy of the person in
+      // view (opening another person's papers already asks for the PIN). Exactly
+      // what the record holds, word for word: checked papers (and SAMPLE pages, labelled), papers not checked yet (photo
+      // only), and allergies told by the patient (labelled). Nothing derived is added (no register details, no crops).
+      // The phone turns it into a PDF ("Save as PDF") so Nepali script prints correctly; every page carries the stamp.
+      if (req.method === 'POST' && path === '/api/record/export') {
+        const r = mine(), made = new Date(now()).toISOString();
+        const photo = id => { const p = r.papers.find(x => x.id === id); return p ? { paper: p.id, sha256: p.sha256, mime: p.mime } : null; };
+        const checked = r.docs.map(d => ({
+          kind: d.origin === 'photo' ? 'checked' : 'sample', title: d.title || null, facility: d.facility || null, clinician: d.clinician || null,
+          date_as_written: d.date_as_written || null, confirmed_at: d.confirmedAt || null,
+          results: (d.results || []).map(x => ({ test: x.test ?? null, value: x.value ?? null, unit: x.unit ?? null, range: x.range ?? null, flag: x.flag ?? null })),
+          medicines: (d.medicines || []).map(m => ({ as_written: m.as_written ?? null, dose: m.dose ?? null, duration: m.duration ?? null })),
+          photo: d.paperId ? photo(d.paperId) : null }));
+        const unchecked = r.papers.filter(p => p.status !== 'confirmed').map(p => ({ kind: 'not_checked', status: p.status, added: p.added, photo: { paper: p.id, sha256: p.sha256, mime: p.mime } }));
+        return send(res, 200, {
+          format: 'abhilekh.export.v1', made_at: made,
+          stamp: 'Copy made by the patient on ' + made.slice(0, 10) + ' · from Abhilekh · Not institution-verified',
+          person: { name: r.name || null },
+          allergies_told: ((r.stated && r.stated.allergies) || []).map(({ substance, reaction, added }) => ({ substance, reaction, added, source: 'Told by the patient · not from a paper' })),
+          papers: [...checked, ...unchecked] });
+      }
+
       // --- Told by the patient (decided 26 Nov 2026): allergies only. Kept apart from what papers say, shown everywhere as
       // "Told by the patient · not from a paper". Stored as typed; Abhilekh adds nothing (no severity, no drug matching, no
       // warning). Adding needs no PIN, like adding a paper; removing needs the PIN, like deleting a paper.

@@ -421,13 +421,33 @@ const NE={
 "The photo could not be kept just now. Nothing was added. Try again in a minute.":"अहिले फोटो राख्न सकिएन। केही थपिएन। एक मिनेटपछि फेरि प्रयास गर्नुहोस्।",
 "No such paper.":"यस्तो कागज भेटिएन।",
 "The original could not be fetched just now.":"अहिले मूल फोटो ल्याउन सकिएन।",
-"This original does not match what was kept.":"यो मूल फोटो राखिएकोसँग मिलेन।"
+"This original does not match what was kept.":"यो मूल फोटो राखिएकोसँग मिलेन।",
+"Download my record":"मेरो अभिलेख डाउनलोड गर्नुहोस्",
+"A copy of everything in this record, word for word, with every photo. Every page says it is a copy you made. Save it as a PDF, print it, or keep the data file.":"यस अभिलेखमा भएका सबै कुराको शब्दशः प्रतिलिपि, हरेक फोटोसहित। हरेक पानामा यो तपाईंले बनाएको प्रतिलिपि हो भनेर लेखिन्छ। PDF मा सेभ गर्नुहोस्, प्रिन्ट गर्नुहोस्, वा डाटा फाइल राख्नुहोस्।",
+"Make my copy":"मेरो प्रतिलिपि बनाउनुहोस्",
+"Save as PDF or print":"PDF मा सेभ वा प्रिन्ट गर्नुहोस्",
+"Download the data file":"डाटा फाइल डाउनलोड गर्नुहोस्",
+"To make a PDF: tap “Save as PDF or print”, then choose “Save as PDF”.":"PDF बनाउन: “PDF मा सेभ वा प्रिन्ट गर्नुहोस्” थिच्नुहोस्, त्यसपछि “Save as PDF” छान्नुहोस्।",
+"Health record":"स्वास्थ्य अभिलेख",
+"This copy shows what each paper says. It gives no advice. The photo of each paper is the record.":"यो प्रतिलिपिले हरेक कागजमा के लेखिएको छ त्यही देखाउँछ। यसले कुनै सल्लाह दिँदैन। हरेक कागजको फोटो नै अभिलेख हो।",
+"Allergies":"एलर्जी",
+"Checked papers":"जाँचिएका कागजात",
+"None yet.":"अहिलेसम्म केही छैन।",
+"Paper":"कागज",
+"Printed flag":"छापिएको चिनो",
+"Papers not checked yet":"अझै नजाँचिएका कागजात",
+"Only the photo. Nothing has been read from these papers.":"फोटो मात्र। यी कागजबाट केही पढिएको छैन।",
+"Yes. Open the menu (top right), choose Download my record, then Make my copy. Abhilekh makes a copy of everything in the record, word for word, with every photo.":"सक्नुहुन्छ। मेनु (माथि दायाँ) खोलेर “मेरो अभिलेख डाउनलोड गर्नुहोस्”, त्यसपछि “मेरो प्रतिलिपि बनाउनुहोस्” छान्नुहोस्। अभिलेखले सबै कुराको शब्दशः प्रतिलिपि, हरेक फोटोसहित बनाउँछ।",
+"Tap Save as PDF or print, then choose Save as PDF to keep it on your phone. Download the data file keeps the same record as a file other apps can read.":"फोनमा राख्न “PDF मा सेभ वा प्रिन्ट गर्नुहोस्” थिचेर “Save as PDF” छान्नुहोस्। “डाटा फाइल डाउनलोड गर्नुहोस्” ले उही अभिलेखलाई अरू एपले पढ्न सक्ने फाइलको रूपमा राख्छ।",
+"Every page says it is a copy made by you, not by a hospital or lab.":"हरेक पानामा यो अस्पताल वा ल्याबले होइन, तपाईंले बनाएको प्रतिलिपि हो भनेर लेखिन्छ।"
 };
 const ASK={"get a code by SMS":"SMS बाट कोड लिनुहोस्","get a code by email":"इमेलबाट कोड लिनुहोस्","sign in with Google again":"फेरि Google बाट साइन इन गर्नुहोस्"};
 const KIND=(k)=>k==='number'?'नम्बर':'ठेगाना';
 const PAT=[
 [/^Told by you on (.+)$/,m=>'तपाईंले बताएको: '+m[1]],
 [/^Papers of (.+)$/,m=>m[1]+' का कागजातहरू'],
+[/^Added on (.+)$/,m=>m[1]+' मा थपिएको'],
+[/^Date on the paper: (.+)$/,m=>'कागजमा मिति: '+(m[1]==='Not written on the paper'?'कागजमा लेखिएको छैन':m[1])],
 [/^Added (.+)$/,m=>m[1]+' मा थपिएको'],
 [/^(\d+) agreed by both readers · (\d+) for you to check · (\d+) unresolved$/,m=>'दुवै पाठक सहमत: '+m[1]+' · तपाईंले जाँच्नुपर्ने: '+m[2]+' · अनिर्णीत: '+m[3]],
 [/^(\d+) ready to check$/,m=>m[1]+' जाँच गर्न तयार'],
