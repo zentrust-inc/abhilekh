@@ -154,6 +154,15 @@ service account is not a Manager there (Google empties the trash after 30 days).
 also removes its sign-in (phone or email, PIN hash, devices, passkeys, sessions, pending codes). API:
 `POST /api/papers/:id/delete`, `POST /api/docs/:id/delete` and `POST /api/account/delete` (`{ pin, confirm: 'DELETE' }`).
 
+## Allergies told by the patient (26 Nov 2026)
+
+For an allergy no paper mentions (My papers › Allergies you told Abhilekh). Kept per person, apart from what papers say;
+stored exactly as typed (what, and optionally what happened), with the date it was entered. Abhilekh adds nothing: no
+severity, no matching against drug lists, no warning. Adding needs no PIN (like adding a paper); removing needs the PIN.
+A share includes them only if the patient ticks "Allergies you told Abhilekh" (ticked by default when there are any);
+the doctor then sees them in their own box, "Told by the patient · not from a paper". A share may hold only these.
+API: `POST /api/stated/allergies` `{ substance, reaction? }`, `POST /api/stated/allergies/:id/delete` `{ pin }`.
+
 ## What it does not do yet
 
 - **Photos are kept, not read.** Reading them with the two readers is M2; confirming them in the app is M3.

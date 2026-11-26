@@ -13,7 +13,7 @@ function render(){
     const live=s.state==='live',url=location.origin+'/s/'+s.id;
     const card=el('div',{class:'card'+(live?'':' off')});
     card.append(el('div',{},el('span',{class:'pill '+(live?'live':'dead')},live?'Active':(s.state==='revoked'?'Stopped by you':'Time ran out')),' ',el('span',{class:'mute'},(live?'until ':'ended ')+fmt(s.state==='revoked'?s.revokedAt:s.expires))));
-    card.append(el('div',{class:'t',style:'margin-top:6px'},s.who||'Doctor (no name given)'),el('div',{class:'mute'},s.docs.map(id=>(REC.docs.find(d=>d.id===id)||{title:id}).title).join(', ')));
+    card.append(el('div',{class:'t',style:'margin-top:6px'},s.who||'Doctor (no name given)'),el('div',{class:'mute'},[...s.docs.map(id=>(REC.docs.find(d=>d.id===id)||{title:id}).title),...(s.stated?['Allergies you told Abhilekh']:[])].join(', ')));
     if(live){const qb=el('div',{class:'qr'});qb.innerHTML=qrSvg(url);card.append(qb,el('div',{class:'url'},url));}
     const row=el('div',{class:'row'});
     if(live){const ne=window.i18n&&window.i18n.lang()==='ne';
@@ -178,6 +178,19 @@ $('delGo').onclick=async()=>{
   $('delGo').disabled=true;
   try{await post('/api/account/delete',{pin:$('delPin').value,confirm:'DELETE'});location.reload()}
   catch(e){err.textContent=e.message;$('delGo').disabled=false}
+};
+// ---- Allergies told by the patient (26 Nov 2026): kept apart from papers; stored as typed; removing needs the PIN ----
+const STATED=()=>(REC&&REC.stated&&REC.stated.allergies)||[];
+function paintTold(){
+  const l=$('toldList');l.replaceChildren();
+  if(!STATED().length)l.append(el('div',{class:'mute'},'None added.'));
+  for(const a of STATED())l.append(el('div',{class:'res'},el('div',{class:'t'},a.substance),a.reaction?el('div',{class:'mute'},a.reaction):'',
+    el('div',{class:'mute'},'Told by you on '+fmt(a.added)),el('div',{},...deleteBox('/api/stated/allergies/'+a.id+'/delete','Remove'))));
+}
+$('toldAdd').onclick=async()=>{
+  const err=$('toldErr');err.textContent='';
+  try{REC=await post('/api/stated/allergies',{substance:$('toldWhat').value,reaction:$('toldReaction').value});$('toldWhat').value=$('toldReaction').value='';paint();paintForm()}
+  catch(e){err.textContent=e.message}
 };
 // Delete one paper (or a SAMPLE page): an inline box with the PIN; nothing happens without it.
 function deleteBox(url,label){
@@ -437,6 +450,7 @@ function paint(){
     hc.append(el('button',{class:'card',style:'width:100%;text-align:left;font-weight:400;color:var(--ink)',onclick:()=>tab('papers')},el('b',{},n+' paper'+(n>1?'s':'')),el('div',{class:'mute'},ready?ready+' ready to check':'Tap to see them')));
     hc.append(el('button',{class:'card',style:'width:100%;text-align:left;font-weight:400;color:var(--ink)',onclick:()=>tab('share')},el('b',{},live?live+' active share'+(live>1?'s':''):'Nothing is being shared'),el('div',{class:'mute'},live?'Tap to see who looked':'Only you can see your papers')));
   }
+  paintTold();
   const pl=$('papers');pl.replaceChildren();
   if(!n)pl.append(el('div',{class:'card mute'},'No papers yet. Photograph a paper from Home.'));
   for(const p of REC.papers||[])if(p.status!=='confirmed')pl.append(paperCard(p));
@@ -453,7 +467,8 @@ function paint(){
 function paintForm(){
   const n=REC.docs.length;
   $('docs').replaceChildren();
-  $('noPapers').style.display=n?'none':'';$('create').disabled=!n;
+  const told=STATED().length;$('toldPick').style.display=told?'':'none';
+  $('noPapers').style.display=n||told?'none':'';$('create').disabled=!(n||told);
   REC.docs.forEach(d=>{const cb=el('input',{type:'checkbox',id:'d-'+d.id,checked:''});$('docs').append(el('label',{class:'opt',for:'d-'+d.id},cb,el('span',{},d.title,el('br'),el('span',{class:'mute'},d.facility+' · '+d.date))))});
 }
 async function setup(){
@@ -464,7 +479,7 @@ async function setup(){
     const docs=REC.docs.filter(d=>$('d-'+d.id)&&$('d-'+d.id).checked).map(d=>d.id);
     if(!docs.length){$('makeErr').textContent='Choose at least one report to share.';return}
     $('makeErr').textContent='';
-    try{await post('/api/shares',{docs,who:$('who').value.trim(),minutes:+$('dur').value,...await confirmAuth($('sharePin').value)});$('who').value='';$('sharePin').value='';await load()}catch(e){$('makeErr').textContent=e.message;if(/Cancelled|PIN/.test(e.message)){PINMODE=true;shareMode()}}
+    try{await post('/api/shares',{docs,stated:$('toldShare').checked&&STATED().length>0,who:$('who').value.trim(),minutes:+$('dur').value,...await confirmAuth($('sharePin').value)});$('who').value='';$('sharePin').value='';await load()}catch(e){$('makeErr').textContent=e.message;if(/Cancelled|PIN/.test(e.message)){PINMODE=true;shareMode()}}
   };
   paint();paintForm();
   await load();setInterval(()=>{if($('app').style.display!=='none')load()},10000); // pick up opens made on the doctor's phone

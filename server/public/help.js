@@ -50,6 +50,9 @@ window.HELP = {
       "Beside each value the doctor can open the part of the photo it came from, and the whole photo of the paper, under the banner “Patient-provided records. Not institution-verified. May be incomplete.”"] },
     { id: "doctoredit", q: "Can a doctor add or change anything in my record?", a: [
       "No. A doctor can only look, while your share is open. Only you add and check papers."] },
+    { id: "allergy", q: "What if my allergy is not on any paper?", a: [
+      "Add it in My papers, under Allergies you told Abhilekh. Type it as you would say it.",
+      "A doctor sees it only if you include it in a share, in its own box marked \u201cTold by the patient \u00b7 not from a paper\u201d. Abhilekh keeps it as you typed it and does not check it."] },
     { id: 'keep', q: 'Can the doctor keep my papers?', a: [
       'The doctor’s page has no download or print button, and every page carries a watermark.',
       'A web page cannot stop a screenshot or a photo of the screen.'] },

@@ -23,6 +23,14 @@ document.addEventListener('dragstart',e=>e.preventDefault());
     if(ms<=0){ph.replaceChildren(el('div',{class:'gone'},'This share has run out of time.',el('div',{class:'mute',style:'font-weight:400;margin-top:6px'},'Ask the patient for a new link.')));return}
     left.textContent='Patient-confirmed record · visible for '+Math.ceil(ms/60000)+' more minute'+(Math.ceil(ms/60000)>1?'s':'')+' (until '+fmt(j.expires)+')';setTimeout(tick,15000)};
   tick();
+  // Allergies told by the patient: only if she included them; always shown apart from the papers, as not from a paper.
+  if(j.stated&&j.stated.allergies&&j.stated.allergies.length){
+    const c=el('div',{class:'card told',style:'margin-top:10px'});
+    c.append(el('h2',{},'Allergies'),el('div',{class:'mute'},'Told by the patient · not from a paper'));
+    for(const a of j.stated.allergies)c.append(el('div',{class:'res'},el('div',{class:'t'},a.substance),
+      a.reaction?el('div',{class:'mute'},'What happened, in the patient\u2019s words: '+a.reaction):'',el('div',{class:'mute'},'Entered by the patient on '+fmt(a.added))));
+    ph.append(c);
+  }
   for(const d of j.docs){
     const c=el('div',{class:'card',style:'margin-top:10px'});
     c.append(el('h2',{},d.title),el('div',{class:'mute'},[d.facility,d.patient,d.date_as_written].filter(Boolean).join(' · ')));
