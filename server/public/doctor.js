@@ -23,6 +23,15 @@ document.addEventListener('dragstart',e=>e.preventDefault());
     if(ms<=0){ph.replaceChildren(el('div',{class:'gone'},'This share has run out of time.',el('div',{class:'mute',style:'font-weight:400;margin-top:6px'},'Ask the patient for a new link.')));return}
     left.textContent='Patient-confirmed record · visible for '+Math.ceil(ms/60000)+' more minute'+(Math.ceil(ms/60000)>1?'s':'')+' (until '+fmt(j.expires)+')';setTimeout(tick,15000)};
   tick();
+  // Details told by the patient (date of birth as typed; sex; never an age): only if she included
+  // them; never turned into an age; shown apart from the papers, as not from a paper.
+  if(j.details){
+    const d=j.details,c=el('div',{class:'card told',style:'margin-top:10px'});
+    c.append(el('h2',{},'Patient details'),el('div',{class:'mute'},'Told by the patient · not from a paper'));
+    if(d.dob)c.append(el('div',{class:'res'},'Date of birth, as typed by the patient: '+d.dob+' '+d.calendar));
+    if(d.sex)c.append(el('div',{class:'res'},'Sex: '+({female:'Female',male:'Male',other:'Other'}[d.sex]||d.sex)));
+    ph.append(c);
+  }
   // Allergies told by the patient: only if she included them; always shown apart from the papers, as not from a paper.
   if(j.stated&&j.stated.allergies&&j.stated.allergies.length){
     const c=el('div',{class:'card told',style:'margin-top:10px'});

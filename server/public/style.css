@@ -70,6 +70,7 @@ input[type=password],input[type=text]{width:100%;padding:9px;border:1.5px solid 
 
 .lang{display:flex;gap:6px;justify-content:flex-end;margin:0 0 10px}
 .lang button{background:#fff;color:var(--mute);border:1.5px solid var(--line);border-radius:999px;padding:4px 12px;font-size:14px;font-weight:500;min-height:0}
+.dob{display:grid;grid-template-columns:0.95fr 1.75fr 0.8fr;gap:6px}.dob select{padding:8px 4px}
 .lang button.on{color:var(--accent);border-color:var(--accent);font-weight:700}
 
 /* Doctor's view (PRD v2.1 FR-064A): watermark over everything, nothing to save or print. */

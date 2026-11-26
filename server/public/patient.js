@@ -148,7 +148,7 @@ function tab(name){
 }
 document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
 $('tileShow').onclick=()=>tab('share');
-const VIEWS={list:['vList','Menu'],pk:['vPk','Fingerprint or face'],pin:['vPin','Change PIN'],help:['vHelp','Help'],dl:['vDl','Download my record'],del:['vDel','Delete my account']};
+const VIEWS={list:['vList','Menu'],pk:['vPk','Fingerprint or face'],pin:['vPin','Change PIN'],help:['vHelp','Help'],me:['vMe','My details'],dl:['vDl','Download my record'],del:['vDel','Delete my account']};
 function openMenu(v){$('ov').style.display='';for(const k in VIEWS)$(VIEWS[k][0]).style.display=k===v?'':'none';$('sheetTitle').textContent=VIEWS[v][1];$('acctBtn').setAttribute('aria-expanded',true);pkErr();$('pinMsg').textContent='';if(v==='pk'&&$('pkAdd').style.display!=='none')$('pkPin').focus()}
 function closeMenu(){$('ov').style.display='none';$('acctBtn').setAttribute('aria-expanded',false)}
 $('acctBtn').onclick=()=>openMenu('list');
@@ -171,6 +171,49 @@ function openHelp(id){
   if(d){if(d.tagName==='DETAILS')d.open=true;setTimeout(()=>d.scrollIntoView({block:'start'}),0)}
 }
 $('rowHelp').onclick=()=>openHelp();$('rowDel').onclick=()=>{$('delErr').textContent='';$('delWord').value=$('delPin').value='';openMenu('del')};
+// ---- My details (26 Nov 2026): identity only, as typed. The date of birth is shown as typed, never as a computed age.
+const DET=()=>(REC&&REC.details)||{};
+const hasDet=()=>{const d=DET();return !!(d.dob||d.sex)};
+const SEX={female:'Female',male:'Male',other:'Other'};
+// Date of birth from Year, Month, Day lists: BS days from the checked BS table (bs-months.json, BS 1983-2090), AD days
+// from the AD calendar. Up to 100 years back, never in the future. Saved as picked; never converted, never an age.
+let meCal=null,BSM=null;
+const BS_MONTHS=['Baisakh बैशाख','Jestha जेठ','Asar असार','Shrawan साउन','Bhadra भदौ','Asoj असोज','Kartik कात्तिक','Mangsir मंसिर','Poush पुस','Magh माघ','Falgun फागुन','Chaitra चैत'];
+const AD_MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const pad=n=>String(n).padStart(2,'0');
+const todayAD=()=>new Date().toISOString().slice(0,10);
+function bsToday(){const t=todayAD();let y=null;for(const k in BSM.first_baisakh_ad)if(BSM.first_baisakh_ad[k]<=t)y=+k;
+  let left=Math.round((Date.parse(t)-Date.parse(BSM.first_baisakh_ad[y]))/864e5),m=0;while(left>=BSM.months[y][m]){left-=BSM.months[y][m];m++}return[y,m+1,left+1]}
+function nowParts(){if(meCal==='AD'){const t=todayAD();return[+t.slice(0,4),+t.slice(5,7),+t.slice(8,10)]}return bsToday()}
+function monthLen(y,m){return meCal==='AD'?new Date(Date.UTC(y,m,0)).getUTCDate():BSM.months[y][m-1]}
+function opts(sel,list,keep){const v=keep??sel.value;sel.replaceChildren(el('option',{value:''},sel.getAttribute('aria-label')),...list.map(([val,txt])=>el('option',{value:val},txt)));if(list.some(([x])=>String(x)===String(v)))sel.value=v}
+function fillDob(keep){
+  if(!meCal){$('meDobPick').style.display='none';return}
+  $('meDobPick').style.display='';const[ty,tm,td]=nowParts(),Y=$('meY'),M=$('meM'),D=$('meD');
+  const lo=meCal==='AD'?ty-100:1983,ys=[];for(let y=ty;y>=lo;y--)ys.push([y,String(y)]);opts(Y,ys,keep&&keep[0]);
+  const y=+Y.value,names=meCal==='AD'?AD_MONTHS:BS_MONTHS,ms=[];if(y)for(let m=1;m<=12&&!(y===ty&&m>tm);m++)ms.push([m,names[m-1]]);opts(M,ms,keep&&keep[1]);
+  const m=+M.value,ds=[];if(y&&m){const n=monthLen(y,m);for(let d=1;d<=n&&!(y===ty&&m===tm&&d>td);d++)ds.push([d,String(d)])}opts(D,ds,keep&&keep[2]);
+}
+async function bsReady(){if(!BSM)BSM=await (await fetch('/bs-months.json')).json()}
+const paintCal=()=>document.querySelectorAll('[data-cal]').forEach(b=>{b.classList.toggle('on',b.dataset.cal===meCal);b.setAttribute('aria-checked',b.dataset.cal===meCal)});
+document.querySelectorAll('[data-cal]').forEach(b=>b.onclick=async()=>{if(meCal!==b.dataset.cal){meCal=b.dataset.cal;await bsReady();paintCal();fillDob([null,null,null])}});
+['meY','meM'].forEach(i=>$(i).onchange=()=>fillDob());
+const dobValue=()=>{const y=$('meY').value,m=$('meM').value,d=$('meD').value;return meCal&&y&&m&&d?y+'-'+pad(m)+'-'+pad(d):''};
+function detLines(d){const out=[];
+  if(d.dob)out.push('Date of birth: '+d.dob+' '+d.calendar);
+  if(d.sex)out.push('Sex: '+SEX[d.sex]);
+  return out}
+async function paintMe(){const d=DET();$('meSex').value=d.sex||'';meCal=d.calendar||null;await bsReady();paintCal();
+  fillDob(d.dob?d.dob.split('-').map(Number):[null,null,null]);
+  const l=detLines(d);$('meNow').replaceChildren(...(l.length?l.map(x=>el('div',{},x)):[el('div',{},'Nothing added yet.')]))}
+$('rowMe').onclick=()=>{$('meErr').textContent='';paintMe();openMenu('me')};
+$('meSave').onclick=async()=>{
+  const err=$('meErr');err.textContent='';$('meSave').disabled=true;
+  try{if(meCal&&!dobValue()&&($('meY').value||$('meM').value))throw new Error('Choose the year, month and day of your date of birth.');
+    REC=await post('/api/person/details',{dob:dobValue(),calendar:meCal,sex:$('meSex').value});paintMe();paint();paintForm();err.style.color='';err.textContent='Saved.'}
+  catch(e){err.style.color='#a01212';err.textContent=e.message}
+  finally{$('meSave').disabled=false}
+};
 $('rowDl').onclick=()=>{$('dlErr').textContent='';openMenu('dl')};
 // ---- Download my record (26 Nov 2026): the patient's own copy, word for word, with every photo. The phone's
 // "Save as PDF" makes the PDF (Nepali script prints correctly). The stamp is on every page and stays in English.
@@ -192,6 +235,7 @@ function printView(x){
   const val=v=>v===null||v===''?'Not written on the paper':v;
   d.append(el('h1',{},'Health record'),el('p',{class:'pname'},x.person.name||''),
     el('p',{class:'mute'},'This copy shows what each paper says. It gives no advice. The photo of each paper is the record.'));
+  if(x.details_told){d.append(el('h2',{},'My details'),el('p',{class:'mute'},'Told by the patient · not from a paper'),...detLines(x.details_told).map(t=>el('div',{},t)))}
   d.append(el('h2',{},'Allergies'),el('p',{class:'mute'},'Told by the patient · not from a paper'));
   if(!x.allergies_told.length)d.append(el('p',{class:'mute'},'None added.'));
   for(const a of x.allergies_told)d.append(el('div',{class:'res'},el('div',{class:'t'},a.substance),a.reaction?el('div',{},a.reaction):''));
@@ -509,7 +553,7 @@ function paint(){
 function paintForm(){
   const n=REC.docs.length;
   $('docs').replaceChildren();
-  const told=STATED().length;$('toldPick').style.display=told?'':'none';
+  const told=STATED().length;$('toldPick').style.display=told?'':'none';$('mePick').style.display=hasDet()?'':'none';
   $('noPapers').style.display=n||told?'none':'';$('create').disabled=!(n||told);
   REC.docs.forEach(d=>{const cb=el('input',{type:'checkbox',id:'d-'+d.id,checked:''});$('docs').append(el('label',{class:'opt',for:'d-'+d.id},cb,el('span',{},d.title,el('br'),el('span',{class:'mute'},d.facility+' · '+d.date))))});
 }
@@ -521,7 +565,7 @@ async function setup(){
     const docs=REC.docs.filter(d=>$('d-'+d.id)&&$('d-'+d.id).checked).map(d=>d.id);
     if(!docs.length){$('makeErr').textContent='Choose at least one report to share.';return}
     $('makeErr').textContent='';
-    try{await post('/api/shares',{docs,stated:$('toldShare').checked&&STATED().length>0,who:$('who').value.trim(),minutes:+$('dur').value,...await confirmAuth($('sharePin').value)});$('who').value='';$('sharePin').value='';await load()}catch(e){$('makeErr').textContent=e.message;if(/Cancelled|PIN/.test(e.message)){PINMODE=true;shareMode()}}
+    try{await post('/api/shares',{docs,stated:$('toldShare').checked&&STATED().length>0,details:$('meShare').checked&&hasDet(),who:$('who').value.trim(),minutes:+$('dur').value,...await confirmAuth($('sharePin').value)});$('who').value='';$('sharePin').value='';await load()}catch(e){$('makeErr').textContent=e.message;if(/Cancelled|PIN/.test(e.message)){PINMODE=true;shareMode()}}
   };
   paint();paintForm();
   await load();setInterval(()=>{if($('app').style.display!=='none')load()},10000); // pick up opens made on the doctor's phone

@@ -74,6 +74,10 @@ window.HELP = {
       "Yes. Open the menu (top right), choose Download my record, then Make my copy. Abhilekh makes a copy of everything in the record, word for word, with every photo.",
       "Tap Save as PDF or print, then choose Save as PDF to keep it on your phone. Download the data file keeps the same record as a file other apps can read.",
       "Every page says it is a copy made by you, not by a hospital or lab."] },
+    { id: 'mydetails', q: 'What are My details?', a: [
+      'Your date of birth and sex, as you enter them, in the menu under My details. They are told by you, not taken from a paper.',
+      'Abhilekh never works out an age from your date of birth. A paper that prints an age keeps that age as printed; the two are shown side by side and never changed to agree.',
+      'A doctor sees your details only if you include them in a share.'] },
     { id: 'family', q: 'Can I keep papers for my family?', a: [
       'Yes. One account can hold up to 6 people, each with their own papers and shares.',
       'Opening another person’s papers asks for your PIN or fingerprint.'] },
