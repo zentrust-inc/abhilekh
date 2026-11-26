@@ -73,7 +73,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
   const token = () => Array.from(randomBytes(14), b => ALPHABET[b % 31]).join('');
   const stateOf = s => (s.revokedAt ? 'revoked' : now() >= Date.parse(s.expires) ? 'expired' : 'live');
   const log = (s, t) => { s.log.push({ at: new Date(now()).toISOString(), t }); };
-  const publicShare = s => ({ id: s.id, docs: s.docs, who: s.who, created: s.created, expires: s.expires, minutes: s.minutes, revokedAt: s.revokedAt || null, state: stateOf(s), log: s.log });
+  const publicShare = s => ({ id: s.id, docs: s.docs, stated: !!s.stated, who: s.who, created: s.created, expires: s.expires, minutes: s.minutes, revokedAt: s.revokedAt || null, state: stateOf(s), log: s.log });
 
   // refused guesses of unknown tokens: slow down anyone trying to find a live link
   const misses = new Map();
@@ -126,7 +126,7 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
       const mine = () => { const r = acct(); return r.people.find(p => p.id === cur.session.personId) || r.people[0]; }; // the person in view on this session
       const forPerson = s => mineOnly(s) && (s.personId ? s.personId === mine().id : mine() === acct().people[0]); // shares made before M1 belong to the first person
       const paperOut = p => ({ id: p.id, sha256: p.sha256, mime: p.mime, bytes: p.bytes, added: p.added, status: p.status, reading: p.reading ? { ...p.reading, usd: undefined } : null });
-      const summary = () => { const r = mine(); return { label: r.name, person: r.id, people: acct().people.map(p => ({ id: p.id, name: p.name, papers: p.docs.length + p.papers.length })), docs: r.docs.map(d => ({ id: d.id, title: d.title, facility: d.facility, date: d.date_as_written, origin: d.origin || 'sample', paper: d.paperId || null, results: d.results.map(({ img, ...r }) => r), medicines: d.medicines || [] })).reverse(), papers: r.papers.map(paperOut).reverse(), photos: photos || testMode, testMode, minutes: ALLOWED_MINUTES, help: { whatsapp: helpWhatsapp } }; };
+      const summary = () => { const r = mine(); return { label: r.name, person: r.id, people: acct().people.map(p => ({ id: p.id, name: p.name, papers: p.docs.length + p.papers.length })), docs: r.docs.map(d => ({ id: d.id, title: d.title, facility: d.facility, date: d.date_as_written, origin: d.origin || 'sample', paper: d.paperId || null, results: d.results.map(({ img, ...r }) => r), medicines: d.medicines || [] })).reverse(), papers: r.papers.map(paperOut).reverse(), stated: { allergies: (r.stated && r.stated.allergies) || [] }, photos: photos || testMode, testMode, minutes: ALLOWED_MINUTES, help: { whatsapp: helpWhatsapp } }; };
       if (req.method === 'GET' && path === '/api/record') return send(res, 200, summary());
       if (req.method === 'POST' && path === '/api/record/sample') { // copy the invented SAMPLE papers into THIS account only; asking twice adds nothing
         const r = mine();
@@ -186,6 +186,32 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
         res.writeHead(200, { 'content-type': p.mime, 'content-length': buf.length, 'cache-control': 'private, no-store', 'x-content-type-options': 'nosniff', 'content-disposition': 'inline', 'referrer-policy': 'no-referrer' });
         return res.end(buf);
       }
+      // --- Told by the patient (decided 26 Nov 2026): allergies only. Kept apart from what papers say, shown everywhere as
+      // "Told by the patient · not from a paper". Stored as typed; Abhilekh adds nothing (no severity, no drug matching, no
+      // warning). Adding needs no PIN, like adding a paper; removing needs the PIN, like deleting a paper.
+      if (req.method === 'POST' && path === '/api/stated/allergies') {
+        const b = await readJson(req);
+        const clean = (v, n) => String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, n);
+        const substance = clean(b.substance, 80), reaction = clean(b.reaction, 160);
+        if (!substance) return send(res, 400, { error: 'Type what you are allergic to.' });
+        const r = mine(); r.stated = r.stated || { allergies: [] };
+        if (r.stated.allergies.length >= 30) return send(res, 400, { error: 'Up to 30 allergies can be added.' });
+        r.stated.allergies.push({ id: 'a' + randomBytes(6).toString('hex'), substance, reaction: reaction || null, added: new Date(now()).toISOString() });
+        save();
+        return send(res, 201, summary());
+      }
+      mp = path.match(/^\/api\/stated\/allergies\/(a[0-9a-f]+)\/delete$/);
+      if (req.method === 'POST' && mp) {
+        const b = await readJson(req);
+        const ok = auth.confirm(cur.account, b);
+        if (!ok.ok) return send(res, ok.status, ok);
+        const r = mine(), list = (r.stated && r.stated.allergies) || [];
+        if (!list.some(a => a.id === mp[1])) return send(res, 404, { error: 'No such allergy.' });
+        r.stated.allergies = list.filter(a => a.id !== mp[1]);
+        save();
+        return send(res, 200, summary());
+      }
+
       // --- Deleting (decided 26 Nov 2026). The patient deletes a paper or her whole account, confirmed with her PIN or
       // fingerprint/face. Gone at once from the app, and from store-live.json in Google Drive within a minute; the photo
       // is deleted in the shared drive (or put in its trash, which Google empties after 30 days); dated snapshots older
@@ -308,12 +334,13 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
         const hold = auth.holdUntil(cur.account);
         if (hold) return send(res, 403, { error: 'New shares are paused until ' + new Date(hold).toISOString() + ', 24 hours after your PIN was reset with a new code. You can still stop shares.', sharesPausedUntil: new Date(hold).toISOString() });
         const docs = Array.isArray(b.docs) ? [...new Set(b.docs)].filter(id => mine().docs.some(d => d.id === id)) : [];
-        if (!docs.length) return send(res, 400, { error: 'Choose at least one report to share.' });
+        const stated = !!b.stated && !!(mine().stated && mine().stated.allergies.length); // allergies told by the patient, if she chose them
+        if (!docs.length && !stated) return send(res, 400, { error: 'Choose at least one report to share.' });
         const minutes = Number(b.minutes);
         if (!(ALLOWED_MINUTES.includes(minutes) || (testMode && minutes === 1))) return send(res, 400, { error: 'A share lasts 15 minutes.' });
         const who = String(b.who || '').slice(0, 80);
         const t = now();
-        const s = { id: token(), ownerId: cur.account.id, personId: mine().id, docs, who, created: new Date(t).toISOString(), expires: new Date(t + minutes * 60000).toISOString(), minutes, revokedAt: null, log: [] };
+        const s = { id: token(), ownerId: cur.account.id, personId: mine().id, docs, stated, who, created: new Date(t).toISOString(), expires: new Date(t + minutes * 60000).toISOString(), minutes, revokedAt: null, log: [] };
         log(s, 'You created this share' + (who ? ' for ' + who : '') + '.');
         store.shares.push(s); save();
         return send(res, 201, publicShare(s));
@@ -358,7 +385,10 @@ export function createApp({ storePath, recordPath = join(HERE, 'data', 'sample-r
         const ppl = (store.records[s.ownerId] || { people: [] }).people;
         const own = (s.personId ? ppl.filter(p => p.id === s.personId) : ppl).flatMap(p => p.docs);
         const docs = s.docs.map(id => own.find(d => d.id === id) || record.docs.find(d => d.id === id)).filter(Boolean);
-        return send(res, 200, { state: 'live', expires: s.expires, docs });
+        // Allergies told by the patient: only if she chose them for this share; always labelled as not from a paper.
+        const person = s.personId ? ppl.find(p => p.id === s.personId) : ppl[0];
+        const told = s.stated && person && person.stated ? person.stated.allergies.map(({ substance, reaction, added }) => ({ substance, reaction, added })) : [];
+        return send(res, 200, { state: 'live', expires: s.expires, docs, stated: told.length ? { label: 'Told by the patient · not from a paper', allergies: told } : null });
       }
       send(res, 404, { error: 'not found' });
     } catch (e) {

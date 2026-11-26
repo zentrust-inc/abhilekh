@@ -23,7 +23,9 @@ test('every question, answer and photo tip has Nepali text', () => {
 test('the new screens have Nepali text', () => {
   const ui = ['Help and questions', 'Delete my account', 'Help', 'Questions and answers', 'How to take a good photo', 'Contact us',
     'Write to us on WhatsApp', 'Type DELETE', 'Delete this paper', 'Remove this SAMPLE page', 'Type DELETE to confirm.',
-    'It is gone from the app at once, and from every copy within 30 days. This cannot be undone.'];
+    'It is gone from the app at once, and from every copy within 30 days. This cannot be undone.',
+    'Allergies you told Abhilekh', 'Allergic to (as you would say it)', 'What happened (optional)', 'Shown as told by you, not from a paper', 'None added.', 'Remove',
+    'Type what you are allergic to.', 'Told by you on 26 Nov, 08:00'];
   assert.deepEqual(ui.filter(l => !dev(tr(l))), []);
 });
 
