@@ -101,23 +101,26 @@ form cannot send.
 
 ## Backups (backup.mjs)
 
-Once at start-up and then every 24 hours, `store.json` is checked (a broken file is never copied) and copied to
-`DATA_DIR/backups/store-YYYY-MM-DD.json`; the newest 30 copies are kept.
+Decided 26 Nov 2026: the app works on its own disk on Azure (every tap reads and writes `store.json`, and Google Drive
+is not a disk), and **Google Drive holds every copy**. With 100 TB in the shared drive, nothing is deleted there.
 
-The second place is **Google Drive** (decided 25 Nov 2026). When both Azure app settings below are set, the same copy is
-also uploaded to a Google Drive folder, so a copy survives if the app's own disk is lost. The start-up log says which.
+- **Live copy:** after any change, at most once a minute, the store is written to the shared drive as
+  `store-live.json` (one file, replaced in place). If the Azure disk is lost, at most the last minute is lost.
+- **Snapshots:** at start-up and every 24 hours, `store-YYYY-MM-DD-HHMM.json` (UTC; older copies have no time) goes to
+  `DATA_DIR/backups` (newest 30 kept there) and, as a new file, to the shared drive (never deleted). A broken store is
+  never copied.
+- **Test papers:** anything left in `DATA_DIR/test-papers` is moved at start-up to the shared drive folder
+  `test-papers`; the copy here is deleted only when Drive reports the same MD5 and size. Test papers live only in the
+  shared drive (CLAUDE.md).
 
-- `GOOGLE_BACKUP_SA_JSON`: the whole JSON key of a Google Cloud **service account** (secret: Azure app setting only,
-  never the repository, never chat). The Google Drive API must be switched on in that Cloud project.
-- `GOOGLE_BACKUP_FOLDER_ID`: the id of a folder **inside a shared drive** (the part after `/folders/` in its link).
-  Add the service account's email to that shared drive as **Content manager**. A service account has no storage of
-  its own, so a folder in someone's My Drive does not work; in a shared drive the files use the organisation's storage.
+Settings (Azure app settings only, never the repository): `GOOGLE_BACKUP_SA_JSON` (the whole JSON key of a Google Cloud
+**service account**; the Drive API must be on in that project) and `GOOGLE_BACKUP_FOLDER_ID` (a folder **inside a shared
+drive**, with the service account as **Content manager**; a service account has no storage of its own). Without them,
+only the local snapshots are made, and the start-up log says so.
 
-Copies on Drive are not deleted by the app. Without the settings, the copies sit only on the app's own disk.
-
-Restore: stop the app; copy the chosen backup over `DATA_DIR/store.json` (or call `restoreBackup`, which first checks
-the backup is a readable store and keeps the old file as `store.json.before-restore`); start the app.
-`test/backup.test.mjs` runs this restore end to end.
+Restore: stop the app; copy `store-live.json` (from Drive) or a snapshot over `DATA_DIR/store.json` (or call
+`restoreBackup`, which first checks the backup is a readable store and keeps the old file as
+`store.json.before-restore`); start the app. `test/backup.test.mjs` runs this restore end to end.
 
 ## Record model (spec v1.0, record.mjs)
 
